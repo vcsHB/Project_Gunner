@@ -21,6 +21,14 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
     private Agent _owner;
     private AgentStatus _status;
+    private bool _initialized;
+
+    private void Awake()
+    {
+        // Agent가 없는 단독 대상(폭발통, 파괴 가능한 엄폐물)은 아무도 Initialize를 불러주지 않는다.
+        if (GetComponentInParent<Agent>() == null)
+            EnsureInitialized();
+    }
 
     public void Initialize(Agent owner)
     {
@@ -29,7 +37,24 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
     public void AfterInitialize()
     {
-        _status = _owner.GetCompo<AgentStatus>();
+        EnsureInitialized();
+    }
+
+    public void Dispose()
+    {
+        if (_status != null)
+            _status.Health.OnChangedEvent -= HandleMaxHealthChanged;
+    }
+
+    private void OnDestroy() => Dispose();
+
+    private void EnsureInitialized()
+    {
+        if (_initialized) return;
+        _initialized = true;
+
+        // Agent가 없으면 스탯도 없다. 이 경우 인스펙터의 _maxHealth를 그대로 쓴다.
+        _status = _owner != null ? _owner.GetCompo<AgentStatus>() : null;
 
         if (_status != null)
         {
@@ -38,12 +63,6 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         }
 
         ResetHealth();
-    }
-
-    public void Dispose()
-    {
-        if (_status != null)
-            _status.Health.OnChangedEvent -= HandleMaxHealthChanged;
     }
 
     public DamageResponse ApplyDamage(DamageData damageData)

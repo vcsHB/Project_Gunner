@@ -17,20 +17,19 @@ public class ConditionCastEffector : MonoBehaviour, ICastEffector
         _caster = GetComponentInParent<CasterBase>();
     }
 
-    public void Cast(Collider2D target)
+    public void Cast(in CastHit hit)
     {
         if (_conditionType == ConditionType.None) return;
         if (_chance < 1f && Random.value > _chance) return;
 
-        Agent agent = target.GetComponentInParent<Agent>();
-        if (agent == null || agent.IsDead) return;
-
-        Agent owner = _caster != null ? _caster.Owner : null;
-        if (owner != null && owner == agent) return;
+        // 상태이상은 Agent에게만 걸린다. (폭발통 같은 단순 대상은 대상 외)
+        Agent agent = hit.Target.Owner;
+        if (agent == null) return;
 
         AgentConditionEffector effector = agent.GetCompo<AgentConditionEffector>();
         if (effector == null) return;
 
+        Agent owner = _caster != null ? _caster.Owner : null;
         effector.AddCondition(_conditionType, _conditionLevel, _duration, owner);
     }
 }

@@ -15,21 +15,16 @@ public class DamageCastEffector : MonoBehaviour, ICastEffector
         _caster = GetComponentInParent<CasterBase>();
     }
 
-    public void Cast(Collider2D target)
+    public void Cast(in CastHit hit)
     {
-        if (!target.TryGetComponent(out IDamageable damageable))
-            damageable = target.GetComponentInParent<IDamageable>();
-
-        if (damageable == null || damageable.IsDead) return;
+        IDamageable damageable = hit.Target.Damageable;
+        if (damageable == null) return;
 
         Agent owner = _caster != null ? _caster.Owner : null;
+        Vector2 direction = (hit.Position - (Vector2)transform.position).normalized;
 
-        // 자기 자신은 때리지 않는다.
-        if (owner != null && target.GetComponentInParent<Agent>() == owner) return;
-
-        Vector2 direction = ((Vector2)(target.transform.position - transform.position)).normalized;
         DamageData damageData = BuildDamageData(owner, direction);
-        damageData.damage *= _damageMultiplier;
+        damageData.damage *= _damageMultiplier * hit.DamageMultiplier;
 
         damageable.ApplyDamage(damageData);
     }

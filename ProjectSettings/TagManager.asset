@@ -11,13 +11,13 @@ TagManager:
   - 
   - Water
   - UI
+  - Ground
+  - Wall
+  - Object
+  - GroundUnit
+  - AirUnit
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Projectile
   - 
   - 
   - 
