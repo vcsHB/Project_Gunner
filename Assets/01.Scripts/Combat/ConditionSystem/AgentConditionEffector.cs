@@ -4,8 +4,12 @@ using UnityEngine;
 
 public class AgentConditionEffector : MonoBehaviour, IAgentComponent
 {
+    public event Action<ConditionBase> OnConditionAddedEvent;
+    public event Action<ConditionBase> OnConditionRemovedEvent;
+
     private readonly List<ConditionBase> _conditions = new();
     private Agent _owner;
+    private AgentStatus _status;
 
     public IReadOnlyList<ConditionBase> Conditions => _conditions;
 
@@ -16,6 +20,7 @@ public class AgentConditionEffector : MonoBehaviour, IAgentComponent
 
     public void AfterInitialize()
     {
+        _status = _owner.GetCompo<AgentStatus>();
     }
 
     public void Dispose()
@@ -24,68 +29,91 @@ public class AgentConditionEffector : MonoBehaviour, IAgentComponent
     }
 
     /// <summary>
-    /// 같은 타입이 이미 걸려있으면 새로 쌓지 않고 지속시간만 갱신한다.
+    /// 이미 같은 타입이 걸려있으면 새로 쌓지 않고 지속시간/레벨만 갱신한다.
+    /// duration이 0 이하면 직접 제거할 때까지 유지된다.
     /// </summary>
-    public void AddCondition(ConditionBase condition, object origin, float duration)
+    public void AddCondition(ConditionType type, int level, float duration, object origin = null)
     {
-        ConditionBase exist = GetCondition(condition.GetType());
+        if (type == ConditionType.None) return;
+
+        // 상태이상 면역
+        if (_status != null && _status.IsResist.TotalValue) return;
+
+        ConditionBase exist = GetCondition(type);
         if (exist != null)
         {
-            exist.Refresh();
+            exist.Refresh(level, duration);
             return;
         }
 
-        condition.Initialize(_owner, origin, duration);
+        ConditionBase condition = ConditionFactory.Create(type);
+        if (condition == null) return;
+
+        condition.Initialize(_owner, origin, level, duration);
         _conditions.Add(condition);
         condition.OnStart();
+
+        OnConditionAddedEvent?.Invoke(condition);
     }
 
-    public T GetCondition<T>() where T : ConditionBase => GetCondition(typeof(T)) as T;
-
-    public bool HasCondition<T>() where T : ConditionBase => GetCondition(typeof(T)) != null;
-
-    public void RemoveCondition<T>() where T : ConditionBase
+    public ConditionBase GetCondition(ConditionType type)
     {
-        ConditionBase condition = GetCondition(typeof(T));
+        for (int i = 0; i < _conditions.Count; i++)
+        {
+            if (_conditions[i].Type == type)
+                return _conditions[i];
+        }
+
+        return null;
+    }
+
+    public bool HasCondition(ConditionType type) => GetCondition(type) != null;
+
+    /// <summary>걸려있지 않으면 0.</summary>
+    public int GetConditionLevel(ConditionType type) => GetCondition(type)?.Level ?? 0;
+
+    public void RemoveCondition(ConditionType type)
+    {
+        ConditionBase condition = GetCondition(type);
         if (condition == null) return;
 
         _conditions.Remove(condition);
-        condition.OnEnd();
+        EndCondition(condition);
     }
 
     public void ClearConditions()
     {
-        for (int i = _conditions.Count - 1; i >= 0; i--)
-            _conditions[i].OnEnd();
+        if (_conditions.Count == 0) return;
 
+        // OnEnd에서 리스트를 건드릴 수 있으니 먼저 비우고 정리한다.
+        ConditionBase[] snapshot = _conditions.ToArray();
         _conditions.Clear();
+
+        for (int i = 0; i < snapshot.Length; i++)
+            EndCondition(snapshot[i]);
     }
 
     private void Update()
     {
         float deltaTime = Time.deltaTime;
 
-        // OnEnd에서 리스트가 바뀔 수 있으니 뒤에서부터 순회한다.
         for (int i = _conditions.Count - 1; i >= 0; i--)
         {
+            if (i >= _conditions.Count) continue;
+
             ConditionBase condition = _conditions[i];
             condition.OnUpdate(deltaTime);
 
             if (!condition.IsFinished) continue;
 
-            _conditions.RemoveAt(i);
-            condition.OnEnd();
+            _conditions.Remove(condition);
+            EndCondition(condition);
         }
     }
 
-    private ConditionBase GetCondition(Type type)
+    private void EndCondition(ConditionBase condition)
     {
-        for (int i = 0; i < _conditions.Count; i++)
-        {
-            if (_conditions[i].GetType() == type)
-                return _conditions[i];
-        }
-
-        return null;
+        condition.OnEnd();
+        OnConditionRemovedEvent?.Invoke(condition);
     }
 }

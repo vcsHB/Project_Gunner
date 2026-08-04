@@ -6,9 +6,9 @@ public static class DamageHandler
     public const float SuperCriticalMultiplier = 3f;
 
     /// <summary>
-    /// 방어력 1당 감소율. defense 100이면 데미지가 절반이 된다.
+    /// 방어력으로 아무리 깎여도 이만큼은 들어간다. 원래 데미지가 이보다 작으면 원래 데미지가 하한이다.
     /// </summary>
-    public const float DefenseConstant = 100f;
+    public const float MinDamage = 1f;
 
     /// <summary>
     /// 치명타를 굴려 최종 데미지를 만든다.
@@ -49,12 +49,16 @@ public static class DamageHandler
     }
 
     /// <summary>
-    /// 방어력을 적용한 최종 피해량. 방어력이 아무리 높아도 0 아래로는 내려가지 않는다.
+    /// 방어력(깡 차감) → 피해 저항(% 감소) 순으로 적용한 최종 피해량.
     /// </summary>
-    public static float ApplyDefense(float damage, float defense)
+    public static float CalculateFinalDamage(float damage, float defense, float damageResistance)
     {
-        if (defense <= 0f) return damage;
+        if (damage <= 0f) return 0f;
 
-        return damage * (DefenseConstant / (DefenseConstant + defense));
+        // 방어력이 아무리 높아도 MinDamage(혹은 원래 데미지)는 들어간다.
+        float floor = Mathf.Min(damage, MinDamage);
+        float afterDefense = Mathf.Max(damage - defense, floor);
+
+        return afterDefense * (1f - Mathf.Clamp01(damageResistance));
     }
 }

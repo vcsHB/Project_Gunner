@@ -52,7 +52,8 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
             return DamageResponse.Miss;
 
         float defense = _status != null ? _status.Defense.TotalValue : 0f;
-        float finalDamage = DamageHandler.ApplyDefense(damageData.damage, defense);
+        float resistance = _status != null ? _status.DamageResistance.TotalValue : 0f;
+        float finalDamage = DamageHandler.CalculateFinalDamage(damageData.damage, defense, resistance);
 
         SetHealth(_currentHealth - finalDamage);
         OnDamagedEvent?.Invoke(damageData);
