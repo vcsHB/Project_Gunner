@@ -8,7 +8,8 @@ public enum StatusType
     Defense,
     CriticalRate,
     DamageResistance,
-    IsResist
+    IsResist,
+    MoveSpeed
 }
 
 public class AgentStatus : MonoBehaviour, IAgentComponent
@@ -19,6 +20,7 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     [SerializeField] private Status<float> criticalRate = new(0f); // 0 ~ 1
     [SerializeField] private Status<float> damageResistance = new(0f); // 받는 피해 감소율 0 ~ 1
     [SerializeField] private Status<bool> isResist = new(false); // 상태이상 면역
+    [SerializeField] private Status<float> moveSpeed = new(5f);
 
     public Status<float> Damage => damage;
     public Status<float> Health => health;
@@ -26,6 +28,7 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     public Status<float> CriticalRate => criticalRate;
     public Status<float> DamageResistance => damageResistance;
     public Status<bool> IsResist => isResist;
+    public Status<float> MoveSpeed => moveSpeed;
 
     private Dictionary<StatusType, StatusBase> _statuses;
 
@@ -43,6 +46,7 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
             { StatusType.CriticalRate, criticalRate },
             { StatusType.DamageResistance, damageResistance },
             { StatusType.IsResist, isResist },
+            { StatusType.MoveSpeed, moveSpeed },
         };
     }
 

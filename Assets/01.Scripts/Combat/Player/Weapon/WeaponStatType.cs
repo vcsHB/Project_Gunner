@@ -1,6 +1,6 @@
 /// <summary>
 /// 무기 스탯 종류. 모든 무기가 전부 갖고 있고, 안 쓰는 값은 그냥 참조하지 않는다.
-/// 파츠가 어느 스탯을 건드릴지 지목하는 키로 쓴다.
+/// 파츠와 개량이 어느 스탯을 건드릴지 지목하는 키로 쓴다.
 ///
 /// WeaponStatus가 이 값을 배열 인덱스로 쓰므로 값이 0부터 빈틈없이 이어져야 한다.
 /// 중간에 끼워 넣지 말고 뒤에 추가할 것.
@@ -21,6 +21,7 @@ public enum WeaponStatType
 
     Recoil,
     Spread,
+    BurstCount,
 
     ProjectileCount,
     ProjectileSpeed,

@@ -14,8 +14,22 @@ public abstract class ItemDataSO : ScriptableObject
     [field: SerializeField] public ItemCategoryType ItemCategory { get; private set; }
     [field: SerializeField] public Sprite IconSprite { get; private set; }
 
+    [Tooltip("한 칸에 겹칠 수 있는 최대 개수. 무기처럼 개별 상태를 갖는 것은 1로 둔다.")]
+    [SerializeField, Min(1)] private int _maxStackCount = 1;
+
     public string itemName; // TODO...for long future. Localization.
     [TextArea] public string itemDescription;
+
+    public int MaxStackCount => _maxStackCount;
+    public bool IsStackable => _maxStackCount > 1;
+
+    /// <summary>
+    /// 개체마다 다른 상태를 갖는 아이템인지. true면 인벤토리에서 한 칸을 혼자 쓴다.
+    /// </summary>
+    public virtual bool RequiresInstance => false;
+
+    /// <summary>RequiresInstance가 true인 아이템만 구현한다.</summary>
+    public virtual ItemInstance CreateRuntimeInstance() => null;
 
     public uint Id => _id;
     public bool IsRegistered => _id != 0;

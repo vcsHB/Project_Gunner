@@ -22,6 +22,7 @@ public class WeaponStatDefaults
     [Header("조작감")]
     public float recoil = 1f;
     public float spread = 0f;
+    public float burstCount = 3f;
 
     [Header("투사체")]
     public float projectileCount = 1f;
@@ -48,6 +49,7 @@ public class WeaponStatDefaults
 
             case WeaponStatType.Recoil: return recoil;
             case WeaponStatType.Spread: return spread;
+            case WeaponStatType.BurstCount: return burstCount;
 
             case WeaponStatType.ProjectileCount: return projectileCount;
             case WeaponStatType.ProjectileSpeed: return projectileSpeed;

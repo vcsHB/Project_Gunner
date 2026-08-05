@@ -3,11 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
+public enum ModifierMode
+{
+    /// <summary>기본값에 그대로 더한다.</summary>
+    Additive = 0,
+
+    /// <summary>비율로 더한다. 0.2면 +20%, -0.1이면 -10%.</summary>
+    Percent = 1,
+}
+
 public struct ModifierData<T>
 {
     public object origin;
     public T value;
-
+    public ModifierMode mode;
 }
 
 /// <summary>
@@ -65,12 +74,13 @@ public class Status<T> : StatusBase
         SetDirty();
     }
 
-    public void AddModifier(object origin, T value)
+    public void AddModifier(object origin, T value, ModifierMode mode = ModifierMode.Additive)
     {
         _modifiers.Add(new ModifierData<T>
         {
             origin = origin,
-            value = value
+            value = value,
+            mode = mode
         });
 
         SetDirty();
@@ -122,22 +132,38 @@ internal static class StatusCombiner
         Func<TConcrete, List<ModifierData<TConcrete>>, TConcrete> combine)
         => (Func<T, List<ModifierData<T>>, T>)(object)combine;
 
+    // (기본값 + 덧셈 전부) * (1 + 비율 전부)
+    // 덧셈을 먼저 다 적용한 뒤 비율을 곱하므로, 적용 순서에 따라 결과가 달라지지 않는다.
     private static float CombineFloat(float defaultValue, List<ModifierData<float>> modifiers)
     {
         float total = defaultValue;
-        for (int i = 0; i < modifiers.Count; i++)
-            total += modifiers[i].value;
+        float percent = 0f;
 
-        return total;
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            if (modifiers[i].mode == ModifierMode.Percent)
+                percent += modifiers[i].value;
+            else
+                total += modifiers[i].value;
+        }
+
+        return total * (1f + percent);
     }
 
     private static int CombineInt(int defaultValue, List<ModifierData<int>> modifiers)
     {
         int total = defaultValue;
-        for (int i = 0; i < modifiers.Count; i++)
-            total += modifiers[i].value;
+        float percent = 0f;
 
-        return total;
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            if (modifiers[i].mode == ModifierMode.Percent)
+                percent += modifiers[i].value;
+            else
+                total += modifiers[i].value;
+        }
+
+        return Mathf.RoundToInt(total * (1f + percent));
     }
 
     // bool은 하나라도 true면 true. (면역/저항 같은 플래그용)
