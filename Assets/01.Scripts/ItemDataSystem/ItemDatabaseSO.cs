@@ -33,12 +33,12 @@ public class ItemDatabaseSO : ScriptableObject
             if (s_instance != null) return s_instance;
             if (s_loadFailed) return null;
 
-            s_instance = Resources.Load<ItemDatabaseSO>(ResourceName);
+            s_instance = ResourceLocator.LoadSingle<ItemDatabaseSO>(ResourceName);
             if (s_instance == null)
             {
                 s_loadFailed = true;
-                Debug.LogError($"[ItemDatabase] Resources/{ResourceName}.asset 이 없습니다. " +
-                               "SO/Item/ItemDatabase로 만들어 Resources 폴더에 두세요.");
+                Debug.LogError($"[ItemDatabase] Resources 안에 {ResourceName} 에셋이 없습니다. " +
+                               "SO/Item/ItemDatabase로 만들어 Resources 폴더(하위 폴더 가능)에 두세요.");
             }
 
             return s_instance;

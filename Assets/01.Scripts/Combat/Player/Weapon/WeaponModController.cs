@@ -1,23 +1,24 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 무기 인스턴스 하나의 파츠 장착 현황.
+/// 살아있는 무기 오브젝트를 개체 상태에 맞춰 따라가게 한다.
 ///
-/// 스탯 적용/해제는 파츠에 프리팹이 있든 없든 전부 여기서만 한다.
-/// 프리팹 쪽에서 따로 만지게 두면 경로가 둘로 갈려서 반드시 어긋난다.
-/// modifier의 origin은 파츠 SO 자신이다.
+/// 파츠·개량의 <b>주인은 WeaponItemInstance</b>이고 여기는 반영만 한다.
+/// 상태를 여기서 들고 있으면 인벤토리에 있는(오브젝트가 없는) 무기를 모딩할 수 없다.
+///
+/// 스탯 적용은 파츠에 프리팹이 있든 없든 전부 여기서만 한다.
+/// WeaponPartBehaviour 쪽에서 따로 만지게 두면 경로가 둘로 갈려서 반드시 어긋난다.
 /// </summary>
 public class WeaponModController
 {
-    public event Action<WeaponPartSlotType, WeaponPartDataSO> OnPartChangedEvent;
-
     private readonly PlayerWeaponBase _weapon;
     private readonly WeaponStatus _status;
 
-    private readonly Dictionary<WeaponPartSlotType, WeaponPartDataSO> _parts = new();
+    private readonly Dictionary<WeaponPartSlotType, WeaponPartDataSO> _appliedParts = new();
     private readonly Dictionary<WeaponPartSlotType, WeaponPartBehaviour> _behaviours = new();
+
+    private WeaponItemInstance _instance;
 
     public WeaponModController(PlayerWeaponBase weapon, WeaponStatus status)
     {
@@ -25,74 +26,49 @@ public class WeaponModController
         _status = status;
     }
 
-    public IReadOnlyDictionary<WeaponPartSlotType, WeaponPartDataSO> Parts => _parts;
+    public WeaponItemInstance Instance => _instance;
 
     public WeaponPartDataSO Get(WeaponPartSlotType slot)
-        => _parts.TryGetValue(slot, out WeaponPartDataSO part) ? part : null;
+        => _instance != null ? _instance.GetPart(slot) : null;
 
     public WeaponPartBehaviour GetBehaviour(WeaponPartSlotType slot)
         => _behaviours.TryGetValue(slot, out WeaponPartBehaviour behaviour) ? behaviour : null;
 
-    public bool CanAttach(WeaponPartDataSO part) => string.IsNullOrEmpty(GetBlockReason(part));
-
-    /// <summary>못 끼우는 이유. 끼울 수 있으면 빈 문자열. UI에서 그대로 보여주면 된다.</summary>
-    public string GetBlockReason(WeaponPartDataSO part)
+    public void Bind(WeaponItemInstance instance)
     {
-        if (part == null) return "파츠가 없습니다.";
+        if (_instance == instance) return;
 
-        string reason = part.GetIncompatibleReason(_weapon.Data);
-        if (!string.IsNullOrEmpty(reason)) return reason;
+        Unbind();
+        _instance = instance;
 
-        // modifier를 파츠 SO로 식별하므로 같은 파츠가 두 슬롯에 들어가면 해제가 꼬인다.
-        foreach (KeyValuePair<WeaponPartSlotType, WeaponPartDataSO> pair in _parts)
+        if (_instance == null) return;
+
+        _instance.OnPartChangedEvent += HandlePartChanged;
+        _instance.OnUpgradeChangedEvent += HandleUpgradeChanged;
+
+        ApplyAll();
+    }
+
+    /// <summary>
+    /// 무기 오브젝트가 사라질 때 호출한다.
+    /// 개체 상태는 건드리지 않는다. 여기서 파츠를 떼면 저장된 모딩이 통째로 날아간다.
+    /// </summary>
+    public void Unbind()
+    {
+        if (_instance != null)
         {
-            if (pair.Value == part && pair.Key != part.Slot)
-                return "같은 파츠가 이미 장착되어 있습니다.";
+            _instance.OnPartChangedEvent -= HandlePartChanged;
+            _instance.OnUpgradeChangedEvent -= HandleUpgradeChanged;
+            _instance = null;
         }
 
-        return string.Empty;
-    }
+        foreach (WeaponPartSlotType slot in new List<WeaponPartSlotType>(_behaviours.Keys))
+            DespawnBehaviour(slot);
 
-    public bool Attach(WeaponPartDataSO part)
-    {
-        string reason = GetBlockReason(part);
-        if (!string.IsNullOrEmpty(reason))
-        {
-            Debug.LogWarning($"[WeaponMod] {part?.DisplayName} 장착 불가 - {reason}");
-            return false;
-        }
+        foreach (WeaponPartDataSO part in _appliedParts.Values)
+            WeaponStatusBuilder.Remove(_status, part);
 
-        // 같은 슬롯에 이미 있으면 갈아끼운다.
-        Detach(part.Slot);
-
-        _parts[part.Slot] = part;
-        ApplyDeltas(part);
-        SpawnBehaviour(part);
-
-        OnPartChangedEvent?.Invoke(part.Slot, part);
-        return true;
-    }
-
-    public bool Detach(WeaponPartSlotType slot)
-    {
-        if (!_parts.TryGetValue(slot, out WeaponPartDataSO part)) return false;
-
-        DespawnBehaviour(slot);
-        _status.RemoveModifiers(part);
-        _parts.Remove(slot);
-
-        OnPartChangedEvent?.Invoke(slot, null);
-        return true;
-    }
-
-    public void DetachAll()
-    {
-        // 순회 중에 컬렉션이 바뀌므로 슬롯 목록을 먼저 뜬다.
-        WeaponPartSlotType[] slots = new WeaponPartSlotType[_parts.Count];
-        _parts.Keys.CopyTo(slots, 0);
-
-        for (int i = 0; i < slots.Length; i++)
-            Detach(slots[i]);
+        _appliedParts.Clear();
     }
 
     /// <summary>무기 기본 모드 + 파츠가 추가한 모드. results를 비우고 채운다.</summary>
@@ -107,7 +83,9 @@ public class WeaponModController
                 results.Add(baseModes[i]);
         }
 
-        foreach (WeaponPartDataSO part in _parts.Values)
+        if (_instance == null) return;
+
+        foreach (WeaponPartDataSO part in _instance.Parts.Values)
         {
             IReadOnlyList<WeaponFireMode> added = part.AddFireModes;
             for (int i = 0; i < added.Count; i++)
@@ -118,41 +96,69 @@ public class WeaponModController
         }
     }
 
-    private void ApplyDeltas(WeaponPartDataSO part)
+    private void ApplyAll()
     {
-        IReadOnlyList<WeaponStatDelta> deltas = part.Deltas;
+        foreach (KeyValuePair<WeaponUpgradeSO, int> pair in _instance.Upgrades)
+            WeaponStatusBuilder.ApplyUpgrade(_status, pair.Key, pair.Value);
 
-        for (int i = 0; i < deltas.Count; i++)
-        {
-            WeaponStatDelta delta = deltas[i];
-            if (!delta.IsValid) continue;
+        foreach (KeyValuePair<WeaponPartSlotType, WeaponPartDataSO> pair in _instance.Parts)
+            ApplyPart(pair.Key, pair.Value);
 
-            _status.Get(delta.type)?.AddModifier(part, delta.value, delta.mode);
-        }
+        _weapon.ValidateFireMode();
     }
 
-    private void SpawnBehaviour(WeaponPartDataSO part)
+    private void HandlePartChanged(WeaponPartSlotType slot, WeaponPartDataSO part)
+    {
+        if (_appliedParts.TryGetValue(slot, out WeaponPartDataSO old))
+        {
+            WeaponStatusBuilder.Remove(_status, old);
+            _appliedParts.Remove(slot);
+        }
+
+        DespawnBehaviour(slot);
+
+        if (part != null)
+            ApplyPart(slot, part);
+
+        _weapon.ValidateFireMode();
+    }
+
+    private void HandleUpgradeChanged(WeaponUpgradeSO upgrade, int level)
+    {
+        // 단계는 누적이 아니라 교체다. 이전 단계를 먼저 전부 걷어낸다.
+        WeaponStatusBuilder.Remove(_status, upgrade);
+        WeaponStatusBuilder.ApplyUpgrade(_status, upgrade, level);
+    }
+
+    private void ApplyPart(WeaponPartSlotType slot, WeaponPartDataSO part)
+    {
+        if (part == null) return;
+
+        _appliedParts[slot] = part;
+        WeaponStatusBuilder.ApplyPart(_status, part);
+
+        SpawnBehaviour(slot, part);
+    }
+
+    private void SpawnBehaviour(WeaponPartSlotType slot, WeaponPartDataSO part)
     {
         if (part.BehaviourPrefab == null) return;
 
         WeaponPartBehaviour behaviour =
-            UnityEngine.Object.Instantiate(part.BehaviourPrefab, _weapon.GetMountPoint(part.Slot));
+            Object.Instantiate(part.BehaviourPrefab, _weapon.GetMountPoint(slot));
 
         behaviour.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
-        _behaviours[part.Slot] = behaviour;
+        _behaviours[slot] = behaviour;
         behaviour.OnAttached(_weapon, part);
     }
 
     private void DespawnBehaviour(WeaponPartSlotType slot)
     {
-        if (!_behaviours.TryGetValue(slot, out WeaponPartBehaviour behaviour)) return;
-
-        _behaviours.Remove(slot);
-
+        if (!_behaviours.Remove(slot, out WeaponPartBehaviour behaviour)) return;
         if (behaviour == null) return;
 
         behaviour.OnDetached();
-        UnityEngine.Object.Destroy(behaviour.gameObject);
+        Object.Destroy(behaviour.gameObject);
     }
 }

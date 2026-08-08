@@ -21,19 +21,16 @@ public abstract class PlayerWeaponBase : MonoBehaviour
 
     public PlayerWeaponDataSO Data { get; private set; }
 
-    /// <summary>이 무기 인스턴스만의 스탯. 개량과 파츠 modifier가 여기에 붙는다.</summary>
+    /// <summary>이 무기 오브젝트의 스탯. 개량과 파츠 modifier가 여기에 붙는다.</summary>
     public WeaponStatus Status { get; private set; }
 
-    /// <summary>이 무기 인스턴스의 개량 현황.</summary>
-    public WeaponUpgradeState Upgrades { get; private set; }
-
-    /// <summary>이 무기 인스턴스의 파츠 장착 현황.</summary>
+    /// <summary>개체 상태를 이 오브젝트에 반영해주는 쪽. 상태 자체는 Instance가 갖는다.</summary>
     public WeaponModController Mods { get; private set; }
 
     /// <summary>이 무기를 들고 있는 주체.</summary>
     public Agent Owner { get; private set; }
 
-    /// <summary>인벤토리에 들어가도 유지되어야 하는 개체 상태. 없을 수도 있다.</summary>
+    /// <summary>파츠·개량의 주인. 인벤토리에 들어가도 유지된다.</summary>
     public WeaponItemInstance Instance { get; private set; }
 
     public bool IsEquipped { get; private set; }
@@ -50,34 +47,21 @@ public abstract class PlayerWeaponBase : MonoBehaviour
         Data = data;
         Owner = owner;
         Status = new WeaponStatus(data.Stats);
-        Upgrades = new WeaponUpgradeState(data, Status);
-        Mods = new WeaponModController(this, Status);
 
         CurrentFireMode = data.DefaultFireMode;
 
-        Instance = instance;
-        if (instance == null) return;
+        // 개체 상태가 없으면 임시로 하나 만든다. 없으면 이 무기는 모딩이 아예 불가능해진다.
+        Instance = instance ?? WeaponItemInstance.CreateDetached(data);
 
-        // 저장된 상태를 먼저 되돌린 뒤에 구독한다. 복원 중에 다시 기록할 필요는 없다.
-        instance.ApplyTo(this);
-
-        Mods.OnPartChangedEvent += HandleModChanged;
-        Upgrades.OnUpgradeChangedEvent += HandleUpgradeChanged;
+        Mods = new WeaponModController(this, Status);
+        Mods.Bind(Instance);
     }
 
     protected virtual void OnDestroy()
     {
-        if (Instance == null) return;
-
-        Mods.OnPartChangedEvent -= HandleModChanged;
-        Upgrades.OnUpgradeChangedEvent -= HandleUpgradeChanged;
+        // 개체 상태는 건드리지 않는다. 여기서 파츠를 떼면 저장된 모딩이 날아간다.
+        Mods?.Unbind();
     }
-
-    // 파츠나 개량이 바뀌는 즉시 개체 상태에 옮겨 적는다.
-    // 이래야 무기를 인벤토리에 넣는 시점을 신경 쓸 필요가 없다.
-    private void HandleModChanged(WeaponPartSlotType slot, WeaponPartDataSO part) => Instance.CaptureFrom(this);
-
-    private void HandleUpgradeChanged(WeaponUpgradeSO upgrade, int level) => Instance.CaptureFrom(this);
 
     /// <summary>슬롯에 장착되어 손에 들렸을 때.</summary>
     public virtual void OnEquipped()

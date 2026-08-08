@@ -185,7 +185,7 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
         if (weapon.IsEquipped)
             weapon.OnUnequipped();
 
-        weapon.Mods?.DetachAll();
+        // 파츠를 떼지 않는다. 개체 상태는 오브젝트가 사라져도 남아야 한다.
         Destroy(weapon.gameObject);
     }
 

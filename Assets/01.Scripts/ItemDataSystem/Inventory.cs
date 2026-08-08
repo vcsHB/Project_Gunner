@@ -5,7 +5,7 @@ using UnityEngine;
 /// 칸 기반 인벤토리. MonoBehaviour가 아니라 순수 로직이라 테스트와 저장이 쉽다.
 /// UI는 OnSlotChangedEvent만 구독하면 된다.
 /// </summary>
-public class Inventory
+public class Inventory : IItemSlotContainer
 {
     public event Action<int> OnSlotChangedEvent;
 
@@ -189,6 +189,85 @@ public class Inventory
             OnSlotChangedEvent?.Invoke(i);
         }
     }
+
+    #region IItemSlotContainer
+
+    public ItemStack Peek(int slotKey) => this[slotKey];
+
+    public bool CanAccept(int slotKey, ItemStack stack, out string reason)
+    {
+        reason = string.Empty;
+
+        if (!IsValidIndex(slotKey))
+        {
+            reason = "없는 칸입니다.";
+            return false;
+        }
+
+        if (stack.IsEmpty)
+        {
+            reason = "빈 아이템입니다.";
+            return false;
+        }
+
+        // 일반 인벤토리 칸은 종류를 가리지 않는다.
+        return true;
+    }
+
+    public ItemStack Take(int slotKey, int count)
+    {
+        if (!IsValidIndex(slotKey) || count <= 0) return ItemStack.Empty;
+
+        ItemStack slot = _slots[slotKey];
+        if (slot.IsEmpty) return ItemStack.Empty;
+
+        // 개체 상태가 있는 아이템은 쪼갤 수 없다. 인스턴스가 하나뿐이기 때문이다.
+        count = slot.HasInstance ? slot.count : Mathf.Clamp(count, 1, slot.count);
+
+        ItemStack taken = new(slot.itemId, count, slot.instanceId);
+
+        slot.count -= count;
+        _slots[slotKey] = slot.count <= 0 ? ItemStack.Empty : slot;
+        OnSlotChangedEvent?.Invoke(slotKey);
+
+        return taken;
+    }
+
+    public ItemStack Place(int slotKey, ItemStack stack)
+    {
+        if (!IsValidIndex(slotKey) || stack.IsEmpty) return stack;
+
+        ItemStack slot = _slots[slotKey];
+        int maxStack = GetMaxStack(stack.itemId);
+
+        if (slot.IsEmpty)
+        {
+            int moved = stack.HasInstance ? 1 : Mathf.Min(maxStack, stack.count);
+
+            _slots[slotKey] = new ItemStack(stack.itemId, moved, stack.instanceId);
+            OnSlotChangedEvent?.Invoke(slotKey);
+
+            stack.count -= moved;
+            return stack.count <= 0 ? ItemStack.Empty : stack;
+        }
+
+        // 다른 아이템이거나 개체 아이템끼리면 겹칠 수 없다.
+        if (!slot.CanMergeWith(stack)) return stack;
+
+        int space = maxStack - slot.count;
+        if (space <= 0) return stack;
+
+        int merged = Mathf.Min(space, stack.count);
+
+        slot.count += merged;
+        _slots[slotKey] = slot;
+        OnSlotChangedEvent?.Invoke(slotKey);
+
+        stack.count -= merged;
+        return stack.count <= 0 ? ItemStack.Empty : stack;
+    }
+
+    #endregion
 
     private bool IsValidIndex(int index) => index >= 0 && index < _slots.Length;
 

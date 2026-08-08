@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e73577e8272034c4e8e39fed2052b455, type: 3}
+  m_Name: Item_PlayerWeapon_Glock7
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponDataSO
+  _id: 1
+  <ItemGrade>k__BackingField: 0
+  <ItemCategory>k__BackingField: 0
+  <IconSprite>k__BackingField: {fileID: 0}
+  itemName: Glock7
+  itemDescription: 
+  playerWeaponPrefab: {fileID: 0}
+  _category: 0
+  _partSlots: 040000000100000003000000
+  _stats:
+    damage: 10
+    attackCooltime: 0.2
+    range: 10
+    maxTargetCount: 1
+    criticalRate: 0
+    magazineSize: 12
+    reloadTime: 1.5
+    recoil: 1
+    spread: 0
+    projectileCount: 1
+    projectileSpeed: 20
+    penetration: 0
+    chargeTime: 0
+    explosionRadius: 0
+    knockback: 0

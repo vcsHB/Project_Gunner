@@ -48,6 +48,7 @@ public class PlayerAimPoint : MonoBehaviour
         public AimPointVisual Scope_Optical1;
 
     }
+    [System.Serializable]
     private class AimPointVisual
     {
         public Sprite icon;

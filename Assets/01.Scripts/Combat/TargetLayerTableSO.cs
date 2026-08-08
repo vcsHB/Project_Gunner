@@ -38,12 +38,12 @@ public class TargetLayerTableSO : ScriptableObject
             if (s_instance != null) return s_instance;
             if (s_loadFailed) return null;
 
-            s_instance = Resources.Load<TargetLayerTableSO>(ResourceName);
+            s_instance = ResourceLocator.LoadSingle<TargetLayerTableSO>(ResourceName);
             if (s_instance == null)
             {
                 s_loadFailed = true;
-                Debug.LogError($"[TargetLayerTable] Resources/{ResourceName}.asset 이 없습니다. " +
-                               "SO/Combat/TargetLayerTable로 만들어 Resources 폴더에 두세요.");
+                Debug.LogError($"[TargetLayerTable] Resources 안에 {ResourceName} 에셋이 없습니다. " +
+                               "SO/Combat/TargetLayerTable로 만들어 Resources 폴더(하위 폴더 가능)에 두세요.");
             }
 
             return s_instance;
