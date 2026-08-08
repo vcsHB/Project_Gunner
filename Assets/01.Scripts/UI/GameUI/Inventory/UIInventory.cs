@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class PartInventory : MonoBehaviour
+public class UIInventory : MonoBehaviour
 {
     [SerializeField] private CellInventorySlot[] _inventorySlots;
-
+    
     
 }

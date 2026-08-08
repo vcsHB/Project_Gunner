@@ -1,0 +1,329 @@
+fileFormatVersion: 2
+guid: 4367118793a2c6742ab0b6f02594e264
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6527271261186847958
+    second: Icon_AimPoint_2_0
+  - first:
+      213: 1099873021518683665
+    second: Icon_AimPoint_2_1
+  - first:
+      213: -852903687149374523
+    second: Icon_AimPoint_2_2
+  - first:
+      213: -473034081689460488
+    second: Icon_AimPoint_2_3
+  - first:
+      213: -627918021398851913
+    second: Icon_AimPoint_2_4
+  - first:
+      213: 3906328305333136984
+    second: Icon_AimPoint_2_5
+  - first:
+      213: 3163941055671336570
+    second: Icon_AimPoint_2_6
+  - first:
+      213: 1017220641135669531
+    second: Icon_AimPoint_2_7
+  - first:
+      213: 717397930795052384
+    second: Icon_AimPoint_2_8
+  - first:
+      213: 6363350695265534454
+    second: Icon_AimPoint_2_9
+  - first:
+      213: 6327883086625552827
+    second: Icon_AimPoint_2_10
+  - first:
+      213: 663663208976148397
+    second: Icon_AimPoint_2_11
+  - first:
+      213: 1645775161597968934
+    second: Icon_AimPoint_2_12
+  - first:
+      213: -832526613845264527
+    second: Icon_AimPoint_2_13
+  - first:
+      213: -2068444406744696408
+    second: Icon_AimPoint_2_14
+  - first:
+      213: 2236296629253311858
+    second: Icon_AimPoint_2_15
+  - first:
+      213: -1136377230104056009
+    second: Icon_AimPoint_2_16
+  - first:
+      213: 5233632467446376275
+    second: Icon_AimPoint_2_17
+  - first:
+      213: -6659088850206494898
+    second: Icon_AimPoint_2_18
+  - first:
+      213: -310231171492373862
+    second: Icon_AimPoint_2_19
+  - first:
+      213: -3183532560133144614
+    second: Icon_AimPoint_2_20
+  - first:
+      213: 3239119555679300738
+    second: Icon_AimPoint_2_21
+  - first:
+      213: 6324533334013911787
+    second: Icon_AimPoint_2_22
+  - first:
+      213: -2065947769540246719
+    second: Icon_AimPoint_2_23
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 128
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Icon_AimPoint_2_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d478ab01a6859a50800000000000000
+      internalID: 6527271261186847958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_AimPoint_2_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 11e18a98fa8834f00800000000000000
+      internalID: 1099873021518683665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_AimPoint_2_2
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c337db8d90e924f0800000000000000
+      internalID: -852903687149374523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_AimPoint_2_3
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 96
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f02f3a42027f69f0800000000000000
+      internalID: -473034081689460488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_AimPoint_2_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7be847ae2ef2947f0800000000000000
+      internalID: -627918021398851913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon_AimPoint_2_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 64
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85e6f67a5e0163630800000000000000
+      internalID: 3906328305333136984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 91d42f06a5245a446b8f8a3bd916b08f
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":32.0,"y":32.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Icon_AimPoint_2_0: 6527271261186847958
+      Icon_AimPoint_2_1: 1099873021518683665
+      Icon_AimPoint_2_2: -852903687149374523
+      Icon_AimPoint_2_3: -473034081689460488
+      Icon_AimPoint_2_4: -627918021398851913
+      Icon_AimPoint_2_5: 3906328305333136984
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

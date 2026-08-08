@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PartHudHotBar : MonoBehaviour
+public class PartHudHotbar : MonoBehaviour
 {
-    
+
 }

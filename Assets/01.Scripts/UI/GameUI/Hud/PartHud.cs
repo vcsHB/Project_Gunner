@@ -2,8 +2,9 @@ using UnityEngine;
 
 public class PartHud : MonoBehaviour
 {
-    [SerializeField] private PartHudHotBar _hotbar;
+    [SerializeField] private PartPlayerStatus _partPlayerStatus;
+    [SerializeField] private PartHudHotbar _partHotbar;
 
 
-    
+
 }
