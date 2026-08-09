@@ -50,6 +50,7 @@ public class UIInventory : MonoBehaviour
         }
 
         _inventory.OnSlotChangedEvent += HandleSlotChanged;
+        _inventory.OnCapacityChangedEvent += RefreshAll;
         RefreshAll();
     }
 
@@ -58,6 +59,7 @@ public class UIInventory : MonoBehaviour
         if (_inventory == null) return;
 
         _inventory.OnSlotChangedEvent -= HandleSlotChanged;
+        _inventory.OnCapacityChangedEvent -= RefreshAll;
         _inventory = null;
     }
 

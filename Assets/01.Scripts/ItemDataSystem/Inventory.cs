@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -9,7 +10,10 @@ public class Inventory : IItemSlotContainer
 {
     public event Action<int> OnSlotChangedEvent;
 
-    private readonly ItemStack[] _slots;
+    /// <summary>칸 수 자체가 바뀌었을 때. UI는 전체를 다시 그려야 한다.</summary>
+    public event Action OnCapacityChangedEvent;
+
+    private ItemStack[] _slots;
 
     public Inventory(int capacity)
     {
@@ -17,6 +21,44 @@ public class Inventory : IItemSlotContainer
     }
 
     public int Capacity => _slots.Length;
+
+    /// <summary>
+    /// 칸 수를 바꾼다. 가방을 끼고 빼는 식으로 스탯이 변할 때 호출한다.
+    ///
+    /// 줄어들면 잘려나간 칸의 아이템을 남은 칸으로 밀어 넣고,
+    /// 그래도 못 넣은 것은 overflow에 담아 돌려준다. 조용히 지우지 않는다.
+    /// </summary>
+    public void Resize(int newCapacity, List<ItemStack> overflow = null)
+    {
+        newCapacity = Mathf.Max(1, newCapacity);
+        if (newCapacity == _slots.Length) return;
+
+        ItemStack[] old = _slots;
+        int keep = Mathf.Min(old.Length, newCapacity);
+
+        _slots = new ItemStack[newCapacity];
+        Array.Copy(old, _slots, keep);
+
+        for (int i = keep; i < old.Length; i++)
+        {
+            if (old[i].IsEmpty) continue;
+
+            ItemStack left = PlaceAnywhere(old[i]);
+            if (!left.IsEmpty)
+                overflow?.Add(left);
+        }
+
+        OnCapacityChangedEvent?.Invoke();
+    }
+
+    /// <summary>빈 자리를 찾아 넣고 남은 것을 반환한다.</summary>
+    private ItemStack PlaceAnywhere(ItemStack stack)
+    {
+        for (int i = 0; i < _slots.Length && !stack.IsEmpty; i++)
+            stack = Place(i, stack);
+
+        return stack;
+    }
 
     public ItemStack this[int index] => IsValidIndex(index) ? _slots[index] : ItemStack.Empty;
 

@@ -8,4 +8,8 @@
 public enum PoolType
 {
     None = 0,
+
+    // Unnamed
+    Bullet_0 = 1,
+    WorldItem = 2,
 }
