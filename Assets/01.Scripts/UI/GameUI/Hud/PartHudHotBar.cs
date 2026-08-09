@@ -2,46 +2,56 @@ using UnityEngine;
 
 /// <summary>
 /// 인벤토리 앞 7칸을 핫바로 보여준다. 칸을 고르면 그게 손에 든 것이 된다.
+/// 칸은 InventoryLayout.HotbarSize에 맞춰 자동으로 만들어진다.
 /// </summary>
 public class PartHudHotbar : MonoBehaviour
 {
-    [SerializeField] private CellHotbarSlot[] _slots;
+    [Tooltip("모자란 칸을 찍어낼 프리팹. CellHotbarSlot이어야 한다.")]
+    [SerializeField] private CellHotbarSlot _cellPrefab;
 
+    [Tooltip("칸이 생성될 부모. 비우면 자기 자신.")]
+    [SerializeField] private RectTransform _cellRoot;
+
+    [Tooltip("이미 만들어 둔 칸이 있으면 여기 등록한다. 비워둬도 루트 자식에서 찾는다.")]
+    [SerializeField] private CellHotbarSlot[] _presetSlots;
+
+    private CellSlotBuilder _builder;
     private Inventory _inventory;
     private PlayerHotbar _hotbar;
 
     private void Awake()
     {
-        if (_slots.Length != InventoryLayout.HotbarSize)
+        if (_cellRoot == null)
+            _cellRoot = transform as RectTransform;
+
+        _builder = new CellSlotBuilder(_cellPrefab, _cellRoot, _presetSlots);
+
+        if (!_builder.Ensure(InventoryLayout.HotbarSize))
         {
             Debug.LogError(
-                $"[Hotbar] 칸이 {_slots.Length}개인데 핫바 크기는 {InventoryLayout.HotbarSize}입니다.", this);
+                $"[Hotbar] 칸이 {InventoryLayout.HotbarSize}개 필요한데 {_builder.Count}개뿐입니다. " +
+                "Cell Prefab을 지정하면 모자란 만큼 자동으로 만듭니다.", this);
         }
 
-        for (int i = 0; i < _slots.Length; i++)
+        for (int i = 0; i < _builder.Count; i++)
         {
-            if (_slots[i] == null) continue;
+            CellInventorySlot cell = _builder[i];
+            if (cell == null) continue;
 
-            _slots[i].SetDisplayIndex(i);
-            _slots[i].Clear();
-            _slots[i].SetActive(false);
+            cell.SetDisplayIndex(i);
+            cell.Clear();
 
             // 숫자키가 아직 없어서 클릭이 유일한 직접 선택 수단이다.
-            _slots[i].OnClickedEvent += HandleCellClicked;
+            cell.OnClickedEvent += HandleCellClicked;
+
+            SetCellActive(i, false);
         }
     }
 
-    private void HandleCellClicked(CellInventorySlot cell)
+    private void SetCellActive(int index, bool active)
     {
-        if (_hotbar == null) return;
-
-        for (int i = 0; i < _slots.Length; i++)
-        {
-            if (_slots[i] != cell) continue;
-
-            _hotbar.Select(i);
-            return;
-        }
+        if (_builder[index] is CellHotbarSlot hotbarCell)
+            hotbarCell.SetActive(active);
     }
 
     public void Bind(Player player)
@@ -87,29 +97,41 @@ public class PartHudHotbar : MonoBehaviour
 
     public void RefreshAll()
     {
-        for (int i = 0; i < _slots.Length; i++)
+        for (int i = 0; i < InventoryLayout.HotbarSize; i++)
         {
-            if (_slots[i] == null) continue;
+            CellInventorySlot cell = _builder[i];
+            if (cell == null) continue;
 
-            _slots[i].Bind(_inventory, i);
+            cell.Bind(_inventory, i);
+        }
+    }
+
+    private void HandleCellClicked(CellInventorySlot cell)
+    {
+        if (_hotbar == null) return;
+
+        for (int i = 0; i < InventoryLayout.HotbarSize; i++)
+        {
+            if (_builder[i] != cell) continue;
+
+            _hotbar.Select(i);
+            return;
         }
     }
 
     private void HandleSlotChanged(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= _slots.Length) return;
-        if (_slots[slotIndex] == null) return;
+        if (slotIndex < 0 || slotIndex >= InventoryLayout.HotbarSize) return;
 
-        _slots[slotIndex].Refresh();
+        CellInventorySlot cell = _builder[slotIndex];
+        if (cell == null) return;
+
+        cell.Refresh();
     }
 
     private void HandleSelectedChanged(int selectedIndex)
     {
-        for (int i = 0; i < _slots.Length; i++)
-        {
-            if (_slots[i] == null) continue;
-
-            _slots[i].SetActive(i == selectedIndex);
-        }
+        for (int i = 0; i < InventoryLayout.HotbarSize; i++)
+            SetCellActive(i, i == selectedIndex);
     }
 }
