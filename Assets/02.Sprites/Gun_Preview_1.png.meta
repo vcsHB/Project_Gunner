@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 013131efd4f953f478bfcb9381384477
+guid: c9a94a537d4ce404d8c051262e775774
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -811009577421398102
-    second: Gun_Preview_0
+      213: 2602383480839570813
+    second: Gun_Preview_1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -72,7 +72,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 128
+    maxTextureSize: 256
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 0
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Gun_Preview_0
+      name: Gun_Preview_1_0
       rect:
         serializedVersion: 2
-        x: 10
-        y: 32
-        width: 106
-        height: 60
+        x: 6
+        y: 103
+        width: 241
+        height: 42
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: aaf9b541617beb4f0800000000000000
-      internalID: -811009577421398102
+      spriteID: d7589c0ecf58d1420800000000000000
+      internalID: 2602383480839570813
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Gun_Preview_0: -811009577421398102
+      Gun_Preview_1_0: 2602383480839570813
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

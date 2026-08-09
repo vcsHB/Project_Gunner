@@ -1,34 +1,27 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 장착된 무기 데이터를 실제 오브젝트로 만들고 손에 들려준다.
+/// 핫바에서 고른 아이템이 무기면 손에 만들어 준다.
 ///
-/// 무기 슬롯마다 인스턴스를 하나씩 만들어 두고 전환할 때 활성화만 바꾼다.
-/// 매번 만들고 부수면 그 무기에 끼워둔 파츠와 개량이 날아간다.
+/// 장착 슬롯을 따로 보지 않는다. "핫바에 넣는 것 = 드는 것"이라 선택 칸만 따라가면 된다.
+/// 파츠·개량 상태는 WeaponItemInstance에 있으므로 오브젝트를 부수고 다시 만들어도 유지된다.
+/// 그래서 살아있는 무기 오브젝트는 한 번에 하나만 두면 충분하다.
 /// </summary>
 public class PlayerWeaponController : MonoBehaviour, IAgentComponent
 {
     [SerializeField] private Transform _weaponHandleRoot;
 
-    [Tooltip("무기를 들 수 있는 슬롯. 순서대로 전환된다.")]
-    [SerializeField]
-    private List<EquipSlotType> _weaponSlots = new()
-    {
-        EquipSlotType.PrimaryWeapon,
-        EquipSlotType.SecondaryWeapon,
-    };
-
     public event Action<PlayerWeaponBase> OnWeaponChangedEvent;
 
-    private readonly Dictionary<EquipSlotType, PlayerWeaponBase> _instances = new();
-
     private Player _player;
-    private EquipmentController _equipment;
+    private PlayerHotbar _hotbar;
+
+    // 같은 아이템이 그대로면 다시 만들지 않기 위한 비교용
+    private uint _currentItemId;
+    private uint _currentInstanceId;
 
     public PlayerWeaponBase Current { get; private set; }
-    public EquipSlotType CurrentSlot { get; private set; } = EquipSlotType.None;
 
     public void Initialize(Agent owner)
     {
@@ -40,81 +33,87 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
 
     public void AfterInitialize()
     {
-        _equipment = _player.GetCompo<EquipmentController>();
+        _hotbar = _player.GetCompo<PlayerHotbar>();
 
-        if (_equipment != null)
-            _equipment.OnEquipChangedEvent += HandleEquipChanged;
+        if (_hotbar != null)
+            _hotbar.OnSelectedChangedEvent += HandleSelectedChanged;
 
         if (_player.Input != null)
-        {
-            _player.Input.OnSlotCycleEvent += CycleWeapon;
             _player.Input.OnAttackEvent += HandleAttack;
-        }
 
-        SwitchTo(FindFirstEquippedSlot());
+        RefreshWeapon();
     }
 
     public void Dispose()
     {
-        if (_equipment != null)
-            _equipment.OnEquipChangedEvent -= HandleEquipChanged;
+        if (_hotbar != null)
+            _hotbar.OnSelectedChangedEvent -= HandleSelectedChanged;
 
         if (_player != null && _player.Input != null)
-        {
-            _player.Input.OnSlotCycleEvent -= CycleWeapon;
             _player.Input.OnAttackEvent -= HandleAttack;
-        }
+
+        DestroyCurrent();
     }
 
-    #region Switching
+    private void HandleSelectedChanged(int selectedIndex) => RefreshWeapon();
 
-    /// <summary>해당 슬롯의 무기를 손에 든다. None이면 전부 내린다.</summary>
-    public void SwitchTo(EquipSlotType slot)
+    private void RefreshWeapon()
     {
-        if (CurrentSlot == slot) return;
+        ItemStack stack = _hotbar != null ? _hotbar.SelectedStack : ItemStack.Empty;
+        PlayerWeaponDataSO data = stack.Resolve<PlayerWeaponDataSO>();
 
-        if (Current != null)
+        if (data == null)
         {
-            Current.OnUnequipped();
-            Current.gameObject.SetActive(false);
+            DestroyCurrent();
+            return;
         }
 
-        CurrentSlot = slot;
-        Current = slot == EquipSlotType.None ? null : GetOrCreate(slot);
+        // 같은 개체를 다시 고른 것이면 그대로 둔다. 매번 부수면 재장전 상태 같은 게 날아간다.
+        if (Current != null && _currentItemId == stack.itemId && _currentInstanceId == stack.instanceId)
+            return;
 
-        if (Current != null)
+        DestroyCurrent();
+        Create(data, stack);
+    }
+
+    private void Create(PlayerWeaponDataSO data, ItemStack stack)
+    {
+        if (data.playerWeaponPrefab == null)
         {
-            Current.gameObject.SetActive(true);
-            Current.OnEquipped();
+            Debug.LogError($"[PlayerWeapon] {data.DisplayName}에 프리팹이 없습니다.", data);
+            return;
         }
+
+        PlayerWeaponBase weapon = Instantiate(data.playerWeaponPrefab, _weaponHandleRoot);
+        weapon.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+        weapon.Initialize(data, _player, stack.ResolveInstance<WeaponItemInstance>());
+        weapon.OnEquipped();
+
+        Current = weapon;
+        _currentItemId = stack.itemId;
+        _currentInstanceId = stack.instanceId;
 
         OnWeaponChangedEvent?.Invoke(Current);
     }
 
-    /// <summary>다음/이전 무기 슬롯으로. 비어있는 슬롯은 건너뛴다.</summary>
-    public void CycleWeapon(int direction)
+    private void DestroyCurrent()
     {
-        if (_weaponSlots.Count == 0 || direction == 0) return;
+        _currentItemId = 0;
+        _currentInstanceId = 0;
 
-        int start = _weaponSlots.IndexOf(CurrentSlot);
-        if (start < 0) start = 0;
+        if (Current == null) return;
 
-        for (int step = 1; step <= _weaponSlots.Count; step++)
-        {
-            int index = start + direction * step;
+        PlayerWeaponBase weapon = Current;
+        Current = null;
 
-            // 음수도 감싸도록 두 번 나눈다.
-            index = ((index % _weaponSlots.Count) + _weaponSlots.Count) % _weaponSlots.Count;
+        weapon.OnUnequipped();
 
-            EquipSlotType slot = _weaponSlots[index];
-            if (_equipment == null || _equipment.Get(slot) == null) continue;
+        // 파츠를 떼지 않는다. 개체 상태는 오브젝트가 사라져도 남아야 한다.
+        Destroy(weapon.gameObject);
 
-            SwitchTo(slot);
-            return;
-        }
+        OnWeaponChangedEvent?.Invoke(null);
     }
-
-    #endregion
 
     private void HandleAttack(bool pressed)
     {
@@ -124,81 +123,5 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
             Current.OnAttackPressed();
         else
             Current.OnAttackReleased();
-    }
-
-    private void HandleEquipChanged(EquipSlotType slot, ItemStack stack)
-    {
-        if (!_weaponSlots.Contains(slot)) return;
-
-        // 그 슬롯의 기존 오브젝트는 더 이상 유효하지 않다.
-        DestroyInstance(slot);
-
-        if (slot == CurrentSlot)
-        {
-            CurrentSlot = EquipSlotType.None;
-            Current = null;
-
-            SwitchTo(!stack.IsEmpty ? slot : FindFirstEquippedSlot());
-        }
-        else if (Current == null)
-        {
-            SwitchTo(slot);
-        }
-    }
-
-    private PlayerWeaponBase GetOrCreate(EquipSlotType slot)
-    {
-        if (_instances.TryGetValue(slot, out PlayerWeaponBase exist) && exist != null)
-            return exist;
-
-        if (_equipment == null) return null;
-
-        ItemStack stack = _equipment.GetStack(slot);
-        PlayerWeaponDataSO data = stack.Resolve<PlayerWeaponDataSO>();
-        if (data == null) return null;
-
-        if (data.playerWeaponPrefab == null)
-        {
-            Debug.LogError($"[PlayerWeapon] {data.DisplayName}에 프리팹이 없습니다.", data);
-            return null;
-        }
-
-        PlayerWeaponBase weapon = Instantiate(data.playerWeaponPrefab, _weaponHandleRoot);
-        weapon.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-        weapon.gameObject.SetActive(false);
-
-        // 개체 상태가 있으면 파츠와 개량이 여기서 복원된다.
-        weapon.Initialize(data, _player, stack.ResolveInstance<WeaponItemInstance>());
-        _instances[slot] = weapon;
-
-        return weapon;
-    }
-
-    private void DestroyInstance(EquipSlotType slot)
-    {
-        if (!_instances.TryGetValue(slot, out PlayerWeaponBase weapon)) return;
-
-        _instances.Remove(slot);
-
-        if (weapon == null) return;
-
-        if (weapon.IsEquipped)
-            weapon.OnUnequipped();
-
-        // 파츠를 떼지 않는다. 개체 상태는 오브젝트가 사라져도 남아야 한다.
-        Destroy(weapon.gameObject);
-    }
-
-    private EquipSlotType FindFirstEquippedSlot()
-    {
-        if (_equipment == null) return EquipSlotType.None;
-
-        for (int i = 0; i < _weaponSlots.Count; i++)
-        {
-            if (_equipment.Get(_weaponSlots[i]) != null)
-                return _weaponSlots[i];
-        }
-
-        return EquipSlotType.None;
     }
 }

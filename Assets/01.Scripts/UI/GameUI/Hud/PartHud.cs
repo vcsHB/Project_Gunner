@@ -28,6 +28,6 @@ public class PartHud : MonoBehaviour
             _partPlayerStatus.Bind(player);
 
         if (_partHotbar != null)
-            _partHotbar.Bind(player.GetCompo<EquipmentController>(), player.GetCompo<PlayerWeaponController>());
+            _partHotbar.Bind(player);
     }
 }

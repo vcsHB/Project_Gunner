@@ -1,46 +1,24 @@
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class CellHotbarSlot : MonoBehaviour
+/// <summary>
+/// 핫바 한 칸. 인벤토리 앞쪽 칸을 그대로 가리키므로 드래그·드롭이 그대로 동작한다.
+///
+/// 베이스의 _selectMarker는 "상세 정보로 고른 칸" 표시이고,
+/// 여기서 쓰는 _activeMarker는 "지금 손에 든 칸" 표시다. 서로 다른 개념이라 나눠 둔다.
+/// </summary>
+public class CellHotbarSlot : CellInventorySlot
 {
-    [SerializeField] private TextMeshProUGUI _textSlotIndex;
-    [SerializeField] private TextMeshProUGUI _textItemAmount;
-    [SerializeField] private Image _imageItemIcon;
-    [SerializeField] private GameObject _selectMarker;
+    [Header("Hotbar")]
+    [Tooltip("지금 들고 있는 칸일 때 활성화된다.")]
+    [SerializeField] private GameObject _activeMarker;
 
-    public EquipSlotType SlotType { get; private set; } = EquipSlotType.None;
+    public bool IsActive { get; private set; }
 
-    public void SetSlotType(EquipSlotType slotType, int displayIndex)
+    public void SetActive(bool active)
     {
-        SlotType = slotType;
+        IsActive = active;
 
-        if (_textSlotIndex != null)
-            _textSlotIndex.text = (displayIndex + 1).ToString();
+        if (_activeMarker != null)
+            _activeMarker.SetActive(active);
     }
-
-    public void SetStack(ItemStack stack)
-    {
-        ItemDataSO data = stack.Resolve();
-
-        if (_imageItemIcon != null)
-        {
-            _imageItemIcon.sprite = data != null ? data.IconSprite : null;
-            _imageItemIcon.enabled = _imageItemIcon.sprite != null;
-        }
-
-        if (_textItemAmount != null)
-        {
-            bool showAmount = !stack.IsEmpty && stack.count > 1;
-            _textItemAmount.text = showAmount ? stack.count.ToString() : string.Empty;
-        }
-    }
-
-    public void SetSelected(bool selected)
-    {
-        if (_selectMarker != null)
-            _selectMarker.SetActive(selected);
-    }
-
-    public void Clear() => SetStack(ItemStack.Empty);
 }

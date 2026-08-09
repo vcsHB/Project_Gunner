@@ -31,7 +31,24 @@ public class ItemDragController : MonoBehaviour
         if (_canvas == null)
             _canvas = GetComponentInParent<Canvas>();
 
+        MakeGhostClickThrough();
         SetGhostVisible(false);
+    }
+
+    /// <summary>
+    /// 고스트는 커서 바로 아래에 있어서, 레이캐스트를 막으면 드롭 대상 칸 대신 고스트가 잡힌다.
+    /// 그러면 OnDrop이 아예 호출되지 않아 "드래그는 되는데 놓아지지 않는" 상태가 된다.
+    /// 프리팹 설정을 깜빡해도 동작하도록 코드에서 강제한다.
+    /// </summary>
+    private void MakeGhostClickThrough()
+    {
+        if (_ghost == null) return;
+
+        if (!_ghost.TryGetComponent(out CanvasGroup group))
+            group = _ghost.gameObject.AddComponent<CanvasGroup>();
+
+        group.blocksRaycasts = false;
+        group.interactable = false;
     }
 
     private void Update()

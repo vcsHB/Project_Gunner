@@ -1,71 +1,69 @@
 using UnityEngine;
 
 /// <summary>
-/// 장착 슬롯을 나열하고 지금 들고 있는 무기를 표시한다.
+/// 인벤토리 앞 7칸을 핫바로 보여준다. 칸을 고르면 그게 손에 든 것이 된다.
 /// </summary>
 public class PartHudHotbar : MonoBehaviour
 {
     [SerializeField] private CellHotbarSlot[] _slots;
 
-    [Tooltip("각 셀이 담당할 장착 슬롯. 셀과 개수가 같아야 한다.")]
-    [SerializeField]
-    private EquipSlotType[] _slotTypes =
-    {
-        EquipSlotType.PrimaryWeapon,
-        EquipSlotType.SecondaryWeapon,
-        EquipSlotType.Tool,
-    };
-
-    private EquipmentController _equipment;
-    private PlayerWeaponController _weapons;
+    private Inventory _inventory;
+    private PlayerHotbar _hotbar;
 
     private void Awake()
     {
-        if (_slots.Length != _slotTypes.Length)
+        if (_slots.Length != InventoryLayout.HotbarSize)
         {
             Debug.LogError(
-                $"[Hotbar] 셀 {_slots.Length}개 / 슬롯 타입 {_slotTypes.Length}개로 개수가 다릅니다.", this);
+                $"[Hotbar] 칸이 {_slots.Length}개인데 핫바 크기는 {InventoryLayout.HotbarSize}입니다.", this);
         }
 
         for (int i = 0; i < _slots.Length; i++)
         {
             if (_slots[i] == null) continue;
 
-            _slots[i].SetSlotType(i < _slotTypes.Length ? _slotTypes[i] : EquipSlotType.None, i);
+            _slots[i].SetDisplayIndex(i);
             _slots[i].Clear();
-            _slots[i].SetSelected(false);
+            _slots[i].SetActive(false);
         }
     }
 
-    public void Bind(EquipmentController equipment, PlayerWeaponController weapons)
+    public void Bind(Player player)
     {
         Unbind();
 
-        _equipment = equipment;
-        _weapons = weapons;
+        if (player == null) return;
 
-        if (_equipment != null)
-            _equipment.OnEquipChangedEvent += HandleEquipChanged;
+        InventoryController controller = player.GetCompo<InventoryController>();
+        _inventory = controller != null ? controller.Inventory : null;
+        _hotbar = player.GetCompo<PlayerHotbar>();
 
-        if (_weapons != null)
-            _weapons.OnWeaponChangedEvent += HandleWeaponChanged;
+        if (_inventory != null)
+        {
+            _inventory.OnSlotChangedEvent += HandleSlotChanged;
+            _inventory.OnCapacityChangedEvent += RefreshAll;
+        }
+
+        if (_hotbar != null)
+            _hotbar.OnSelectedChangedEvent += HandleSelectedChanged;
 
         RefreshAll();
-        RefreshSelection();
+        HandleSelectedChanged(_hotbar != null ? _hotbar.SelectedIndex : 0);
     }
 
     public void Unbind()
     {
-        if (_equipment != null)
+        if (_inventory != null)
         {
-            _equipment.OnEquipChangedEvent -= HandleEquipChanged;
-            _equipment = null;
+            _inventory.OnSlotChangedEvent -= HandleSlotChanged;
+            _inventory.OnCapacityChangedEvent -= RefreshAll;
+            _inventory = null;
         }
 
-        if (_weapons != null)
+        if (_hotbar != null)
         {
-            _weapons.OnWeaponChangedEvent -= HandleWeaponChanged;
-            _weapons = null;
+            _hotbar.OnSelectedChangedEvent -= HandleSelectedChanged;
+            _hotbar = null;
         }
     }
 
@@ -77,31 +75,25 @@ public class PartHudHotbar : MonoBehaviour
         {
             if (_slots[i] == null) continue;
 
-            _slots[i].SetStack(_equipment != null ? _equipment.GetStack(_slots[i].SlotType) : ItemStack.Empty);
+            _slots[i].Bind(_inventory, i);
         }
     }
 
-    private void HandleEquipChanged(EquipSlotType slot, ItemStack stack)
+    private void HandleSlotChanged(int slotIndex)
     {
-        for (int i = 0; i < _slots.Length; i++)
-        {
-            if (_slots[i] == null || _slots[i].SlotType != slot) continue;
+        if (slotIndex < 0 || slotIndex >= _slots.Length) return;
+        if (_slots[slotIndex] == null) return;
 
-            _slots[i].SetStack(stack);
-        }
+        _slots[slotIndex].Refresh();
     }
 
-    private void HandleWeaponChanged(PlayerWeaponBase weapon) => RefreshSelection();
-
-    private void RefreshSelection()
+    private void HandleSelectedChanged(int selectedIndex)
     {
-        EquipSlotType current = _weapons != null ? _weapons.CurrentSlot : EquipSlotType.None;
-
         for (int i = 0; i < _slots.Length; i++)
         {
             if (_slots[i] == null) continue;
 
-            _slots[i].SetSelected(_slots[i].SlotType == current && current != EquipSlotType.None);
+            _slots[i].SetActive(i == selectedIndex);
         }
     }
 }

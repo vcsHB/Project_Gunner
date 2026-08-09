@@ -26,11 +26,17 @@ public class InventoryController : MonoBehaviour, IAgentComponent
         _status = Owner.GetCompo<AgentStatus>();
 
         int capacity = _status != null ? _status.InventorySize.TotalValue : _fallbackCapacity;
-        Inventory = new Inventory(capacity);
+        Inventory = new Inventory(ClampCapacity(capacity));
 
         if (_status != null)
             _status.InventorySize.OnChangedEvent += HandleCapacityChanged;
     }
+
+    /// <summary>
+    /// 앞 7칸은 핫바라 절대 줄어들면 안 된다.
+    /// 배낭을 벗어서 스탯이 그 아래로 내려가도 손에 든 것까지 사라지지는 않게 한다.
+    /// </summary>
+    private static int ClampCapacity(int capacity) => Mathf.Max(InventoryLayout.HotbarSize, capacity);
 
     public void Dispose()
     {
@@ -41,7 +47,7 @@ public class InventoryController : MonoBehaviour, IAgentComponent
     private void HandleCapacityChanged(int newCapacity)
     {
         _overflowBuffer.Clear();
-        Inventory.Resize(newCapacity, _overflowBuffer);
+        Inventory.Resize(ClampCapacity(newCapacity), _overflowBuffer);
 
         if (_overflowBuffer.Count == 0) return;
 

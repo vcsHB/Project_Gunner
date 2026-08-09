@@ -24,10 +24,12 @@ public class CellInventorySlot : MonoBehaviour,
     private ItemDragController _drag;
     private ItemSelectionController _selection;
 
-    private void Awake()
+    protected virtual void Awake()
     {
         _drag = GetComponentInParent<ItemDragController>(true);
         _selection = GetComponentInParent<ItemSelectionController>(true);
+
+        OnStackChanged();
     }
 
     /// <summary>어느 컨테이너의 몇 번 칸인지 알려준다. 표시는 Refresh가 한다.</summary>
@@ -65,6 +67,15 @@ public class CellInventorySlot : MonoBehaviour,
             bool showAmount = !stack.IsEmpty && stack.count > 1;
             _textItemAmount.text = showAmount ? stack.count.ToString() : string.Empty;
         }
+
+        OnStackChanged();
+    }
+
+    /// <summary>
+    /// 내용이 바뀐 뒤 호출된다. 파생 칸이 빈 칸 표시 같은 걸 추가할 때 쓴다.
+    /// </summary>
+    protected virtual void OnStackChanged()
+    {
     }
 
     public void SetSelected(bool selected)

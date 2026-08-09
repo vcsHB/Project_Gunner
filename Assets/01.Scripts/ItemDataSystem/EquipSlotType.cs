@@ -8,5 +8,12 @@ public enum EquipSlotType
     PrimaryWeapon,
     SecondaryWeapon,
     Tool,
-    Armor,
+    Helmet,
+    Face,
+    Chestplate,
+    Bagpack,
+    HeadPhone,
+    Battery,
+    UtilLoadout,
+
 }
