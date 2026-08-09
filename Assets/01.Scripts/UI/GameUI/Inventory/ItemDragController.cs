@@ -6,13 +6,13 @@ using UnityEngine.UI;
 /// <summary>
 /// 아이템 드래그 진행 상태와 커서를 따라다니는 고스트를 관리한다. 캔버스 루트에 하나 둔다.
 ///
-/// 싱글턴을 쓰지 않고 셀이 부모에서 찾게 한 이유는, 나중에 화면 분할이 생겼을 때
-/// 캔버스마다 독립적으로 동작해야 하기 때문이다.
+/// 커서가 하나라 드래그도 하나뿐이므로 싱글턴으로 둔다.
+/// (부모에서 찾게 했더니 컨트롤러를 셀의 조상이 아닌 곳에 두면 조용히 실패했다)
 ///
 /// 드래그를 시작해도 아이템을 원래 칸에서 빼지 않는다. 드롭 시점에 ItemTransfer가 한 번에 옮긴다.
 /// 미리 빼두면 드래그 도중 창이 닫히거나 예외가 나는 순간 아이템이 증발한다.
 /// </summary>
-public class ItemDragController : MonoBehaviour
+public class ItemDragController : Singleton<ItemDragController>
 {
     [SerializeField] private Canvas _canvas;
     [SerializeField] private RectTransform _ghost;
@@ -26,8 +26,10 @@ public class ItemDragController : MonoBehaviour
     public CellInventorySlot SourceCell => _sourceCell;
     public int Count => _count;
 
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake();
+
         if (_canvas == null)
             _canvas = GetComponentInParent<Canvas>();
 
@@ -89,8 +91,13 @@ public class ItemDragController : MonoBehaviour
             return;
         }
 
-        ItemTransfer.Move(_sourceCell.Container, _sourceCell.SlotKey,
+        bool moved = ItemTransfer.Move(_sourceCell.Container, _sourceCell.SlotKey,
             target.Container, target.SlotKey, _count);
+
+#if UNITY_EDITOR
+        if (!moved)
+            LogDropFailure(target);
+#endif
 
         Cancel();
     }
@@ -108,6 +115,27 @@ public class ItemDragController : MonoBehaviour
         _count = 0;
         SetGhostVisible(false);
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 드롭이 조용히 무시되면 원인을 찾기가 매우 어렵다. 왜 실패했는지 남긴다.
+    /// </summary>
+    private void LogDropFailure(CellInventorySlot target)
+    {
+        if (target.Container == null)
+        {
+            Debug.LogWarning(
+                $"[Drag] {target.name}에 컨테이너가 연결되어 있지 않습니다. " +
+                "UIInventory의 _startSlotIndex가 인벤토리 용량을 넘었거나, Bind가 되지 않았습니다.", target);
+            return;
+        }
+
+        ItemTransfer.CanMove(_sourceCell.Container, _sourceCell.SlotKey,
+            target.Container, target.SlotKey, _count, out string reason);
+
+        Debug.LogWarning($"[Drag] 옮기지 못했습니다. {(string.IsNullOrEmpty(reason) ? "(같은 칸)" : reason)}", target);
+    }
+#endif
 
     private void SetGhostVisible(bool visible)
     {

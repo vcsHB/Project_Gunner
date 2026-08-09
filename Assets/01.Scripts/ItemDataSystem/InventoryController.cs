@@ -26,6 +26,14 @@ public class InventoryController : MonoBehaviour, IAgentComponent
         _status = Owner.GetCompo<AgentStatus>();
 
         int capacity = _status != null ? _status.InventorySize.TotalValue : _fallbackCapacity;
+
+        if (capacity <= InventoryLayout.HotbarSize)
+        {
+            Debug.LogWarning(
+                $"[Inventory] 용량이 {capacity}칸이라 핫바({InventoryLayout.HotbarSize}칸) 뒤에 보관 칸이 없습니다. " +
+                "AgentStatus의 InventorySize를 확인하세요.", this);
+        }
+
         Inventory = new Inventory(ClampCapacity(capacity));
 
         if (_status != null)

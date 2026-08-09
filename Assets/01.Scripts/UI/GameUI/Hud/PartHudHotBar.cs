@@ -25,6 +25,22 @@ public class PartHudHotbar : MonoBehaviour
             _slots[i].SetDisplayIndex(i);
             _slots[i].Clear();
             _slots[i].SetActive(false);
+
+            // 숫자키가 아직 없어서 클릭이 유일한 직접 선택 수단이다.
+            _slots[i].OnClickedEvent += HandleCellClicked;
+        }
+    }
+
+    private void HandleCellClicked(CellInventorySlot cell)
+    {
+        if (_hotbar == null) return;
+
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            if (_slots[i] != cell) continue;
+
+            _hotbar.Select(i);
+            return;
         }
     }
 

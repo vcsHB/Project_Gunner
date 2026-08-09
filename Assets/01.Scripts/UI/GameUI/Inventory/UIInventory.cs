@@ -54,7 +54,15 @@ public class UIInventory : MonoBehaviour
         if (_inventory == null) return;
 
         int shown = _inventory.Capacity - _startSlotIndex;
-        if (shown > _inventorySlots.Length)
+
+        if (shown <= 0)
+        {
+            // 이 상태에서는 모든 칸이 컨테이너 없이 남아서 클릭은 되는데 드롭만 안 되는 것처럼 보인다.
+            Debug.LogError(
+                $"[UIInventory] 보여줄 칸이 없습니다. 인벤토리 용량 {_inventory.Capacity} / 시작 인덱스 {_startSlotIndex}. " +
+                "AgentStatus의 InventorySize를 늘리거나 _startSlotIndex를 줄이세요.", this);
+        }
+        else if (shown > _inventorySlots.Length)
         {
             Debug.LogWarning(
                 $"[UIInventory] 칸이 모자랍니다. 보여줄 칸 {shown} / UI {_inventorySlots.Length}. " +

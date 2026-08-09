@@ -4,8 +4,10 @@ using UnityEngine;
 /// <summary>
 /// 지금 선택된 아이템 칸. 인벤토리든 장비든 파츠든 어느 칸을 눌러도 여기로 모인다.
 /// PartItemDetail 같은 상세 표시는 이 이벤트만 구독하면 된다.
+///
+/// 드래그와 마찬가지로 선택도 한 번에 하나뿐이라 싱글턴으로 둔다.
 /// </summary>
-public class ItemSelectionController : MonoBehaviour
+public class ItemSelectionController : Singleton<ItemSelectionController>
 {
     /// <summary>(컨테이너, 슬롯키). 선택이 풀리면 컨테이너가 null.</summary>
     public event Action<IItemSlotContainer, int> OnSelectionChangedEvent;
