@@ -16,6 +16,15 @@ public abstract class CasterBase : MonoBehaviour
     /// </summary>
     public Agent Owner { get; set; }
 
+    /// <summary>
+    /// 발사자가 지정한 위력. 무기 스탯으로 쏜 투사체는 Agent 스탯 대신 이걸 쓴다.
+    /// null이면 이펙터가 알아서(Owner 스탯 또는 고정값) 판단한다.
+    /// </summary>
+    public CastPower? Power { get; set; }
+
+    /// <summary>직전 Cast에서 실제로 효과가 들어간 대상 수. 히트박스 중복은 이미 접힌 뒤의 값이다.</summary>
+    public int LastHitCount { get; private set; }
+
     private ICastEffector[] _castEffectors;
     private readonly Collider2D[] _colliderBuffer = new Collider2D[MaxTargetCount];
     private ContactFilter2D _contactFilter;
@@ -48,6 +57,7 @@ public abstract class CasterBase : MonoBehaviour
 
         ResolveHits(_colliderBuffer, count);
         ApplyEffectors();
+        AfterCast(_hits);
 
         OnCastEvent?.Invoke();
     }
@@ -58,11 +68,31 @@ public abstract class CasterBase : MonoBehaviour
     protected abstract int CastTarget(ContactFilter2D filter, Collider2D[] buffer);
 
     /// <summary>탐색 없이 이미 알고 있는 콜라이더에 바로 적용한다.</summary>
-    public void ForceCast(Collider2D[] colliders)
+    public void ForceCast(Collider2D[] colliders) => ForceCast(colliders, colliders.Length);
+
+    /// <summary>
+    /// 재사용 버퍼를 넘길 때 쓴다. 배열 길이가 아니라 실제로 채워진 개수를 받아야
+    /// 지난 번에 남아있던 콜라이더를 다시 때리지 않는다.
+    /// </summary>
+    public void ForceCast(Collider2D[] colliders, int count)
     {
-        ResolveHits(colliders, colliders.Length);
+        ResolveHits(colliders, count);
         ApplyEffectors();
+        AfterCast(_hits);
+
+        OnCastEvent?.Invoke();
     }
+
+    /// <summary>
+    /// 대상 하나를 더 걸러낸다. 관통 투사체가 이미 맞힌 대상을 제외할 때 쓴다.
+    /// 생존·자기 자신 제외는 이 호출 전에 이미 끝나 있다.
+    /// </summary>
+    protected virtual bool CanAffect(TargetBase target) => true;
+
+    /// <summary>
+    /// 효과가 다 들어간 뒤. 무엇을 맞혔는지 기록해야 하는 쪽(관통 카운트)이 여기서 처리한다.
+    /// </summary>
+    protected virtual void AfterCast(IReadOnlyList<CastHit> hits) { }
 
     /// <summary>
     /// 콜라이더 목록을 대상 목록으로 접는다.
@@ -78,6 +108,7 @@ public abstract class CasterBase : MonoBehaviour
             if (!TryResolve(colliders[i], out CastHit hit)) continue;
             if (!hit.Target.IsTargetable) continue;
             if (Owner != null && hit.Target.Owner == Owner) continue;
+            if (!CanAffect(hit.Target)) continue;
 
             if (_hitIndices.TryGetValue(hit.Target, out int index))
             {
@@ -91,6 +122,8 @@ public abstract class CasterBase : MonoBehaviour
             _hitIndices.Add(hit.Target, _hits.Count);
             _hits.Add(hit);
         }
+
+        LastHitCount = _hits.Count;
     }
 
     private static bool TryResolve(Collider2D collider, out CastHit hit)

@@ -78,7 +78,9 @@ public class WorldItem : PoolableMono
         if (_renderer == null) return;
 
         ItemDataSO data = Stack.Resolve();
-        _renderer.sprite = data != null ? data.IconSprite : null;
+
+        // UI 아이콘이 아니라 월드용을 쓴다. 지정이 없으면 WorldSprite가 아이콘으로 되돌려준다.
+        _renderer.sprite = data != null ? data.WorldSprite : null;
         _renderer.enabled = _renderer.sprite != null;
     }
 }

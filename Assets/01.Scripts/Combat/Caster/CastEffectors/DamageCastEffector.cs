@@ -31,6 +31,16 @@ public class DamageCastEffector : MonoBehaviour, ICastEffector
 
     private DamageData BuildDamageData(Agent owner, Vector2 direction)
     {
+        // 발사자가 위력을 실어 보냈으면 그게 우선이다.
+        // 무기 스탯과 탄종 차이는 Agent 스탯에 들어있지 않아서, 이걸 무시하면 전부 사라진다.
+        if (_caster != null && _caster.Power.HasValue)
+        {
+            CastPower power = _caster.Power.Value;
+
+            return DamageHandler.CalculateDamage(power.damage, power.criticalRate, _canSuperCritical)
+                .WithSource(owner, direction);
+        }
+
         if (owner != null && owner.AgentStatus != null)
             return DamageHandler.CalculateDamage(owner, direction, _canSuperCritical);
 

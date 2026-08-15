@@ -49,8 +49,10 @@ public class ItemDatabaseSOEditor : Editor
             if (item.ItemCategory == ItemCategoryType.None)
                 problems.AppendLine($"- {item.name}: 카테고리가 None 입니다.");
 
+            // 월드 스프라이트는 비어있으면 아이콘으로 되돌아가므로, 아이콘이 없으면 양쪽 다 없는 것이다.
             if (item.IconSprite == null)
-                problems.AppendLine($"- {item.name}: 아이콘이 없습니다.");
+                problems.AppendLine($"- {item.name}: UI 아이콘이 없습니다."
+                    + (item.HasDedicatedWorldSprite ? " (월드 스프라이트만 있습니다)" : string.Empty));
         }
 
         if (problems.Length > 0)

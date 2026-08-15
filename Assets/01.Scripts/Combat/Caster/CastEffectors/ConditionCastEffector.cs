@@ -20,7 +20,7 @@ public class ConditionCastEffector : MonoBehaviour, ICastEffector
     public void Cast(in CastHit hit)
     {
         if (_conditionType == ConditionType.None) return;
-        if (_chance < 1f && Random.value > _chance) return;
+        if (_chance < 1f && GameRandom.Combat.Value > _chance) return;
 
         // 상태이상은 Agent에게만 걸린다. (폭발통 같은 단순 대상은 대상 외)
         Agent agent = hit.Target.Owner;

@@ -12,6 +12,9 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
 {
     [SerializeField] private Transform _weaponHandleRoot;
 
+    [Tooltip("재장전 키를 이 시간 이상 누르고 있으면 재장전 대신 탄종을 넘긴다.")]
+    [SerializeField, Min(0.05f)] private float _ammoCycleHoldTime = 0.35f;
+
     public event Action<PlayerWeaponBase> OnWeaponChangedEvent;
 
     private Player _player;
@@ -20,6 +23,12 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
     // 같은 아이템이 그대로면 다시 만들지 않기 위한 비교용
     private uint _currentItemId;
     private uint _currentInstanceId;
+
+    // 짧게 누름(재장전) / 길게 누름(탄종 전환) 구분.
+    // PlayerInput은 눌림/뗌만 알려준다. 시간 판정은 게임 규칙이라 여기서 한다.
+    private bool _reloadHeld;
+    private float _reloadHeldTime;
+    private bool _ammoCycleFired;
 
     public PlayerWeaponBase Current { get; private set; }
 
@@ -39,7 +48,10 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
             _hotbar.OnSelectedChangedEvent += HandleSelectedChanged;
 
         if (_player.Input != null)
+        {
             _player.Input.OnAttackEvent += HandleAttack;
+            _player.Input.OnReloadEvent += HandleReload;
+        }
 
         RefreshWeapon();
     }
@@ -50,7 +62,10 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
             _hotbar.OnSelectedChangedEvent -= HandleSelectedChanged;
 
         if (_player != null && _player.Input != null)
+        {
             _player.Input.OnAttackEvent -= HandleAttack;
+            _player.Input.OnReloadEvent -= HandleReload;
+        }
 
         DestroyCurrent();
     }
@@ -123,5 +138,36 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
             Current.OnAttackPressed();
         else
             Current.OnAttackReleased();
+    }
+
+    private void HandleReload(bool pressed)
+    {
+        if (pressed)
+        {
+            _reloadHeld = true;
+            _reloadHeldTime = 0f;
+            _ammoCycleFired = false;
+            return;
+        }
+
+        _reloadHeld = false;
+
+        // 홀드로 이미 탄종을 넘겼으면 뗄 때 재장전까지 겹치지 않게 한다.
+        if (_ammoCycleFired || Current == null) return;
+
+        Current.OnReloadRequested();
+    }
+
+    private void Update()
+    {
+        if (!_reloadHeld || _ammoCycleFired) return;
+
+        _reloadHeldTime += Time.deltaTime;
+        if (_reloadHeldTime < _ammoCycleHoldTime) return;
+
+        _ammoCycleFired = true;
+
+        if (Current != null)
+            Current.OnAmmoCycleRequested(1);
     }
 }

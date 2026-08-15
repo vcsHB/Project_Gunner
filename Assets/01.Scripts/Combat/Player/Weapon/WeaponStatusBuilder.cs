@@ -31,6 +31,9 @@ public static class WeaponStatusBuilder
 
         foreach (KeyValuePair<WeaponPartSlotType, WeaponPartDataSO> pair in instance.Parts)
             ApplyPart(status, pair.Value);
+
+        // 장전된 탄약도 성능의 일부다. 빼고 계산하면 UI가 실제와 다른 수치를 보여준다.
+        ApplyAmmo(status, instance.LoadedAmmo);
     }
 
     public static void ApplyPart(WeaponStatus status, WeaponPartDataSO part)
@@ -40,6 +43,19 @@ public static class WeaponStatusBuilder
         IReadOnlyList<WeaponStatDelta> deltas = part.Deltas;
         for (int i = 0; i < deltas.Count; i++)
             ApplyDelta(status, deltas[i], part);
+    }
+
+    /// <summary>
+    /// 장전된 탄종의 성능 차이를 반영한다. 파츠와 같은 규칙이고 origin은 탄약 SO 자신이다.
+    /// 탄종을 바꾸기 전에 이전 탄약을 Remove해야 한다.
+    /// </summary>
+    public static void ApplyAmmo(WeaponStatus status, AmmoDataSO ammo)
+    {
+        if (status == null || ammo == null) return;
+
+        IReadOnlyList<WeaponStatDelta> deltas = ammo.Deltas;
+        for (int i = 0; i < deltas.Count; i++)
+            ApplyDelta(status, deltas[i], ammo);
     }
 
     /// <summary>

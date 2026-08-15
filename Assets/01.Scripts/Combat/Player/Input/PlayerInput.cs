@@ -17,7 +17,13 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public event Action<bool> OnCrawlEvent;
     public event Action OnUseEvent;
     public event Action OnInteractEvent;
-    public event Action OnReloadEvent;
+
+    /// <summary>
+    /// true=누름, false=뗌. 짧게 눌렀는지 길게 눌렀는지는 여기서 판단하지 않는다 —
+    /// 입력 리더에 시간 로직이 들어가면 게임 규칙이 SO로 새어 들어간다.
+    /// </summary>
+    public event Action<bool> OnReloadEvent;
+
     public event Action OnInventoryToggleEvent;
 
     /// <summary>장비 슬롯 넘기기. -1 = 이전, +1 = 다음</summary>
@@ -32,6 +38,7 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public bool IsAttacking { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsCrawling { get; private set; }
+    public bool IsReloadHeld { get; private set; }
 
     /// <summary>
     /// 조준용 화면 좌표. 지금은 마우스 전용이다.
@@ -72,6 +79,7 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
         IsAttacking = false;
         IsSprinting = false;
         IsCrawling = false;
+        IsReloadHeld = false;
     }
 
     #region Controls.IPlayerActions
@@ -121,7 +129,9 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public void OnReload(InputAction.CallbackContext context)
     {
         if (context.performed)
-            OnReloadEvent?.Invoke();
+            SetReloadHeld(true);
+        else if (context.canceled)
+            SetReloadHeld(false);
     }
 
     public void OnInventory(InputAction.CallbackContext context)
@@ -170,5 +180,13 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
 
         IsCrawling = value;
         OnCrawlEvent?.Invoke(value);
+    }
+
+    private void SetReloadHeld(bool value)
+    {
+        if (IsReloadHeld == value) return;
+
+        IsReloadHeld = value;
+        OnReloadEvent?.Invoke(value);
     }
 }

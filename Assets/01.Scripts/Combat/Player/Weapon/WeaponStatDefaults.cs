@@ -21,8 +21,14 @@ public class WeaponStatDefaults
 
     [Header("조작감")]
     public float recoil = 1f;
+
+    [Tooltip("탄이 퍼지는 각도(도). 전체 폭이고 좌우로 절반씩 갈라진다.")]
     public float spread = 0f;
+
     public float burstCount = 3f;
+
+    [Tooltip("점사 안에서 발과 발 사이 간격(초). attackCooltime은 묶음이 끝난 뒤의 쿨이다.")]
+    public float burstInterval = 0.06f;
 
     [Header("투사체")]
     public float projectileCount = 1f;
@@ -58,6 +64,8 @@ public class WeaponStatDefaults
 
             case WeaponStatType.ExplosionRadius: return explosionRadius;
             case WeaponStatType.Knockback: return knockback;
+
+            case WeaponStatType.BurstInterval: return burstInterval;
         }
 
         return 0f;

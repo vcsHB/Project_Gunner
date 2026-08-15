@@ -86,6 +86,16 @@ public abstract class PlayerWeaponBase : MonoBehaviour
     {
     }
 
+    /// <summary>재장전 입력(짧게 누름). 탄약을 쓰지 않는 무기는 무시한다.</summary>
+    public virtual void OnReloadRequested()
+    {
+    }
+
+    /// <summary>재장전 입력을 길게 눌렀을 때. 쓸 수 있는 탄종을 넘긴다.</summary>
+    public virtual void OnAmmoCycleRequested(int direction)
+    {
+    }
+
     /// <summary>파츠 프리팹이 붙을 위치. 지정된 게 없으면 무기 본체.</summary>
     public Transform GetMountPoint(WeaponPartSlotType slot)
     {

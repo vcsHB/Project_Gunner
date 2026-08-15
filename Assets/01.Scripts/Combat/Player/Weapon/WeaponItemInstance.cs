@@ -18,8 +18,14 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
     /// <summary>(개량 경로, 새 단계)</summary>
     public event Action<WeaponUpgradeSO, int> OnUpgradeChangedEvent;
 
+    /// <summary>(장전된 탄종, 남은 발수). 탄종이 없으면 첫 번째가 null.</summary>
+    public event Action<AmmoDataSO, int> OnAmmoChangedEvent;
+
     private readonly Dictionary<WeaponPartSlotType, WeaponPartDataSO> _parts = new();
     private readonly Dictionary<WeaponUpgradeSO, int> _upgrades = new();
+
+    private uint _loadedAmmoId;
+    private int _ammoInMagazine;
 
     public PlayerWeaponDataSO WeaponData => Data as PlayerWeaponDataSO;
 
@@ -123,6 +129,51 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
             _upgrades[upgrade] = level;
 
         OnUpgradeChangedEvent?.Invoke(upgrade, level);
+        return true;
+    }
+
+    #endregion
+
+    #region Ammo
+
+    // 탄창은 무기 오브젝트가 아니라 여기 있다.
+    // 인벤토리에 넣었다 다시 들어도 반쯤 남은 탄창이 유지되어야 하고, 그대로 저장되어야 한다.
+
+    /// <summary>장전된 탄종의 아이템 Id. 0이면 비어있다.</summary>
+    public uint LoadedAmmoId => _loadedAmmoId;
+
+    /// <summary>탄창에 남은 발수.</summary>
+    public int AmmoInMagazine => _ammoInMagazine;
+
+    public AmmoDataSO LoadedAmmo => AmmoDataSO.Find(_loadedAmmoId);
+
+    /// <summary>
+    /// 탄창 내용을 통째로 바꾼다. 재장전과 세이브 복원이 같은 길을 쓴다.
+    /// count가 0이면 탄종도 함께 비운다 — 빈 탄창에 탄종만 남아있으면 UI가 거짓말을 한다.
+    /// </summary>
+    public void SetMagazine(uint ammoItemId, int count)
+    {
+        if (count <= 0)
+        {
+            ammoItemId = 0;
+            count = 0;
+        }
+
+        if (_loadedAmmoId == ammoItemId && _ammoInMagazine == count) return;
+
+        _loadedAmmoId = ammoItemId;
+        _ammoInMagazine = count;
+
+        OnAmmoChangedEvent?.Invoke(LoadedAmmo, _ammoInMagazine);
+    }
+
+    /// <summary>격발로 탄을 뺀다. 모자라면 아무것도 빼지 않고 false.</summary>
+    public bool TryConsumeAmmo(int count)
+    {
+        if (count <= 0) return true;
+        if (_ammoInMagazine < count) return false;
+
+        SetMagazine(_loadedAmmoId, _ammoInMagazine - count);
         return true;
     }
 

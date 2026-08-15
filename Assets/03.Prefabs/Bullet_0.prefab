@@ -9,7 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3662756840868415459}
-  - component: {fileID: 5958401526591938033}
+  - component: {fileID: 4747327655173915263}
+  - component: {fileID: 6878573460316652448}
   - component: {fileID: 190397538963932453}
   m_Layer: 0
   m_Name: Caster
@@ -33,7 +34,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1778373170360278840}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5958401526591938033
+--- !u!114 &4747327655173915263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2636581031224381135}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc90568291ad1f546b0dd5f50944c438, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileCaster
+  _targetTypes: -1
+  _radius: 0.08
+--- !u!114 &6878573460316652448
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -46,7 +61,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CircleCaster
   _targetTypes: -1
-  _radius: 1
+  _radius: 0.2
 --- !u!114 &190397538963932453
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -199,4 +214,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8579d0692d6261418017f32024b6c63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Projectile
-  _caster: {fileID: 5958401526591938033}
+  _caster: {fileID: 4747327655173915263}
+  _explosionCaster: {fileID: 6878573460316652448}
+  _maxLifeTime: 5

@@ -16,8 +16,11 @@ public static class DamageHandler
     /// </summary>
     public static DamageData CalculateDamage(float damage, float criticalRate, bool canSuperCritical)
     {
-        bool isCritical = Random.value < criticalRate;
-        bool isSuperCritical = canSuperCritical && isCritical && Random.value < criticalRate - 1f;
+        // 멀티에서 클라마다 결과가 갈리면 안 되므로 시드 난수를 쓴다. UnityEngine.Random 금지.
+        IRandomSource random = GameRandom.Combat;
+
+        bool isCritical = random.Value < criticalRate;
+        bool isSuperCritical = canSuperCritical && isCritical && random.Value < criticalRate - 1f;
 
         if (isSuperCritical)
             damage *= SuperCriticalMultiplier;

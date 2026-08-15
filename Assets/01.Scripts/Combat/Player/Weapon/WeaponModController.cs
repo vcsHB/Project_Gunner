@@ -20,6 +20,9 @@ public class WeaponModController
 
     private WeaponItemInstance _instance;
 
+    // 장전된 탄약도 스탯을 바꾼다. 파츠와 같은 자리에서 관리해야 경로가 갈리지 않는다.
+    private AmmoDataSO _appliedAmmo;
+
     public WeaponModController(PlayerWeaponBase weapon, WeaponStatus status)
     {
         _weapon = weapon;
@@ -45,6 +48,7 @@ public class WeaponModController
 
         _instance.OnPartChangedEvent += HandlePartChanged;
         _instance.OnUpgradeChangedEvent += HandleUpgradeChanged;
+        _instance.OnAmmoChangedEvent += HandleAmmoChanged;
 
         ApplyAll();
     }
@@ -59,6 +63,7 @@ public class WeaponModController
         {
             _instance.OnPartChangedEvent -= HandlePartChanged;
             _instance.OnUpgradeChangedEvent -= HandleUpgradeChanged;
+            _instance.OnAmmoChangedEvent -= HandleAmmoChanged;
             _instance = null;
         }
 
@@ -69,6 +74,12 @@ public class WeaponModController
             WeaponStatusBuilder.Remove(_status, part);
 
         _appliedParts.Clear();
+
+        if (_appliedAmmo != null)
+        {
+            WeaponStatusBuilder.Remove(_status, _appliedAmmo);
+            _appliedAmmo = null;
+        }
     }
 
     /// <summary>무기 기본 모드 + 파츠가 추가한 모드. results를 비우고 채운다.</summary>
@@ -104,6 +115,8 @@ public class WeaponModController
         foreach (KeyValuePair<WeaponPartSlotType, WeaponPartDataSO> pair in _instance.Parts)
             ApplyPart(pair.Key, pair.Value);
 
+        HandleAmmoChanged(_instance.LoadedAmmo, _instance.AmmoInMagazine);
+
         _weapon.ValidateFireMode();
     }
 
@@ -128,6 +141,22 @@ public class WeaponModController
         // 단계는 누적이 아니라 교체다. 이전 단계를 먼저 전부 걷어낸다.
         WeaponStatusBuilder.Remove(_status, upgrade);
         WeaponStatusBuilder.ApplyUpgrade(_status, upgrade, level);
+    }
+
+    /// <summary>
+    /// 잔탄만 줄어든 경우는 스탯이 그대로다. 탄종이 실제로 바뀌었을 때만 modifier를 갈아끼운다.
+    /// </summary>
+    private void HandleAmmoChanged(AmmoDataSO ammo, int count)
+    {
+        if (_appliedAmmo == ammo) return;
+
+        if (_appliedAmmo != null)
+            WeaponStatusBuilder.Remove(_status, _appliedAmmo);
+
+        _appliedAmmo = ammo;
+
+        if (_appliedAmmo != null)
+            WeaponStatusBuilder.ApplyAmmo(_status, _appliedAmmo);
     }
 
     private void ApplyPart(WeaponPartSlotType slot, WeaponPartDataSO part)

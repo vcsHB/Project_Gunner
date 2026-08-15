@@ -30,4 +30,7 @@ public enum WeaponStatType
 
     ExplosionRadius,
     Knockback,
+
+    // 점사 안에서 발과 발 사이 간격. AttackCooltime은 점사 한 묶음이 끝난 뒤의 쿨이다.
+    BurstInterval,
 }
