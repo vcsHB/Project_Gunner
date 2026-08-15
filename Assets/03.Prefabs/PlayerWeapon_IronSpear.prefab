@@ -104,7 +104,7 @@ GameObject:
   - component: {fileID: 5690469464989021128}
   - component: {fileID: 1014361397215951198}
   m_Layer: 0
-  m_Name: PlayerWeapon_Perro
+  m_Name: PlayerWeapon_IronSpear
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -143,6 +143,7 @@ MonoBehaviour:
     point: {fileID: 56937349241318411}
   - slot: 1
     point: {fileID: 8619234796119753361}
+  _spriteFacing: 1
   _muzzle: {fileID: 56937349241318411}
 --- !u!1 &5238664240873267008
 GameObject:

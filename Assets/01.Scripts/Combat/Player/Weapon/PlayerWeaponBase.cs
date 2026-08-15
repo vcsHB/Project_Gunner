@@ -17,6 +17,10 @@ public abstract class PlayerWeaponBase : MonoBehaviour
     [Tooltip("파츠 프리팹이 붙을 위치. 지정하지 않은 슬롯은 무기 본체에 붙는다.")]
     [SerializeField] private List<PartMountPoint> _mountPoints = new();
 
+    [Tooltip("리소스가 그려진 방향. 총구가 왼쪽을 향하게 그려졌으면 Left로 둔다. " +
+             "스프라이트와 총구 위치를 통째로 미러링해서 +X를 앞으로 맞춘다.")]
+    [SerializeField] private WeaponFacingType _spriteFacing = WeaponFacingType.Right;
+
     public event Action<WeaponFireMode> OnFireModeChangedEvent;
 
     public PlayerWeaponDataSO Data { get; private set; }
@@ -47,6 +51,8 @@ public abstract class PlayerWeaponBase : MonoBehaviour
         Data = data;
         Owner = owner;
         Status = new WeaponStatus(data.Stats);
+
+        ApplyFacing();
 
         CurrentFireMode = data.DefaultFireMode;
 
@@ -95,6 +101,29 @@ public abstract class PlayerWeaponBase : MonoBehaviour
     public virtual void OnAmmoCycleRequested(int direction)
     {
     }
+
+    /// <summary>
+    /// 왼쪽을 보고 그려진 리소스를 통째로 X 미러링해서 +X를 앞으로 맞춘다.
+    ///
+    /// 발사 방향에서 부호를 뒤집는 식으로 맞추면 안 된다. 그렇게 하면 스프라이트는 그대로
+    /// 반대를 보고, 총구는 플레이어 뒤에 남고, 파츠 장착점과 이펙트 방향이 전부 따로 논다.
+    /// 리소스와 코드의 규칙 차이는 <b>한 곳에서 한 번만</b> 흡수한다.
+    ///
+    /// 스케일을 곱하지 않고 부호만 덮어쓰므로 여러 번 불려도 결과가 같다.
+    /// </summary>
+    private void ApplyFacing()
+    {
+        float sign = _spriteFacing == WeaponFacingType.Left ? -1f : 1f;
+
+        Vector3 scale = transform.localScale;
+        transform.localScale = new Vector3(Mathf.Abs(scale.x) * sign, scale.y, scale.z);
+    }
+
+#if UNITY_EDITOR
+    // 에디터에서도 프리팹이 실제로 나갈 모습으로 보이게 한다.
+    // 인스펙터에서 Left로 바꿔놓고 씬에서는 반대로 보이면 어느 쪽이 맞는지 알 수 없다.
+    private void OnValidate() => ApplyFacing();
+#endif
 
     /// <summary>파츠 프리팹이 붙을 위치. 지정된 게 없으면 무기 본체.</summary>
     public Transform GetMountPoint(WeaponPartSlotType slot)

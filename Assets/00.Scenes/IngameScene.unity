@@ -14680,11 +14680,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DebugItemSpawner
   _entries:
   - key: 29
-    item: {fileID: 11400000, guid: e38f35e9d5a8c9549925ca76862f2a9e, type: 2}
+    item: {fileID: 11400000, guid: 8769d5808fd97fe47a5db94bcebdfcb1, type: 2}
     count: 1
     dropToWorld: 1
   - key: 30
-    item: {fileID: 11400000, guid: 2c0c8489d2692664ba54a98d05725978, type: 2}
+    item: {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
     count: 1
     dropToWorld: 1
   _enableHotkeys: 1

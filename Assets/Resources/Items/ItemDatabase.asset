@@ -12,12 +12,65 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19108510989963b4387dcba9239d5fb4, type: 3}
   m_Name: ItemDatabase
   m_EditorClassIdentifier: Assembly-CSharp::ItemDatabaseSO
-  _nextId: 8
+  _idRanges:
+  - typeName: ItemDataSO
+    label: "\uAE30\uD0C0 / \uBBF8\uBD84\uB958"
+    start: 1
+    end: 999
+    nextId: 1
+  - typeName: PlayerWeaponDataSO
+    label: "\uBB34\uAE30"
+    start: 1000
+    end: 1999
+    nextId: 1004
+  - typeName: WeaponPartDataSO
+    label: "\uBB34\uAE30 \uD30C\uCE20"
+    start: 2000
+    end: 2999
+    nextId: 2002
+  - typeName: AmmoDataSO
+    label: "\uD0C4\uC57D"
+    start: 3000
+    end: 3999
+    nextId: 3003
+  - typeName: 
+    label: "\uC18C\uBAA8\uD488"
+    start: 4000
+    end: 4999
+    nextId: 4000
+  - typeName: 
+    label: "\uB3C4\uAD6C"
+    start: 5000
+    end: 5999
+    nextId: 5000
+  - typeName: 
+    label: "\uBC29\uC5B4\uAD6C"
+    start: 6000
+    end: 6999
+    nextId: 6000
+  - typeName: 
+    label: "\uC790\uC6D0"
+    start: 7000
+    end: 7999
+    nextId: 7000
+  - typeName: 
+    label: "\uBE14\uB7ED"
+    start: 8000
+    end: 8999
+    nextId: 8000
+  - typeName: 
+    label: "\uC720\uB2DB"
+    start: 9000
+    end: 9999
+    nextId: 9000
+  _nextId: 1
   _items:
+  - {fileID: 11400000, guid: aa993fe814cf6eb439e0ae645664510d, type: 2}
   - {fileID: 11400000, guid: 9e9a6ba3451602e439eb77bc2f17547a, type: 2}
-  - {fileID: 11400000, guid: f4196b1aae1596d419fd2c186d00f932, type: 2}
   - {fileID: 11400000, guid: e38f35e9d5a8c9549925ca76862f2a9e, type: 2}
+  - {fileID: 11400000, guid: 8769d5808fd97fe47a5db94bcebdfcb1, type: 2}
   - {fileID: 11400000, guid: f5cab53e7556c654ab198ca933014009, type: 2}
-  - {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
-  - {fileID: 11400000, guid: c831b0fae6b13444ba27e742aa2e5d16, type: 2}
+  - {fileID: 11400000, guid: f4196b1aae1596d419fd2c186d00f932, type: 2}
   - {fileID: 11400000, guid: 2c0c8489d2692664ba54a98d05725978, type: 2}
+  - {fileID: 11400000, guid: c831b0fae6b13444ba27e742aa2e5d16, type: 2}
+  - {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
