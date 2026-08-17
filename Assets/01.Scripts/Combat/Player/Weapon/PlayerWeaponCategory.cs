@@ -9,5 +9,8 @@ public enum PlayerWeaponCategory
     AutoRifle,
     SniperRifle,
     GrenadeShooter,
-    Rocket
+    Rocket,
+
+    // 뒤에만 추가할 것. 이미 저장된 무기·파츠 에셋의 값이 밀린다.
+    Shotgun,
 }

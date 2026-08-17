@@ -4,18 +4,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 하이어라키 행에 계층선과 토글, 컴포넌트 아이콘을 얹는다.
+/// 하이어라키 행에 계층선과 컴포넌트 아이콘을 얹는다.
 ///
-/// 항상 그리는 것은 <b>계층선과 활성 체크박스</b>뿐입니다.
+/// 항상 그리는 것은 <b>계층선</b>뿐입니다.
 /// 컴포넌트 아이콘과 RaycastTarget 토글은 <b>마우스를 올린 행에만</b> 나옵니다 —
 /// 행 폭이 좁아서 전부 상시로 그리면 이름이 가려집니다.
+///
+/// 활성 토글은 여기 없습니다. 휠클릭이 그 일을 합니다 (<see cref="HierarchyActiveToggle"/>).
 /// </summary>
 [InitializeOnLoad]
 public static class HierarchyRowDecorator
 {
     private const float IndentWidth = 14f;
     private const float IconSize = 16f;
-    private const float ToggleWidth = 15f;
     private const float RaycastWidth = 20f;
     private const float RightMargin = 2f;
 
@@ -43,11 +44,9 @@ public static class HierarchyRowDecorator
 
         DrawTreeLines(go, rect);
 
-        float x = rect.xMax - RightMargin;
-        DrawActiveToggle(go, rect, ref x);
-
         if (!rect.Contains(Event.current.mousePosition)) return;
 
+        float x = rect.xMax - RightMargin;
         DrawRaycastToggle(go, rect, ref x);
         DrawComponentIcons(go, rect, x);
     }
@@ -92,21 +91,6 @@ public static class HierarchyRowDecorator
         if (parent == null) return true;
 
         return transform.GetSiblingIndex() == parent.childCount - 1;
-    }
-
-    private static void DrawActiveToggle(GameObject go, Rect rect, ref float x)
-    {
-        x -= ToggleWidth;
-
-        Rect area = new(x, rect.y + (rect.height - ToggleWidth) * 0.5f, ToggleWidth, ToggleWidth);
-
-        EditorGUI.BeginChangeCheck();
-        bool active = GUI.Toggle(area, go.activeSelf, GUIContent.none);
-
-        if (!EditorGUI.EndChangeCheck()) return;
-
-        Undo.RecordObject(go, active ? "Activate GameObject" : "Deactivate GameObject");
-        go.SetActive(active);
     }
 
     /// <summary>UI 오브젝트만 나온다. Graphic이 없으면 RaycastTarget 자체가 없다.</summary>

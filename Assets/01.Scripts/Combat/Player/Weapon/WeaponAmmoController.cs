@@ -60,6 +60,9 @@ public class WeaponAmmoController
             ? Mathf.Clamp01(1f - _reloadTimer / _reloadDuration)
             : 0f;
 
+    /// <summary>재장전이 끝나기까지 남은 초. 재장전 중이 아니면 0.</summary>
+    public float ReloadRemainTime => IsReloading ? Mathf.Max(0f, _reloadTimer) : 0f;
+
     /// <summary>한 번 격발에 드는 탄. 탄종이 정하고, 없으면 1이다.</summary>
     public int CostPerShot
     {

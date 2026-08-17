@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CanvasGroup))]
 public class UIPanelBase : MonoBehaviour, IWindowPanel
 {
     [SerializeField] private bool _shownOnStart;
@@ -12,6 +13,12 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
     {
         if (canvasGroup == null)
             canvasGroup = GetComponent<CanvasGroup>();
+
+        // 없으면 Show/Hide가 조용히 아무 일도 안 한다.
+        // "패널이 안 숨겨지는데 에러도 없다"가 가장 찾기 어려운 부류라 여기서 보장한다.
+        // alpha 1 / interactable true로 붙으므로 있던 화면이 달라지지는 않는다.
+        if (canvasGroup == null)
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         SetShown(_shownOnStart);
     }

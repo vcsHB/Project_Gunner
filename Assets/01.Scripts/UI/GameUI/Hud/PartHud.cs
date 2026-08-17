@@ -4,6 +4,7 @@ public class PartHud : MonoBehaviour
 {
     [SerializeField] private PartPlayerStatus _partPlayerStatus;
     [SerializeField] private PartHudHotbar _partHotbar;
+    [SerializeField] private PartEquipmentStatus _partEquipmentStatus;
 
     public Player Player { get; private set; }
 
@@ -29,5 +30,8 @@ public class PartHud : MonoBehaviour
 
         if (_partHotbar != null)
             _partHotbar.Bind(player);
+
+        if (_partEquipmentStatus != null)
+            _partEquipmentStatus.Bind(player);
     }
 }

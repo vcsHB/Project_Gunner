@@ -101,9 +101,13 @@ public class CellInventorySlot : MonoBehaviour,
     {
         if (_textItemAmount == null) return;
 
-        // 빈 칸에서만 끈다. 1개짜리도 숫자를 보여준다.
-        _textItemAmount.enabled = !IsEmpty;
-        _textItemAmount.text = IsEmpty ? string.Empty : Stack.count.ToString();
+        // 1개짜리는 숫자를 지운다. 칸마다 "1"이 붙어 있으면 눈이 피로하고,
+        // 겹치지 않는 아이템(무기 등)은 애초에 개수가 의미 없다.
+        // 드래그 고스트도 같은 규칙(> 1)을 쓴다.
+        bool showAmount = !IsEmpty && Stack.count > 1;
+
+        _textItemAmount.enabled = showAmount;
+        _textItemAmount.text = showAmount ? Stack.count.ToString() : string.Empty;
     }
 
     #region Pointer
