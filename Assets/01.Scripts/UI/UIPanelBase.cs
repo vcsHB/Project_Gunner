@@ -5,9 +5,15 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
 {
     [SerializeField] private bool _shownOnStart;
 
+    [Tooltip("떠 있는 동안 조준·발사 같은 게임플레이 입력을 막는다. 인벤토리처럼 화면을 잡는 패널만 켠다.")]
+    [SerializeField] private bool _blocksGameplayInput;
+
     public CanvasGroup canvasGroup;
 
     public bool IsShown { get; private set; }
+
+    // 두 번 밀거나 두 번 빼면 카운터가 어긋난다. 실제로 밀었는지 기억한다.
+    private bool _pushedBlock;
 
     protected virtual void Awake()
     {
@@ -25,9 +31,21 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
 
     // LocalizedText는 자기가 알아서 갈아끼우지만, 코드가 조립하는 문구는 아무도 다시 그려주지 않는다.
     // 언어를 바꿨을 때 잔탄 라벨만 이전 언어로 남는 걸 막는다.
-    protected virtual void OnEnable() => Localization.OnChangedEvent += RefreshLocalization;
+    protected virtual void OnEnable()
+    {
+        Localization.OnChangedEvent += RefreshLocalization;
 
-    protected virtual void OnDisable() => Localization.OnChangedEvent -= RefreshLocalization;
+        // 떠 있는 채로 껐다 켜면 OnDisable에서 뺐던 것을 다시 밀어야 한다.
+        ApplyBlock(IsShown);
+    }
+
+    protected virtual void OnDisable()
+    {
+        Localization.OnChangedEvent -= RefreshLocalization;
+
+        // 열린 채로 꺼지거나 파괴되면 아무도 빼주지 않아 조작이 영영 막힌다.
+        ReleaseBlock();
+    }
 
     /// <summary>
     /// 언어가 바뀌었을 때 다시 그린다.
@@ -67,11 +85,35 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
     private void SetShown(bool value)
     {
         IsShown = value;
+        ApplyBlock(value);
 
         if (canvasGroup == null) return;
 
         canvasGroup.alpha = value ? 1f : 0f;
         canvasGroup.interactable = value;
         canvasGroup.blocksRaycasts = value;
+    }
+
+    private void ApplyBlock(bool shown)
+    {
+        if (!_blocksGameplayInput) return;
+
+        if (shown && !_pushedBlock)
+        {
+            UIInputBlocker.Push();
+            _pushedBlock = true;
+            return;
+        }
+
+        if (!shown)
+            ReleaseBlock();
+    }
+
+    private void ReleaseBlock()
+    {
+        if (!_pushedBlock) return;
+
+        _pushedBlock = false;
+        UIInputBlocker.Pop();
     }
 }

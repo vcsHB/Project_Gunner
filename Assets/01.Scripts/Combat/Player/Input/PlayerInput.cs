@@ -153,7 +153,8 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
         if (Mathf.Approximately(value, 0f)) return;
 
         // 굴린 양과 무관하게 한 칸씩 넘긴다.
-        OnSlotCycleEvent?.Invoke(value > 0f ? 1 : -1);
+        // 위로 굴리면 왼쪽(이전) 칸이다. 휠을 "목록을 위로 올린다"로 읽는 쪽에 맞춘다.
+        OnSlotCycleEvent?.Invoke(value > 0f ? -1 : 1);
     }
 
     #endregion

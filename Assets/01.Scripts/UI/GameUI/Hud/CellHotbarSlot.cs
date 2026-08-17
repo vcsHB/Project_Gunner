@@ -1,3 +1,7 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+
 /// <summary>
 /// 핫바 한 칸. 인벤토리 앞쪽 칸을 그대로 가리키므로 드래그·드롭이 그대로 동작한다.
 ///
@@ -9,7 +13,6 @@ public class CellHotbarSlot : CellInventorySlot
 {
     private bool _isActive;
     private bool _isSelected;
-
     public bool IsActive => _isActive;
 
     /// <summary>지금 손에 든 칸인지.</summary>

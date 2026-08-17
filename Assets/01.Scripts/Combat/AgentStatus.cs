@@ -10,7 +10,12 @@ public enum StatusType
     DamageResistance,
     IsResist,
     MoveSpeed,
-    InventorySize
+    InventorySize,
+
+    // 생존 수치의 최대값. 현재값은 VitalStatus가 들고 간다.
+    MaxStamina,
+    MaxHunger,
+    MaxThirst,
 }
 
 public class AgentStatus : MonoBehaviour, IAgentComponent
@@ -26,6 +31,11 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     [Tooltip("인벤토리 칸 수. 가방 같은 걸로 늘어난다.")]
     [SerializeField] private Status<int> inventorySize = new(30);
 
+    [Header("생존")]
+    [SerializeField] private Status<float> maxStamina = new(100f);
+    [SerializeField] private Status<float> maxHunger = new(100f);
+    [SerializeField] private Status<float> maxThirst = new(100f);
+
     public Status<float> Damage => damage;
     public Status<float> Health => health;
     public Status<float> Defense => defense;
@@ -34,6 +44,22 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     public Status<bool> IsResist => isResist;
     public Status<float> MoveSpeed => moveSpeed;
     public Status<int> InventorySize => inventorySize;
+    public Status<float> MaxStamina => maxStamina;
+    public Status<float> MaxHunger => maxHunger;
+    public Status<float> MaxThirst => maxThirst;
+
+    /// <summary>VitalStatus가 종류로 최대값을 찾을 때 쓴다.</summary>
+    public Status<float> GetMaxVital(VitalType type)
+    {
+        switch (type)
+        {
+            case VitalType.Stamina: return maxStamina;
+            case VitalType.Hunger: return maxHunger;
+            case VitalType.Thirst: return maxThirst;
+        }
+
+        return null;
+    }
 
     private Dictionary<StatusType, StatusBase> _statuses;
 
@@ -53,6 +79,9 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
             { StatusType.IsResist, isResist },
             { StatusType.MoveSpeed, moveSpeed },
             { StatusType.InventorySize, inventorySize },
+            { StatusType.MaxStamina, maxStamina },
+            { StatusType.MaxHunger, maxHunger },
+            { StatusType.MaxThirst, maxThirst },
         };
     }
 

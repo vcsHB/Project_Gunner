@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,12 +10,22 @@ using UnityEngine.UI;
 /// 무엇을 받을 수 있는지는 이 셀이 아니라 컨테이너가 판단한다.
 /// </summary>
 public class CellInventorySlot : MonoBehaviour,
-    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerClickHandler
+    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerClickHandler,
+    IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private TextMeshProUGUI _textSlotIndex;
     [SerializeField] private TextMeshProUGUI _textItemAmount;
     [SerializeField] private Image _imageItemIcon;
     [SerializeField] private GameObject _selectMarker;
+
+    [Tooltip("내구도 고갈처럼 손을 쓰지 않으면 안 풀리는 이유로 쓸 수 없을 때 켜진다. 쿨타임은 여기 포함되지 않는다.")]
+    [SerializeField] private GameObject _itemNotUseable;
+
+    [Tooltip("쿨타임 표시. fillAmount로 줄어든다. 없으면 표시하지 않는다.")]
+    [SerializeField] private SlicedFilledImage _cooldownFill;
+
+    [Tooltip("내구도 게이지. 내구도가 없는 아이템에서는 꺼진다.")]
+    [SerializeField] private Image _durabilityFill;
 
     /// <summary>왼쪽 클릭됐을 때. 핫바처럼 클릭에 다른 의미를 더할 때 쓴다.</summary>
     public event Action<CellInventorySlot> OnClickedEvent;
@@ -26,6 +37,9 @@ public class CellInventorySlot : MonoBehaviour,
     public bool IsEmpty => Stack.IsEmpty;
 
     private int _displayIndex = -1;
+
+    // 내구도 알림을 받기 위해 붙잡아 둔다. 스택이 바뀌면 반드시 떼야 한다.
+    private ItemInstance _instance;
 
     // 캐싱하지 않는다. 씬 로드 순서와 무관하게 항상 현재 것을 쓴다.
     private static ItemDragController Drag => ItemDragController.Instance;
@@ -61,6 +75,9 @@ public class CellInventorySlot : MonoBehaviour,
 
     public void SetStack(ItemStack stack)
     {
+        // 개체가 바뀌면 이전 개체의 내구도 알림을 계속 받으면 안 된다.
+        UnsubscribeInstance();
+
         Stack = stack;
 
         if (_imageItemIcon != null)
@@ -71,9 +88,77 @@ public class CellInventorySlot : MonoBehaviour,
             _imageItemIcon.enabled = _imageItemIcon.sprite != null;
         }
 
+        SubscribeInstance();
+
         RefreshAmountText();
+        RefreshUsable();
+        RefreshDurability();
         OnStackChanged();
     }
+
+    /// <summary>쿨타임 표시. 핫바가 매 프레임 밀어 넣는다. 0이면 꺼진다.</summary>
+    public void SetCooldownRatio(float ratio)
+    {
+        if (_cooldownFill == null) return;
+
+        bool active = ratio > 0f;
+
+        if (_cooldownFill.enabled != active)
+            _cooldownFill.enabled = active;
+
+        if (active)
+            _cooldownFill.fillAmount = Mathf.Clamp01(ratio);
+    }
+
+    #region 사용 가능 / 내구도
+
+    private void SubscribeInstance()
+    {
+        _instance = Stack.ResolveInstance();
+
+        if (_instance != null)
+            _instance.OnDurabilityChangedEvent += HandleDurabilityChanged;
+    }
+
+    private void UnsubscribeInstance()
+    {
+        if (_instance == null) return;
+
+        _instance.OnDurabilityChangedEvent -= HandleDurabilityChanged;
+        _instance = null;
+    }
+
+    private void HandleDurabilityChanged(int current, int max)
+    {
+        RefreshUsable();
+        RefreshDurability();
+    }
+
+    /// <summary>
+    /// 쓸 수 없는 상태 표시. 판정은 ItemUsability 한 곳에서만 한다 —
+    /// 칸마다 따로 판단하면 "표시는 멀쩡한데 안 쓰이는" 칸이 생긴다.
+    /// </summary>
+    private void RefreshUsable()
+    {
+        if (_itemNotUseable == null) return;
+
+        _itemNotUseable.SetActive(ItemUsability.IsBlocked(Stack));
+    }
+
+    private void RefreshDurability()
+    {
+        if (_durabilityFill == null) return;
+
+        bool show = _instance != null && _instance.HasDurability;
+
+        if (_durabilityFill.enabled != show)
+            _durabilityFill.enabled = show;
+
+        if (show)
+            _durabilityFill.fillAmount = _instance.DurabilityNormalized;
+    }
+
+    #endregion
 
     public virtual void SetSelected(bool selected)
     {
@@ -162,7 +247,26 @@ public class CellInventorySlot : MonoBehaviour,
         OnClickedEvent?.Invoke(this);
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        // 드래그 중에는 띄우지 않는다. 커서 밑에 고스트가 있는데 설명까지 겹치면 아무것도 안 보인다.
+        if (IsEmpty || (Drag != null && Drag.IsDragging)) return;
+
+        PopupItemInformation popup = PopupItemInformation.Instance;
+        if (popup != null)
+            popup.ShowFor(Stack);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        PopupItemInformation popup = PopupItemInformation.Instance;
+        if (popup != null)
+            popup.HideFor(Stack);
+    }
+
     #endregion
+
+    private void OnDestroy() => UnsubscribeInstance();
 
 #if UNITY_EDITOR
     /// <summary>

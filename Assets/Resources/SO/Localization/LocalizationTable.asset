@@ -13,17 +13,29 @@ MonoBehaviour:
   m_Name: LocalizationTable
   m_EditorClassIdentifier: Assembly-CSharp::LocalizationTableSO
   _entries:
-  - key: UI_Reload
+  - key: Item_Ammo_NormalHeavy270.name
     values:
-    - "\uC7AC\uC7A5\uC804 \uC911"
-    - Reloading
-  - key: Item_Weapon_Hunter
+    - "\uC77C\uBC18 Heavy270 \uD0C4\uD658"
+    - 
+  - key: Item_Ammo_NormalSmall.name
     values:
-    - "\uD5CC\uD130 "
+    - "\uC77C\uBC18 \uC18C\uAD6C\uACBD \uD0C4\uD658"
+    - 
+  - key: Item_Ammo_RustyHeavy270.name
+    values:
+    - "\uB179\uC2A8 Heavy270 \uD0C4\uD658"
+    - 
+  - key: Item_Ammo_RustySmall.name
+    values:
+    - "\uB179\uC2A8 \uC18C\uAD6C\uACBD \uD0C4\uD658"
     - 
   - key: Item_Weapon_Burster
     values:
     - "\uBC84\uC2A4\uD130"
+    - 
+  - key: Item_Weapon_Hunter
+    values:
+    - "\uD5CC\uD130 "
     - 
   - key: Item_Weapon_IronSpear
     values:
@@ -33,7 +45,26 @@ MonoBehaviour:
     values:
     - "\uC2A4\uCE90\uD130"
     - 
-  - key: 
+  - key: UI_Reload
     values:
+    - "\uC7AC\uC7A5\uC804 \uC911"
+    - Reloading
+  - key: Item_Ammo_NormalHeavy270.desc
+    values:
+    - "\uB192\uC740 \uC7A5\uAC11 \uAD00\uD1B5\uB825\uACFC \uD53C\uD574\uB7C9\uC744
+      \uAC00\uC9C4 \uD0C4\uD658 \uD0C0\uC785\uC785\uB2C8\uB2E4."
     - 
+  - key: Item_Ammo_NormalSmall.desc
+    values:
+    - "\uC18C\uAD6C\uACBD \uCD1D\uAE30\uB958\uC5D0 \uC801\uD569\uD55C \uD0C4\uD658\uC774\uB2E4. "
+    - 
+  - key: Item_Ammo_RustyHeavy270.desc
+    values:
+    - "\uB192\uC740 \uC7A5\uAC11 \uAD00\uD1B5\uB825\uACFC \uD53C\uD574\uB7C9\uC744
+      \uAC00\uC9C4 \uD0C4\uD658 \uD0C0\uC785\uC785\uB2C8\uB2E4. \uB179\uC2AC\uC5B4
+      \uD6A8\uACFC\uAC00 \uC57D\uD654\uB418\uC5C8\uC2B5\uB2C8\uB2E4."
+    - 
+  - key: Item_Ammo_RustySmall.desc
+    values:
+    - "\uC18C\uAD6C\uACBD \uCD1D\uAE30\uB958\uC5D0 \uC801\uD569\uD55C \uD0C4\uD658\uC774\uB2E4. "
     - 

@@ -18,6 +18,7 @@ public class PartHudHotbar : MonoBehaviour
     private CellSlotBuilder _builder;
     private Inventory _inventory;
     private PlayerHotbar _hotbar;
+    private PlayerItemUseController _itemUse;
 
     private void Awake()
     {
@@ -63,6 +64,7 @@ public class PartHudHotbar : MonoBehaviour
         InventoryController controller = player.GetCompo<InventoryController>();
         _inventory = controller != null ? controller.Inventory : null;
         _hotbar = player.GetCompo<PlayerHotbar>();
+        _itemUse = player.GetCompo<PlayerItemUseController>();
 
         if (_inventory != null)
         {
@@ -90,6 +92,25 @@ public class PartHudHotbar : MonoBehaviour
         {
             _hotbar.OnSelectedChangedEvent -= HandleSelectedChanged;
             _hotbar = null;
+        }
+
+        _itemUse = null;
+    }
+
+    /// <summary>
+    /// 쿨타임은 연속 값이라 이벤트로 받을 수 없다. 남은 시간이 있을 때만 훑는다.
+    /// 칸이 7개뿐이라 매 프레임 도는 비용은 무시할 수 있다.
+    /// </summary>
+    private void Update()
+    {
+        if (_itemUse == null) return;
+
+        for (int i = 0; i < InventoryLayout.HotbarSize; i++)
+        {
+            CellInventorySlot cell = _builder[i];
+            if (cell == null) continue;
+
+            cell.SetCooldownRatio(_itemUse.GetCooldownRatio(cell.Stack.itemId));
         }
     }
 

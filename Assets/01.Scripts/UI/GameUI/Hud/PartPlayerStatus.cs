@@ -5,7 +5,6 @@ public class PartPlayerStatus : MonoBehaviour
     [Header("Default Status Displays")]
     [SerializeField] private SimpleGauge _healthGauge;
 
-    // 스태미나/허기/갈증은 아직 데이터가 없다. 시스템이 생기면 여기에 연결한다.
     [SerializeField] private SimpleGauge _staminaGauge;
     [SerializeField] private SimpleGauge _hungerGauge;
     [SerializeField] private SimpleGauge _thirstyGauge;
@@ -14,6 +13,7 @@ public class PartPlayerStatus : MonoBehaviour
     [SerializeField] private ConditionDisplayGroup _conditionDisplayGroup;
 
     private Health _health;
+    private VitalStatus _vitals;
 
     public void Bind(Player player)
     {
@@ -28,6 +28,16 @@ public class PartPlayerStatus : MonoBehaviour
             HandleHealthChanged(_health.CurrentHealth, _health.MaxHealth);
         }
 
+        _vitals = player.GetCompo<VitalStatus>();
+        if (_vitals != null)
+        {
+            _vitals.OnVitalChangedEvent += HandleVitalChanged;
+
+            // 이벤트는 값이 바뀔 때만 온다. 붙는 순간의 값은 직접 한 번 읽어야 한다.
+            foreach (VitalType type in System.Enum.GetValues(typeof(VitalType)))
+                HandleVitalChanged(type, _vitals.Get(type), _vitals.GetMax(type));
+        }
+
         if (_conditionDisplayGroup != null)
             _conditionDisplayGroup.Bind(player.GetCompo<AgentConditionEffector>());
     }
@@ -40,8 +50,34 @@ public class PartPlayerStatus : MonoBehaviour
             _health = null;
         }
 
+        if (_vitals != null)
+        {
+            _vitals.OnVitalChangedEvent -= HandleVitalChanged;
+            _vitals = null;
+        }
+
         if (_conditionDisplayGroup != null)
             _conditionDisplayGroup.Unbind();
+    }
+
+    private void HandleVitalChanged(VitalType type, float current, float max)
+    {
+        SimpleGauge gauge = GetGauge(type);
+        if (gauge == null) return;
+
+        gauge.UpdateProgress(Mathf.CeilToInt(current), Mathf.CeilToInt(max));
+    }
+
+    private SimpleGauge GetGauge(VitalType type)
+    {
+        switch (type)
+        {
+            case VitalType.Stamina: return _staminaGauge;
+            case VitalType.Hunger: return _hungerGauge;
+            case VitalType.Thirst: return _thirstyGauge;
+        }
+
+        return null;
     }
 
     private void OnDestroy() => Unbind();

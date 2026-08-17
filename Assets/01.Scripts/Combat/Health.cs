@@ -83,6 +83,20 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         return DamageResponse.Hit();
     }
 
+    /// <summary>
+    /// 방어력·저항을 무시하는 피해. 굶주림·탈수처럼 전투가 아닌 원인에 쓴다.
+    /// 갑옷을 입었다고 덜 굶지는 않는다.
+    /// </summary>
+    public void ApplyDirectDamage(float amount)
+    {
+        if (IsDead || amount <= 0f) return;
+
+        SetHealth(_currentHealth - amount);
+
+        if (_currentHealth <= 0f)
+            Die();
+    }
+
     public void Heal(float amount)
     {
         if (IsDead || amount <= 0f) return;

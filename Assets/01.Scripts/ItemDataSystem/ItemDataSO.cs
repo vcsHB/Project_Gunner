@@ -28,6 +28,9 @@ public abstract class ItemDataSO : ScriptableObject
     [Tooltip("한 칸에 겹칠 수 있는 최대 개수. 무기처럼 개별 상태를 갖는 것은 1로 둔다.")]
     [SerializeField, Min(1)] private int _maxStackCount = 1;
 
+    [Tooltip("최대 내구도. 0이면 닳지 않는 아이템이다. 0보다 크면 개체 상태가 필요하다.")]
+    [SerializeField, Min(0)] private int _maxDurability;
+
     [Header("Naming")]
     [Tooltip("에디터에서 이 아이템을 알아보기 위한 식별자. 에셋 이름 규칙의 재료다. " +
              "화면에는 나오지 않으므로 영문으로 짧게 쓴다.")]
@@ -49,6 +52,17 @@ public abstract class ItemDataSO : ScriptableObject
     public int MaxStackCount => _maxStackCount;
     public bool IsStackable => _maxStackCount > 1;
 
+    public int MaxDurability => _maxDurability;
+    public bool HasDurability => _maxDurability > 0;
+
+    /// <summary>
+    /// 개체마다 다른 상태를 갖는 아이템인지. true면 인벤토리에서 한 칸을 혼자 쓴다.
+    ///
+    /// 내구도가 있으면 개체마다 남은 값이 달라야 하므로 자동으로 true가 된다.
+    /// 파생 타입이 다른 이유로 true를 원하면 이 위에 얹어서 오버라이드한다.
+    /// </summary>
+    public virtual bool RequiresInstance => HasDurability;
+
     /// <summary>
     /// 월드에 놓였을 때 쓸 스프라이트. 따로 지정하지 않았으면 UI 아이콘을 그대로 쓴다.
     ///
@@ -61,13 +75,8 @@ public abstract class ItemDataSO : ScriptableObject
     /// <summary>월드용 스프라이트를 따로 갖고 있는지. 에디터 검증용.</summary>
     public bool HasDedicatedWorldSprite => _worldSprite != null;
 
-    /// <summary>
-    /// 개체마다 다른 상태를 갖는 아이템인지. true면 인벤토리에서 한 칸을 혼자 쓴다.
-    /// </summary>
-    public virtual bool RequiresInstance => false;
-
-    /// <summary>RequiresInstance가 true인 아이템만 구현한다.</summary>
-    public virtual ItemInstance CreateRuntimeInstance() => null;
+    /// <summary>개체 상태가 필요한 아이템이 자기 타입에 맞는 인스턴스를 만든다.</summary>
+    public virtual ItemInstance CreateRuntimeInstance() => new PlainItemInstance();
 
     public uint Id => _id;
     public bool IsRegistered => _id != 0;

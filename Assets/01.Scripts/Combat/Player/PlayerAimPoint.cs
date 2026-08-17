@@ -108,6 +108,9 @@ public class PlayerAimPoint : MonoBehaviour
             _weaponController.OnWeaponChangedEvent += HandleWeaponChanged;
             HandleWeaponChanged(_weaponController.Current);
         }
+
+        UIInputBlocker.OnBlockedChangedEvent += HandleInputBlocked;
+        HandleInputBlocked(UIInputBlocker.IsBlocked);
     }
 
     public void Unbind()
@@ -118,15 +121,19 @@ public class PlayerAimPoint : MonoBehaviour
             _weaponController = null;
         }
 
+        UIInputBlocker.OnBlockedChangedEvent -= HandleInputBlocked;
         _aimController = null;
     }
+
+    // 인벤토리를 열면 조준선을 숨긴다. 마우스로 UI를 다루는 중에 조준선이 따라다니면 방해가 된다.
+    private void HandleInputBlocked(bool blocked) => SetAimPointEnable(!blocked);
 
     private void OnDestroy() => Unbind();
 
     // 조준 계산이 Update에서 끝난 뒤에 따라가야 한 프레임 밀리지 않는다.
     private void LateUpdate()
     {
-        if (_aimController == null) return;
+        if (_aimController == null || !_isVisualEnable) return;
 
         SetAimPointPosition(_aimController.AimPosition);
     }

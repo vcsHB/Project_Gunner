@@ -184,6 +184,15 @@ public class PlayerRangedWeapon : PlayerWeaponBase
     /// <summary>실제 격발. 쿨타임은 보지 않는다(점사가 자기 간격으로 돌기 때문).</summary>
     private bool Shoot(float powerRatio)
     {
+        // 내구도가 다 닳은 무기는 탄이 있어도 나가지 않는다.
+        // 슬롯의 _itemNotUseable과 같은 판정을 쓴다 — 표시와 동작이 갈리면 안 된다.
+        if (Instance != null && Instance.IsBroken)
+        {
+            OnDryFireEvent?.Invoke();
+            _triggerHeld = false;
+            return false;
+        }
+
         if (!Ammo.CanFire)
         {
             OnDryFireEvent?.Invoke();
@@ -197,6 +206,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         }
 
         if (!Ammo.TryConsumeForShot()) return false;
+
+        // 한 발이 실제로 나갔을 때만 닳는다. 빈 격발로 총이 망가지면 억울하다.
+        Instance?.ConsumeDurability();
 
         FireProjectiles(powerRatio);
 

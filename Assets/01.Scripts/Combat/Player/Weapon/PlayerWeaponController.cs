@@ -53,6 +53,8 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
             _player.Input.OnReloadEvent += HandleReload;
         }
 
+        UIInputBlocker.OnBlockedChangedEvent += HandleInputBlocked;
+
         RefreshWeapon();
     }
 
@@ -66,6 +68,8 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
             _player.Input.OnAttackEvent -= HandleAttack;
             _player.Input.OnReloadEvent -= HandleReload;
         }
+
+        UIInputBlocker.OnBlockedChangedEvent -= HandleInputBlocked;
 
         DestroyCurrent();
     }
@@ -134,14 +138,35 @@ public class PlayerWeaponController : MonoBehaviour, IAgentComponent
     {
         if (Current == null) return;
 
+        // 인벤토리를 열어둔 채로 클릭하면 총이 나가면 안 된다.
+        // 떼는 것은 막지 않는다 — 막힌 동안 뗀 것을 무시하면 계속 눌린 상태로 남는다.
+        if (pressed && UIInputBlocker.IsBlocked) return;
+
         if (pressed)
             Current.OnAttackPressed();
         else
             Current.OnAttackReleased();
     }
 
+    /// <summary>
+    /// 막히기 시작하면 누르고 있던 것을 놓아준다.
+    /// 안 그러면 연사가 인벤토리를 연 채로 계속 돌고, 차지는 걸린 채로 남는다.
+    /// </summary>
+    private void HandleInputBlocked(bool blocked)
+    {
+        if (!blocked) return;
+
+        _reloadHeld = false;
+        _ammoCycleFired = false;
+
+        if (Current != null)
+            Current.OnAttackReleased();
+    }
+
     private void HandleReload(bool pressed)
     {
+        if (pressed && UIInputBlocker.IsBlocked) return;
+
         if (pressed)
         {
             _reloadHeld = true;
