@@ -13,8 +13,15 @@ public class PopupReload : WeaponPanelBase
     [SerializeField] private TextMeshProUGUI _textReloadRemainTime;
     [SerializeField] private Image _reloadGaugeFill;
 
-    [Tooltip("남은 시간 표시 형식. {0}에 초가 들어간다.")]
-    [SerializeField] private string _remainTimeFormat = "{0:0.0}s";
+    [Tooltip("남은 시간 문구의 로컬라이즈 키. 표에는 포맷 문자열이 들어간다.")]
+    [SerializeField] private string _remainTimeKey = "ui.popupreload.remaintime";
+
+    [Tooltip("표에 없을 때 쓸 포맷. {0}에 남은 초가 들어간다.")]
+    [SerializeField] private string _remainTimeFormat = "{0:0.0}";
+
+    // 표시 단위가 0.1초라 매 프레임 문자열을 다시 만들 이유가 없다.
+    // TMP는 text에 대입할 때마다 메시를 다시 만든다.
+    private int _shownTenths = -1;
 
     protected override void Awake()
     {
@@ -40,10 +47,14 @@ public class PopupReload : WeaponPanelBase
 
     protected override void OnWeaponCleared() => Hide();
 
+    // 언어가 바뀌면 캐시를 버려서 다음 프레임에 새 문구로 다시 만들게 한다.
+    protected override void RefreshLocalization() => _shownTenths = -1;
+
     private void HandleReloadStateChanged(bool reloading)
     {
         if (reloading)
         {
+            _shownTenths = -1;
             Refresh();
             Show();
             return;
@@ -67,7 +78,17 @@ public class PopupReload : WeaponPanelBase
         if (_reloadGaugeFill != null)
             _reloadGaugeFill.fillAmount = ammo.ReloadProgress01;
 
-        if (_textReloadRemainTime != null)
-            _textReloadRemainTime.text = string.Format(_remainTimeFormat, ammo.ReloadRemainTime);
+        RefreshRemainTime(ammo.ReloadRemainTime);
+    }
+
+    private void RefreshRemainTime(float remainSeconds)
+    {
+        if (_textReloadRemainTime == null) return;
+
+        int tenths = Mathf.CeilToInt(remainSeconds * 10f);
+        if (tenths == _shownTenths) return;
+
+        _shownTenths = tenths;
+        _textReloadRemainTime.text = Localization.Format(_remainTimeKey, _remainTimeFormat, tenths * 0.1f);
     }
 }

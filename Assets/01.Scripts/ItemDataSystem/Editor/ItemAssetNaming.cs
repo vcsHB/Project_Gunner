@@ -11,6 +11,9 @@ public static class ItemAssetNaming
     public const string Prefix = "Item";
     public const char Separator = '_';
 
+    /// <summary>로컬라이즈 키의 맨 앞. 시트에서 아이템 행을 한 덩어리로 모아준다.</summary>
+    public const string LocalizationPrefix = "item";
+
     /// <summary>SO 타입명에서 종류 부분을 뽑는다. PlayerWeaponDataSO -> PlayerWeapon</summary>
     public static string GetKindName(Type type)
     {
@@ -32,11 +35,23 @@ public static class ItemAssetNaming
     /// 이 에셋이 가져야 할 이름. 표시 이름이 비어있으면 현재 파일명에서 규칙 부분을 걷어내고 쓴다.
     /// </summary>
     public static string BuildAssetName(ItemDataSO item)
-    {
-        string source = string.IsNullOrEmpty(item.itemName) ? StripPrefix(item) : item.itemName;
+        => BuildAssetName(item.GetType(), GetNameSource(item));
 
-        return BuildAssetName(item.GetType(), source);
-    }
+    /// <summary>
+    /// 로컬라이즈 키. item.{종류}.{식별자} — 전부 소문자다.
+    ///
+    /// 만들 때 한 번 채워 넣고 그 뒤로는 <b>따라 바뀌지 않는다.</b>
+    /// 에셋 이름에서 매번 계산하면 이름을 바꾸는 순간 시트 행이 고아가 된다.
+    /// </summary>
+    public static string BuildLocalizationKey(Type type, string editorName)
+        => $"{LocalizationPrefix}.{GetKindName(type).ToLowerInvariant()}.{Sanitize(editorName).ToLowerInvariant()}";
+
+    public static string BuildLocalizationKey(ItemDataSO item)
+        => BuildLocalizationKey(item.GetType(), GetNameSource(item));
+
+    /// <summary>이름을 만들 재료. 식별자가 비어 있으면 에셋 이름에서 규칙 부분을 걷어내고 쓴다.</summary>
+    private static string GetNameSource(ItemDataSO item)
+        => string.IsNullOrEmpty(item.RawEditorName) ? StripPrefix(item) : item.RawEditorName;
 
     /// <summary>파일명에서 공백과 경로에 못 쓰는 문자를 걷어낸다.</summary>
     public static string Sanitize(string raw)

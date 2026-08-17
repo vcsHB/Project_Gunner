@@ -309,6 +309,20 @@ public class ItemDatabaseSOEditor : Editor
 
         DrawOverlapValidation(database, problems);
 
+        // 키가 겹치면 두 아이템이 시트의 같은 행을 보게 되어 이름이 하나로 합쳐진다.
+        Dictionary<string, ItemDataSO> keyOwners = new();
+
+        foreach (ItemDataSO item in database.All)
+        {
+            if (item == null || string.IsNullOrEmpty(item.LocalizationKey)) continue;
+
+            if (!keyOwners.TryAdd(item.LocalizationKey, item))
+            {
+                problems.AppendLine(
+                    $"- {item.name}: 로컬라이즈 키 '{item.LocalizationKey}'가 {keyOwners[item.LocalizationKey].name}과 겹칩니다.");
+            }
+        }
+
         foreach (ItemDataSO item in database.All)
         {
             if (item == null)
@@ -322,6 +336,10 @@ public class ItemDatabaseSOEditor : Editor
 
             if (item.ItemCategory == ItemCategoryType.None)
                 problems.AppendLine($"- {item.name}: 카테고리가 None 입니다.");
+
+            // 키가 없으면 시트에 행이 있어도 영영 못 찾는다. Item Creator에서 일괄로 채울 수 있다.
+            if (string.IsNullOrEmpty(item.LocalizationKey))
+                problems.AppendLine($"- {item.name}: 로컬라이즈 키가 없습니다.");
 
             // 월드 스프라이트는 비어있으면 아이콘으로 되돌아가므로, 아이콘이 없으면 양쪽 다 없는 것이다.
             if (item.IconSprite == null)

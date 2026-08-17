@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// 게임에 들어가는 모든 데이터의 공통 베이스. 무기·블럭·자원·유닛 전부 여기서 파생된다.
@@ -6,6 +7,10 @@ using UnityEngine;
 /// </summary>
 public abstract class ItemDataSO : ScriptableObject
 {
+    /// <summary>로컬라이즈 키에 붙는 접미사. 시트의 행 이름이 된다.</summary>
+    public const string NameKeySuffix = ".name";
+    public const string DescriptionKeySuffix = ".desc";
+
     // Id는 ItemDatabase가 부여하고 한 번 부여되면 재사용하지 않는다.
     // 0은 "아직 등록 안 됨"을 뜻한다. 직접 수정하지 말 것.
     [SerializeField] private uint _id;
@@ -23,8 +28,23 @@ public abstract class ItemDataSO : ScriptableObject
     [Tooltip("한 칸에 겹칠 수 있는 최대 개수. 무기처럼 개별 상태를 갖는 것은 1로 둔다.")]
     [SerializeField, Min(1)] private int _maxStackCount = 1;
 
-    public string itemName; // TODO...for long future. Localization.
-    [TextArea] public string itemDescription;
+    [Header("Naming")]
+    [Tooltip("에디터에서 이 아이템을 알아보기 위한 식별자. 에셋 이름 규칙의 재료다. " +
+             "화면에는 나오지 않으므로 영문으로 짧게 쓴다.")]
+    [FormerlySerializedAs("itemName")]
+    [SerializeField] private string _editorName;
+
+    [Tooltip("화면에 표시될 이름. 로컬라이즈 시트가 로드되면 그쪽이 우선한다.")]
+    [SerializeField] private string _displayName;
+
+    [Tooltip("화면에 표시될 설명. 로컬라이즈 시트가 로드되면 그쪽이 우선한다.")]
+    [TextArea]
+    [FormerlySerializedAs("itemDescription")]
+    [SerializeField] private string _description;
+
+    [Tooltip("로컬라이즈 시트의 행을 찾는 키. .name/.desc 접미사는 코드가 붙인다. " +
+             "Item Creator가 채워주고, 한 번 정해지면 에셋 이름을 바꿔도 따라 바뀌지 않는다.")]
+    [SerializeField] private string _localizationKey;
 
     public int MaxStackCount => _maxStackCount;
     public bool IsStackable => _maxStackCount > 1;
@@ -52,6 +72,42 @@ public abstract class ItemDataSO : ScriptableObject
     public uint Id => _id;
     public bool IsRegistered => _id != 0;
 
-    /// <summary>비어있으면 에셋 이름을 쓴다.</summary>
-    public string DisplayName => string.IsNullOrEmpty(itemName) ? name : itemName;
+    #region Naming
+
+    /// <summary>인스펙터에 적힌 식별자 그대로. 비어있을 수 있다. 에셋 이름 규칙이 쓴다.</summary>
+    public string RawEditorName => _editorName;
+
+    /// <summary>에디터 식별자. 비어있으면 에셋 이름을 쓴다. 로그에 찍는 이름이다.</summary>
+    public string EditorName => string.IsNullOrEmpty(_editorName) ? name : _editorName;
+
+    public string LocalizationKey => _localizationKey;
+
+    public string NameKey
+        => string.IsNullOrEmpty(_localizationKey) ? string.Empty : _localizationKey + NameKeySuffix;
+
+    public string DescriptionKey
+        => string.IsNullOrEmpty(_localizationKey) ? string.Empty : _localizationKey + DescriptionKeySuffix;
+
+    /// <summary>
+    /// 화면에 쓸 이름. 시트가 로드되어 있으면 그쪽이 우선한다.
+    ///
+    /// 시트가 없거나 키가 비었으면 기본 표시명 → 에디터 식별자 → 에셋 이름 순으로 내려간다.
+    /// 어느 단계에서도 빈 문자열이 나오지 않아야 UI에 이름 없는 칸이 생기지 않는다.
+    /// </summary>
+    public string DisplayName => Localization.Get(NameKey, FallbackName);
+
+    public string Description => Localization.Get(DescriptionKey, _description);
+
+    /// <summary>
+    /// 표가 없을 때 보일 이름. 표에 등록할 한국어 값이기도 하다.
+    ///
+    /// 등록할 때 <see cref="DisplayName"/>을 쓰면 안 된다 — 그건 이미 표를 거친 값이라,
+    /// 영어로 보고 있는 중이면 영어가 한국어 칸에 들어간다.
+    /// </summary>
+    public string FallbackName => string.IsNullOrEmpty(_displayName) ? EditorName : _displayName;
+
+    /// <summary>인스펙터에 적힌 설명 그대로. 로컬라이즈를 타지 않는다.</summary>
+    public string RawDescription => _description;
+
+    #endregion
 }

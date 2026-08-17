@@ -48,6 +48,9 @@ public class PartEquipmentStatus : WeaponPanelBase
 
     private void HandleAmmoChanged(AmmoDataSO ammo, int count) => RefreshAmmoText();
 
+    // 탄종 이름이 언어를 탄다. 잔탄 숫자는 안 타지만 같이 다시 그려도 비용이 없다.
+    protected override void RefreshLocalization() => RefreshAmmoText();
+
     private void RefreshAmmoText()
     {
         WeaponAmmoController ammo = Ammo;

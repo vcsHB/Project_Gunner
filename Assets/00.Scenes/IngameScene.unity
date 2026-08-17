@@ -2283,6 +2283,7 @@ GameObject:
   - component: {fileID: 344493923}
   - component: {fileID: 344493925}
   - component: {fileID: 344493924}
+  - component: {fileID: 344493926}
   m_Layer: 5
   m_Name: TextReload
   m_TagString: Untagged
@@ -2409,6 +2410,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 344493922}
   m_CullTransparentMesh: 1
+--- !u!114 &344493926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 344493922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c93c9e332db9804e8711c584b0d89bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizedText
+  _key: UI_Reload
+  _sourceText: "\uC7AC\uC7A5\uC804 \uC911"
+  _target: {fileID: 344493924}
 --- !u!1 &349363799
 GameObject:
   m_ObjectHideFlags: 0
@@ -6956,6 +6972,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 979540996}
   _weaponPreview: {fileID: 113506063}
   _textCurrentAmmo: {fileID: 1655619798}
+  _textAmmoType: {fileID: 0}
   _noAmmoText: '-'
 --- !u!225 &979540996
 CanvasGroup:
@@ -8623,7 +8640,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.0007415898}
+  m_AnchoredPosition: {x: 0, y: -0.000021746548}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1109435037
@@ -9711,6 +9728,7 @@ MonoBehaviour:
   canvasGroup: {fileID: 0}
   _textReloadRemainTime: {fileID: 1344179964}
   _reloadGaugeFill: {fileID: 990299309}
+  _remainTimeKey: ui.popupreload.remaintime
   _remainTimeFormat: '{0:0.0}s'
 --- !u!225 &1258705260
 CanvasGroup:
@@ -12981,6 +12999,7 @@ GameObject:
   - component: {fileID: 1655619797}
   - component: {fileID: 1655619799}
   - component: {fileID: 1655619798}
+  - component: {fileID: 1655619800}
   m_Layer: 5
   m_Name: TextCurrentAmmo
   m_TagString: Untagged
@@ -13107,6 +13126,56 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1655619796}
   m_CullTransparentMesh: 1
+--- !u!114 &1655619800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1655619796}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
+  m_StringReference:
+    m_Dirty: 1
+    m_UpdateTrigger: 0
+    <property>k__BackingField: 
+    m_TableReference:
+      m_TableCollectionName: 
+      m_Valid: 0
+      <ReferenceType>k__BackingField: 0
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: 
+      m_Valid: 0
+      <ReferenceType>k__BackingField: 0
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocaleOverride: {fileID: 0}
+    m_CurrentTable:
+      m_TableCollectionName: 
+      m_Valid: 0
+      <ReferenceType>k__BackingField: 0
+    m_CurrentTableEntry:
+      m_KeyId: 0
+      m_Key: 
+      m_Valid: 0
+      <ReferenceType>k__BackingField: 0
+    m_ActivatedCount: 0
+    m_LocalVariables: []
+    m_CurrentStringChangedValue: 
+    m_WaitingForVariablesEndUpdate: 0
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - {m_Target: {fileID: 1655619798}, m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro, m_MethodName: set_text, m_Mode: 0, m_Arguments: {m_ObjectArgument: {fileID: 0}, m_ObjectArgumentAssemblyTypeName: , m_IntArgument: 0, m_FloatArgument: 0, m_StringArgument: , m_BoolArgument: 0}, m_CallState: 1}
+    m_CallsDirty: 1
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &1673327624
 GameObject:
   m_ObjectHideFlags: 0

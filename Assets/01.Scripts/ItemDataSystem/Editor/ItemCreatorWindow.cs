@@ -25,6 +25,7 @@ public class ItemCreatorWindow : EditorWindow
     private Type _selectedType;
     private Vector2 _typeScroll;
     private Vector2 _renameScroll;
+    private Vector2 _localizationScroll;
 
     private List<Type> _types;
 
@@ -162,9 +163,9 @@ public class ItemCreatorWindow : EditorWindow
         if (AssetDatabase.LoadAssetAtPath<ItemDataSO>(path) != null) return;
 
         ItemDataSO asset = (ItemDataSO)CreateInstance(_selectedType);
-        asset.itemName = _itemName;
-
         AssetDatabase.CreateAsset(asset, path);
+
+        WriteNaming(asset, _itemName, ItemAssetNaming.BuildLocalizationKey(_selectedType, _itemName));
         AssetDatabase.SaveAssets();
 
         // 만들자마자 Id를 받아야 다른 곳에서 참조할 수 있다.
@@ -189,6 +190,13 @@ public class ItemCreatorWindow : EditorWindow
     {
         EditorGUILayout.LabelField("정리", EditorStyles.boldLabel);
 
+        DrawRenameMaintenance();
+        EditorGUILayout.Space();
+        DrawLocalizationMaintenance();
+    }
+
+    private void DrawRenameMaintenance()
+    {
         List<ItemDataSO> mismatched = FindMismatchedNames();
 
         if (mismatched.Count == 0)
@@ -207,6 +215,85 @@ public class ItemCreatorWindow : EditorWindow
 
         if (GUILayout.Button("이름 규칙 일괄 적용", GUILayout.Height(24f)))
             RenameAll(mismatched);
+    }
+
+    /// <summary>
+    /// 키가 없는 에셋을 찾아 규칙대로 채운다. 이미 있는 키는 건드리지 않는다 —
+    /// 덮어쓰면 시트에 이미 적어둔 행이 고아가 된다.
+    /// </summary>
+    private void DrawLocalizationMaintenance()
+    {
+        List<ItemDataSO> missing = FindMissingLocalizationKeys();
+
+        if (missing.Count == 0)
+        {
+            EditorGUILayout.HelpBox("모든 아이템에 로컬라이즈 키가 있습니다.", MessageType.Info);
+            return;
+        }
+
+        EditorGUILayout.HelpBox($"로컬라이즈 키가 없는 에셋 {missing.Count}개", MessageType.Warning);
+
+        _localizationScroll = EditorGUILayout.BeginScrollView(_localizationScroll, GUILayout.Height(100f));
+        foreach (ItemDataSO item in missing)
+            EditorGUILayout.LabelField($"{item.name}  →  {ItemAssetNaming.BuildLocalizationKey(item)}", EditorStyles.miniLabel);
+
+        EditorGUILayout.EndScrollView();
+
+        if (GUILayout.Button("로컬라이즈 키 일괄 채우기", GUILayout.Height(24f)))
+            FillLocalizationKeys(missing);
+    }
+
+    private static List<ItemDataSO> FindMissingLocalizationKeys()
+    {
+        List<ItemDataSO> result = new();
+
+        foreach (ItemDataSO item in ItemDatabaseBuilder.LoadAllItemAssets())
+        {
+            if (string.IsNullOrEmpty(item.LocalizationKey))
+                result.Add(item);
+        }
+
+        return result;
+    }
+
+    private static void FillLocalizationKeys(List<ItemDataSO> targets)
+    {
+        if (!EditorUtility.DisplayDialog("로컬라이즈 키 일괄 채우기",
+                $"{targets.Count}개 에셋에 키를 채웁니다.\n비어 있는 표시명도 식별자로 채웁니다.\n" +
+                "이미 키가 있는 에셋은 건드리지 않습니다.", "채우기", "취소"))
+            return;
+
+        foreach (ItemDataSO item in targets)
+            WriteNaming(item, item.RawEditorName, ItemAssetNaming.BuildLocalizationKey(item));
+
+        AssetDatabase.SaveAssets();
+        Debug.Log($"[Item Creator] {targets.Count}개에 로컬라이즈 키를 채웠습니다.");
+    }
+
+    /// <summary>
+    /// 이름 관련 필드를 한 번에 쓴다. SerializedProperty를 쓰므로 Undo와 dirty 처리가 자동이고,
+    /// 런타임 코드에 공개 setter를 만들 필요도 없다.
+    ///
+    /// 표시명과 키는 <b>비어 있을 때만</b> 채운다. 손으로 적어둔 값을 덮어쓰면 안 된다.
+    /// </summary>
+    private static void WriteNaming(ItemDataSO asset, string editorName, string localizationKey)
+    {
+        SerializedObject serialized = new(asset);
+
+        SerializedProperty editorNameProperty = serialized.FindProperty("_editorName");
+        if (!string.IsNullOrEmpty(editorName))
+            editorNameProperty.stringValue = editorName;
+
+        SerializedProperty displayName = serialized.FindProperty("_displayName");
+        if (string.IsNullOrEmpty(displayName.stringValue))
+            displayName.stringValue = editorNameProperty.stringValue;
+
+        SerializedProperty key = serialized.FindProperty("_localizationKey");
+        if (string.IsNullOrEmpty(key.stringValue))
+            key.stringValue = localizationKey;
+
+        serialized.ApplyModifiedProperties();
+        EditorUtility.SetDirty(asset);
     }
 
     private static List<ItemDataSO> FindMismatchedNames()

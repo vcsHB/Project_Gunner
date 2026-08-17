@@ -23,6 +23,18 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
         SetShown(_shownOnStart);
     }
 
+    // LocalizedText는 자기가 알아서 갈아끼우지만, 코드가 조립하는 문구는 아무도 다시 그려주지 않는다.
+    // 언어를 바꿨을 때 잔탄 라벨만 이전 언어로 남는 걸 막는다.
+    protected virtual void OnEnable() => Localization.OnChangedEvent += RefreshLocalization;
+
+    protected virtual void OnDisable() => Localization.OnChangedEvent -= RefreshLocalization;
+
+    /// <summary>
+    /// 언어가 바뀌었을 때 다시 그린다.
+    /// 코드가 문자열을 조립하는 패널만 오버라이드하면 된다.
+    /// </summary>
+    protected virtual void RefreshLocalization() { }
+
     public void Show()
     {
         if (IsShown) return;
