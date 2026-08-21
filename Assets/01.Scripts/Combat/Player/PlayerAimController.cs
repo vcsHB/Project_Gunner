@@ -29,9 +29,10 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
     [Tooltip("무기가 없을 때 쓸 조준 가능 거리. 무기를 들면 AimRange 스탯을 쓴다.")]
     [SerializeField] private float _defaultAimRange = 5f;
 
-    [Tooltip("조준점이 머물 수 있는 범위. x는 반너비, y는 반높이에 대한 비율이다. 1이면 화면 끝까지 간다. " +
-             "무기 사거리가 아무리 길어도 안 보이는 곳은 조준할 수 없다.")]
-    [SerializeField] private Vector2 _viewMargin = new(0.85f, 0.85f);
+    [Tooltip("조준점이 화면 가장자리에서 안쪽으로 둘 여백(월드 단위). 0이면 화면 끝까지 간다. " +
+             "비율이 아니라 거리다 - 비율로 두면 화면이 클수록 여백이 같이 커져서 " +
+             "커서가 가장자리 근처에 있을 때 조준점이 멈춰 떨어져 나간다.")]
+    [SerializeField] private Vector2 _viewPadding = new(0.3f, 0.3f);
 
     [Header("반동")]
     [Tooltip("반동 1당 조준점이 발사 방향으로 밀리는 거리.")]
@@ -163,9 +164,11 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
     /// <summary>
     /// 조준점을 화면 안으로 잡아둔다.
     ///
-    /// <b>축별로 잘라야 한다.</b> 16:9면 세로 반높이가 가로 반너비의 절반 남짓이라,
-    /// 거리 하나로 원을 그려 자르면 가로는 멀쩡한데 세로만 화면을 벗어난다.
-    /// (무기 aimRange 17에 반높이 10이면 위아래로 7이 밖으로 나간다)
+    /// 커서는 원래 화면 안에 있으므로 평소에는 걸리지 않는다.
+    /// <b>반동으로 밀린 만큼</b>과, 마우스가 게임 창 밖으로 나간 경우만 여기서 잡힌다.
+    ///
+    /// 여백은 비율이 아니라 <b>거리</b>다. 비율로 두면 화면이 클수록 여백이 같이 커져서,
+    /// 커서가 가장자리 근처에 있을 때 조준점이 멈춰 커서에서 떨어져 나간다.
     ///
     /// 카메라가 이미 옮겨간 뒤(AimExecutionOrder)에 불리므로 현재 프레임 위치를 그대로 쓴다.
     /// </summary>
@@ -178,9 +181,9 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
         float halfHeight = _camera.orthographicSize;
         float halfWidth = halfHeight * _camera.aspect;
 
-        // Vector2에는 Range를 걸 수 없다. 1을 넘으면 화면 밖이 되므로 여기서 막는다.
-        float limitX = halfWidth * Mathf.Clamp01(_viewMargin.x);
-        float limitY = halfHeight * Mathf.Clamp01(_viewMargin.y);
+        // 여백이 화면 절반보다 크면 조준점이 중앙에 붙어버린다. 절반까지만 인정한다.
+        float limitX = halfWidth - Mathf.Clamp(_viewPadding.x, 0f, halfWidth);
+        float limitY = halfHeight - Mathf.Clamp(_viewPadding.y, 0f, halfHeight);
 
         return new Vector2(
             Mathf.Clamp(world.x, center.x - limitX, center.x + limitX),
