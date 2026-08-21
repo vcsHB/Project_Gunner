@@ -15,6 +15,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
     [Tooltip("탄이 생기는 위치. 비워두면 무기 본체에서 나간다.")]
     [SerializeField] private Transform _muzzle;
 
+    [Tooltip("정조준 중일 때 탄 퍼짐에 곱해지는 값. 0.4면 퍼짐이 40%로 줄어든다.")]
+    [SerializeField, Range(0f, 1f)] private float _aimSpreadScale = 0.4f;
+
     /// <summary>실제로 한 발 나갔을 때. 인자는 반동 세기다. (머즐 플래시, 소리, 화면 흔들림용)</summary>
     public event Action<float> OnFiredEvent;
 
@@ -44,9 +47,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
     /// <summary>0~1. 차지 무기 UI가 그대로 쓴다.</summary>
     public float ChargeRatio01 => _isCharging ? ChargeRatio() : 0f;
 
-    public override void Initialize(PlayerWeaponDataSO data, Agent owner, WeaponItemInstance instance = null)
+    public override void Initialize(Agent owner, ItemStack stack)
     {
-        base.Initialize(data, owner, instance);
+        base.Initialize(owner, stack);
 
         InventoryController inventoryController = null;
         if (owner != null)
@@ -60,7 +63,7 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
     public override void OnUnequipped()
     {
-        // 차지를 먼저 끈다. base가 OnAttackReleased를 부르는데,
+        // 차지를 먼저 끈다. base가 OnPrimaryReleased를 부르는데,
         // 차지 중이면 그게 격발로 이어져서 무기를 넘기는 것만으로 한 발이 나간다.
         _isCharging = false;
         _chargeElapsed = 0f;
@@ -73,7 +76,7 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
     #region Input
 
-    public override void OnAttackPressed()
+    public override void OnPrimaryPressed()
     {
         _triggerHeld = true;
 
@@ -98,7 +101,7 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         }
     }
 
-    public override void OnAttackReleased()
+    public override void OnPrimaryReleased()
     {
         _triggerHeld = false;
 
@@ -110,6 +113,20 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         _chargeElapsed = 0f;
 
         TryFire(ratio);
+    }
+
+    // 총의 보조 동작은 정조준이다. 상태는 조준 컨트롤러가 들고 간다 —
+    // 카메라와 조준점도 봐야 하는 값이라 무기 오브젝트에 두면 무기를 바꿀 때마다 날아간다.
+    public override void OnSecondaryPressed()
+    {
+        if (_aim != null)
+            _aim.SetAiming(true);
+    }
+
+    public override void OnSecondaryReleased()
+    {
+        if (_aim != null)
+            _aim.SetAiming(false);
     }
 
     public override void OnReloadRequested() => Ammo.BeginReload();
@@ -229,7 +246,11 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         Vector2 aim = _aim != null ? _aim.AimDirection : (Vector2)transform.right;
 
         int count = Mathf.Max(1, Mathf.RoundToInt(Status.Value(WeaponStatType.ProjectileCount)));
+
+        // 정조준의 이득. 스탯이 아니라 모드 배율이라 WeaponStatus에 넣지 않는다.
         float spread = Mathf.Max(0f, Status.Value(WeaponStatType.Spread));
+        if (_aim != null && _aim.IsAiming)
+            spread *= _aimSpreadScale;
 
         ProjectileLaunchData data = new()
         {

@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "SO/Item/PlayerWeaponData")]
-public class PlayerWeaponDataSO : EquipableItemDataSO
+public class PlayerWeaponDataSO : EquipableItemDataSO, IHandItemData
 {
     [Header("Player WeaponData Settings")]
     public PlayerWeaponBase playerWeaponPrefab;
+
+    public HandActionBase HandPrefab => playerWeaponPrefab;
 
     [Tooltip("공격 방식 분류. 파츠 호환 판정에 쓴다.")]
     [SerializeField] private PlayerWeaponCategory _category = PlayerWeaponCategory.None;

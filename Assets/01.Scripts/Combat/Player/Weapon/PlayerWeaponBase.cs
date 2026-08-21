@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class PlayerWeaponBase : MonoBehaviour
+/// <summary>
+/// 손에 드는 무기. 주/보조 입력의 의미는 파생 클래스가 정한다.
+/// (원거리 무기는 Primary=발사 / Secondary=정조준)
+/// </summary>
+public abstract class PlayerWeaponBase : HandActionBase
 {
     // 인스펙터에서만 채워지는 필드라 "할당된 적 없음" 경고가 뜬다.
 #pragma warning disable CS0649
@@ -31,13 +35,9 @@ public abstract class PlayerWeaponBase : MonoBehaviour
     /// <summary>개체 상태를 이 오브젝트에 반영해주는 쪽. 상태 자체는 Instance가 갖는다.</summary>
     public WeaponModController Mods { get; private set; }
 
-    /// <summary>이 무기를 들고 있는 주체.</summary>
-    public Agent Owner { get; private set; }
-
     /// <summary>파츠·개량의 주인. 인벤토리에 들어가도 유지된다.</summary>
     public WeaponItemInstance Instance { get; private set; }
 
-    public bool IsEquipped { get; private set; }
     public WeaponFireMode CurrentFireMode { get; private set; }
 
     private readonly List<WeaponFireMode> _fireModeBuffer = new();
@@ -46,18 +46,25 @@ public abstract class PlayerWeaponBase : MonoBehaviour
     /// 스폰 직후 한 번. 장착/해제와는 별개다.
     /// 오버라이드할 때 반드시 base를 먼저 호출할 것.
     /// </summary>
-    public virtual void Initialize(PlayerWeaponDataSO data, Agent owner, WeaponItemInstance instance = null)
+    public override void Initialize(Agent owner, ItemStack stack)
     {
-        Data = data;
-        Owner = owner;
-        Status = new WeaponStatus(data.Stats);
+        base.Initialize(owner, stack);
+
+        Data = stack.Resolve<PlayerWeaponDataSO>();
+        if (Data == null)
+        {
+            Debug.LogError($"[Weapon] {name}에 무기 데이터가 없습니다.", this);
+            return;
+        }
+
+        Status = new WeaponStatus(Data.Stats);
 
         ApplyFacing();
 
-        CurrentFireMode = data.DefaultFireMode;
+        CurrentFireMode = Data.DefaultFireMode;
 
         // 개체 상태가 없으면 임시로 하나 만든다. 없으면 이 무기는 모딩이 아예 불가능해진다.
-        Instance = instance ?? WeaponItemInstance.CreateDetached(data);
+        Instance = stack.ResolveInstance<WeaponItemInstance>() ?? WeaponItemInstance.CreateDetached(Data);
 
         Mods = new WeaponModController(this, Status);
         Mods.Bind(Instance);
@@ -69,38 +76,6 @@ public abstract class PlayerWeaponBase : MonoBehaviour
         Mods?.Unbind();
     }
 
-    /// <summary>슬롯에 장착되어 손에 들렸을 때.</summary>
-    public virtual void OnEquipped()
-    {
-        IsEquipped = true;
-    }
-
-    /// <summary>슬롯에서 내려놓았을 때. 걸어둔 modifier나 예약된 상태를 여기서 되돌린다.</summary>
-    public virtual void OnUnequipped()
-    {
-        IsEquipped = false;
-        OnAttackReleased();
-    }
-
-    /// <summary>공격 입력이 눌렸을 때. 실제 발사는 파생 클래스가 구현한다.</summary>
-    public virtual void OnAttackPressed()
-    {
-    }
-
-    /// <summary>공격 입력이 떼졌을 때. 연사 중단, 차지 해제 등.</summary>
-    public virtual void OnAttackReleased()
-    {
-    }
-
-    /// <summary>재장전 입력(짧게 누름). 탄약을 쓰지 않는 무기는 무시한다.</summary>
-    public virtual void OnReloadRequested()
-    {
-    }
-
-    /// <summary>재장전 입력을 길게 눌렀을 때. 쓸 수 있는 탄종을 넘긴다.</summary>
-    public virtual void OnAmmoCycleRequested(int direction)
-    {
-    }
 
     /// <summary>
     /// 왼쪽을 보고 그려진 리소스를 통째로 X 미러링해서 +X를 앞으로 맞춘다.

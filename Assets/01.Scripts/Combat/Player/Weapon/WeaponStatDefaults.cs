@@ -12,6 +12,9 @@ public class WeaponStatDefaults
     public float damage = 10f;
     public float attackCooltime = 0.2f;
     public float range = 10f;
+
+    [Tooltip("조준점을 플레이어에서 얼마나 멀리 둘 수 있는지. 스코프가 늘린다. range와는 별개다.")]
+    public float aimRange = 6f;
     public float maxTargetCount = 1f;
     public float criticalRate = 0f;
 
@@ -66,6 +69,7 @@ public class WeaponStatDefaults
             case WeaponStatType.Knockback: return knockback;
 
             case WeaponStatType.BurstInterval: return burstInterval;
+            case WeaponStatType.AimRange: return aimRange;
         }
 
         return 0f;

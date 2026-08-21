@@ -25,9 +25,9 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Use",
+                    "name": "Secondary",
                     "type": "Button",
-                    "id": "bea9e4d9-9273-4e19-bba5-1d56debf9e4c",
+                    "id": "3f5c2b40-1d7e-4a92-b6c1-5e0a2d8f4471",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -388,12 +388,23 @@
                 },
                 {
                     "name": "",
-                    "id": "70f347e8-cc8a-4f72-a492-0ab257614963",
+                    "id": "9a1e7c34-62b8-4f05-8d3a-71c4e9b2a5d6",
                     "path": "<Mouse>/rightButton",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Use",
+                    "action": "Secondary",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b7d3a05e-4c19-42a7-9e58-3a6d1f8c40b2",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Secondary",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

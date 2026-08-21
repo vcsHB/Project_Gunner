@@ -33,4 +33,8 @@ public enum WeaponStatType
 
     // 점사 안에서 발과 발 사이 간격. AttackCooltime은 점사 한 묶음이 끝난 뒤의 쿨이다.
     BurstInterval,
+
+    // 조준점을 플레이어에서 얼마나 멀리 둘 수 있는가. Range(탄이 날아가는 거리)와는 별개다.
+    // 스코프가 이걸 늘린다 — 탄의 사거리는 그대로 두고 조준만 멀리 보게 할 수 있다.
+    AimRange,
 }

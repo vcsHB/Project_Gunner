@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 핫바에서 든 소모품을 쓴다. 사용 시간과 쿨타임을 여기서 관리한다.
+/// 소모품의 사용 진행과 쿨타임을 들고 간다.
 ///
-/// 쿨타임 표는 <b>플레이어별 상태</b>라 여기 둔다. 정적으로 두면 멀티에서 섞인다.
-/// 키는 아이템 Id다 — 같은 종류를 칸만 나눠 담아 쿨타임을 우회하는 것을 막는다.
+/// <b>입력을 직접 받지 않는다.</b> 우클릭이 사용을 뜻하는지는 손에 든 것이 정하고,
+/// <see cref="ConsumableHand"/>가 여기로 넘긴다.
+///
+/// 손에 든 오브젝트는 핫바를 넘길 때마다 파괴되므로 쿨타임을 거기 둘 수 없다.
+/// 쿨타임 표는 <b>플레이어별 상태</b>라 정적으로도 둘 수 없다 — 멀티에서 섞인다.
+/// 키는 아이템 Id다. 같은 종류를 칸만 나눠 담아 쿨타임을 우회하는 것을 막는다.
 /// </summary>
 public class PlayerItemUseController : MonoBehaviour, IAgentComponent
 {
-    /// <summary>사용 진행이 시작/취소/완료되었을 때. 인자는 진행 중인지.</summary>
+    /// <summary>사용이 시작/취소/완료되었을 때. 인자는 진행 중인지.</summary>
     public event Action<bool> OnUsingChangedEvent;
 
     /// <summary>쿨타임이 새로 걸렸을 때. (아이템 Id)</summary>
@@ -24,7 +28,6 @@ public class PlayerItemUseController : MonoBehaviour, IAgentComponent
     private InventoryController _inventory;
 
     private ConsumableDataSO _using;
-    private int _usingSlot = -1;
     private float _useEndTime;
     private float _useStartTime;
 
@@ -51,23 +54,9 @@ public class PlayerItemUseController : MonoBehaviour, IAgentComponent
     {
         _hotbar = _player.GetCompo<PlayerHotbar>();
         _inventory = _player.GetCompo<InventoryController>();
-
-        if (_player.Input != null)
-            _player.Input.OnUseEvent += HandleUse;
-
-        // 쓰던 도중 다른 칸으로 넘기면 취소된다. 손에 없는 것을 계속 쓸 수는 없다.
-        if (_hotbar != null)
-            _hotbar.OnSelectedChangedEvent += HandleSelectedChanged;
     }
 
-    public void Dispose()
-    {
-        if (_player != null && _player.Input != null)
-            _player.Input.OnUseEvent -= HandleUse;
-
-        if (_hotbar != null)
-            _hotbar.OnSelectedChangedEvent -= HandleSelectedChanged;
-    }
+    public void Dispose() { }
 
     #region 쿨타임
 
@@ -95,36 +84,23 @@ public class PlayerItemUseController : MonoBehaviour, IAgentComponent
 
     #endregion
 
-    private void HandleSelectedChanged(int index)
+    /// <summary>손에 든 소모품이 부른다. 쓸 수 없는 상태면 아무 일도 하지 않는다.</summary>
+    public bool TryBeginUse(ItemStack stack)
     {
-        if (IsUsing && index != _usingSlot)
-            CancelUse();
-    }
+        if (IsUsing) return false;
 
-    private void HandleUse()
-    {
-        // 인벤토리를 열어둔 채로 소모품이 쓰이면 안 된다.
-        if (UIInputBlocker.IsBlocked || IsUsing || _hotbar == null) return;
-
-        ItemStack stack = _hotbar.SelectedStack;
         ConsumableDataSO data = stack.Resolve<ConsumableDataSO>();
-        if (data == null) return;
+        if (data == null) return false;
 
         if (ItemUsability.IsBlocked(stack, out string reason))
         {
             Debug.Log($"[Use] {data.DisplayName} - {reason}");
-            return;
+            return false;
         }
 
-        if (IsOnCooldown(stack.itemId)) return;
+        if (IsOnCooldown(stack.itemId)) return false;
 
-        BeginUse(data, _hotbar.SelectedIndex);
-    }
-
-    private void BeginUse(ConsumableDataSO data, int slotIndex)
-    {
         _using = data;
-        _usingSlot = slotIndex;
         _useStartTime = Time.time;
         _useEndTime = _useStartTime + data.UseDuration;
 
@@ -133,6 +109,8 @@ public class PlayerItemUseController : MonoBehaviour, IAgentComponent
         // 즉발 아이템은 다음 Update를 기다릴 이유가 없다.
         if (data.UseDuration <= 0f)
             CompleteUse();
+
+        return true;
     }
 
     public void CancelUse()
@@ -140,8 +118,6 @@ public class PlayerItemUseController : MonoBehaviour, IAgentComponent
         if (!IsUsing) return;
 
         _using = null;
-        _usingSlot = -1;
-
         OnUsingChangedEvent?.Invoke(false);
     }
 
@@ -149,7 +125,7 @@ public class PlayerItemUseController : MonoBehaviour, IAgentComponent
     {
         if (!IsUsing) return;
 
-        // 사용 중에 죽거나 아이템이 사라지면 붙들고 있을 이유가 없다.
+        // 사용 중에 죽으면 붙들고 있을 이유가 없다.
         if (_player.IsDead)
         {
             CancelUse();
@@ -163,24 +139,45 @@ public class PlayerItemUseController : MonoBehaviour, IAgentComponent
     private void CompleteUse()
     {
         ConsumableDataSO data = _using;
-        int slot = _usingSlot;
 
         _using = null;
-        _usingSlot = -1;
-
         OnUsingChangedEvent?.Invoke(false);
 
-        Inventory inventory = _inventory != null ? _inventory.Inventory : null;
-        if (inventory == null || data == null) return;
+        if (data == null) return;
 
         // 다 쓰기 직전에 칸이 비었을 수 있다. 효과를 먼저 주고 못 빼면 공짜가 된다.
-        ItemStack stack = inventory[slot];
-        if (stack.itemId != data.Id || stack.count < data.ConsumeCount) return;
-
-        if (!inventory.RemoveAt(slot, data.ConsumeCount)) return;
+        if (!TryConsume(data)) return;
 
         data.Apply(_player);
         StartCooldown(data);
+    }
+
+    /// <summary>
+    /// 지금 든 칸에서 뺀다. 손에 든 것이 곧 쓰는 것이라 선택 칸을 그대로 본다.
+    /// 쓰는 도중 칸이 바뀌었으면 손도 바뀌었을 것이고, 그때는 이미 취소되어 여기 오지 않는다.
+    /// </summary>
+    /// <summary>
+    /// 들고 있는 것을 하나 소모하고 쿨타임을 건다. 투척처럼 사용 시간을 거치지 않는 것이 쓴다.
+    /// </summary>
+    public bool ConsumeHeld(ConsumableDataSO data)
+    {
+        if (data == null || !TryConsume(data)) return false;
+
+        StartCooldown(data);
+        return true;
+    }
+
+    private bool TryConsume(ConsumableDataSO data)
+    {
+        Inventory inventory = _inventory != null ? _inventory.Inventory : null;
+        if (inventory == null || _hotbar == null) return false;
+
+        int slot = _hotbar.SelectedIndex;
+        ItemStack stack = inventory[slot];
+
+        if (stack.itemId != data.Id || stack.count < data.ConsumeCount) return false;
+
+        return inventory.RemoveAt(slot, data.ConsumeCount);
     }
 
     private void StartCooldown(ConsumableDataSO data)

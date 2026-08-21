@@ -19,7 +19,11 @@ public struct ProjectileLaunchData
     /// <summary>이 거리를 날아가면 사라진다. 무기의 Range 스탯이다.</summary>
     public float range;
 
-    public CastPower power;
+    /// <summary>
+    /// 발사자가 계산한 위력. null이면 프리팹에 붙은 이펙터가 자기 설정을 쓴다.
+    /// 수류탄처럼 위력이 무기 스탯이 아니라 프리팹에 붙어 있는 경우에 비워둔다.
+    /// </summary>
+    public CastPower? power;
 
     /// <summary>추가로 뚫을 수 있는 대상 수. 0이면 하나 맞히고 사라진다.</summary>
     public int penetration;

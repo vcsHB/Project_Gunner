@@ -12,10 +12,18 @@ using UnityEngine.InputSystem;
 public class PlayerInput : ScriptableObject, Controls.IPlayerActions
 {
     public event Action<Vector2> OnMoveEvent;
-    public event Action<bool> OnAttackEvent;   // true=누름, false=뗌
+
+    /// <summary>
+    /// 주 동작(좌클릭). 발사·던지기·채굴이 전부 여기로 온다.
+    /// <b>무엇을 하는지는 입력이 정하지 않는다.</b> 손에 든 것이 정한다.
+    /// </summary>
+    public event Action<bool> OnPrimaryEvent;   // true=누름, false=뗌
+
+    /// <summary>보조 동작(우클릭). 정조준·아이템 사용·안전핀 제거가 전부 여기로 온다.</summary>
+    public event Action<bool> OnSecondaryEvent;
+
     public event Action<bool> OnSprintEvent;
     public event Action<bool> OnCrawlEvent;
-    public event Action OnUseEvent;
     public event Action OnInteractEvent;
 
     /// <summary>
@@ -35,7 +43,8 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
 
     public Vector2 MoveInput { get; private set; }
 
-    public bool IsAttacking { get; private set; }
+    public bool IsPrimaryHeld { get; private set; }
+    public bool IsSecondaryHeld { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsCrawling { get; private set; }
     public bool IsReloadHeld { get; private set; }
@@ -76,7 +85,8 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
 
         // 플레이 모드를 나가도 SO는 살아있으므로 눌린 상태가 남지 않게 정리한다.
         MoveInput = Vector2.zero;
-        IsAttacking = false;
+        IsPrimaryHeld = false;
+        IsSecondaryHeld = false;
         IsSprinting = false;
         IsCrawling = false;
         IsReloadHeld = false;
@@ -90,18 +100,22 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
         OnMoveEvent?.Invoke(MoveInput);
     }
 
+    // 액션 이름은 Attack이지만 의미는 "주 동작"이다.
+    // 기존 바인딩(패드·터치·XR)을 그대로 살리려고 이름만 남겨뒀다.
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (context.performed)
-            SetAttacking(true);
+            SetPrimary(true);
         else if (context.canceled)
-            SetAttacking(false);
+            SetPrimary(false);
     }
 
-    public void OnUse(InputAction.CallbackContext context)
+    public void OnSecondary(InputAction.CallbackContext context)
     {
         if (context.performed)
-            OnUseEvent?.Invoke();
+            SetSecondary(true);
+        else if (context.canceled)
+            SetSecondary(false);
     }
 
     public void OnInteract(InputAction.CallbackContext context)
@@ -159,12 +173,20 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
 
     #endregion
 
-    private void SetAttacking(bool value)
+    private void SetPrimary(bool value)
     {
-        if (IsAttacking == value) return;
+        if (IsPrimaryHeld == value) return;
 
-        IsAttacking = value;
-        OnAttackEvent?.Invoke(value);
+        IsPrimaryHeld = value;
+        OnPrimaryEvent?.Invoke(value);
+    }
+
+    private void SetSecondary(bool value)
+    {
+        if (IsSecondaryHeld == value) return;
+
+        IsSecondaryHeld = value;
+        OnSecondaryEvent?.Invoke(value);
     }
 
     private void SetSprinting(bool value)

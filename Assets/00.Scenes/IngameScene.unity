@@ -1605,10 +1605,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 240768531}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 190a4158e1163a64b8b925ba1b429221, type: 3}
+  m_Script: {fileID: 11500000, guid: ba1ed4c61c0fa7a4aaf0cd363a35b09c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponController
-  _weaponHandleRoot: {fileID: 299193921}
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHandController
+  _handRoot: {fileID: 299193921}
+  _defaultConsumableHand: {fileID: 3003743904902985954, guid: 96f84e1c1e3c06747998fa99132d3a52, type: 3}
   _ammoCycleHoldTime: 0.35
 --- !u!114 &240768541
 MonoBehaviour:
@@ -1662,6 +1663,11 @@ MonoBehaviour:
   _aimPivot: {fileID: 299193921}
   _keepUpright: 1
   _facingDeadzone: 0.05
+  _defaultAimRange: 15
+  _viewMargin: {x: 0.85, y: 0.85}
+  _recoilKickPerLevel: 0.25
+  _recoilRecoverSpeed: 6
+  _maxRecoilOffset: 1.5
 --- !u!114 &240768545
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3583,6 +3589,8 @@ GameObject:
   m_Component:
   - component: {fileID: 465010670}
   - component: {fileID: 465010669}
+  - component: {fileID: 465010672}
+  - component: {fileID: 465010671}
   m_Layer: 0
   m_Name: CameraManager
   m_TagString: Untagged
@@ -3619,6 +3627,39 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2101241768}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &465010671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 465010668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aef3eadc709aabd4b8376e774df86199, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShakeEffector
+  _defaultPower: 0.2
+  _defaultDuration: 0.15
+--- !u!114 &465010672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 465010668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd0d36eda487f2c46ad4038da36752b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraFollowEffector
+  _target: {fileID: 240768532}
+  _rig: {fileID: 519420032}
+  _aimWeight: 0.5
+  _maxAimOffsetRatio: {x: 0.35, y: 0.7}
+  _smoothTime: 0.2
+  _aimZoomScale: 0.85
+  _zoomSpeed: 6
 --- !u!1001 &470663944
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6268,7 +6309,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &845078384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9189,7 +9230,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00093905034}
+  m_AnchoredPosition: {x: 0, y: 0.0009434561}
   m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1109435037
@@ -10044,7 +10085,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 29053399}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999785
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -13720,44 +13761,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Components.LocalizeStringEvent
-  m_StringReference:
-    m_Dirty: 1
-    m_UpdateTrigger: 0
-    <property>k__BackingField: 
-    m_TableReference:
-      m_TableCollectionName: 
-      m_Valid: 0
-      <ReferenceType>k__BackingField: 0
-    m_TableEntryReference:
-      m_KeyId: 0
-      m_Key: 
-      m_Valid: 0
-      <ReferenceType>k__BackingField: 0
-    m_FallbackState: 0
-    m_WaitForCompletion: 0
-    m_LocaleOverride: {fileID: 0}
-    m_CurrentTable:
-      m_TableCollectionName: 
-      m_Valid: 0
-      <ReferenceType>k__BackingField: 0
-    m_CurrentTableEntry:
-      m_KeyId: 0
-      m_Key: 
-      m_Valid: 0
-      <ReferenceType>k__BackingField: 0
-    m_ActivatedCount: 0
-    m_LocalVariables: []
-    m_CurrentStringChangedValue: 
-    m_WaitingForVariablesEndUpdate: 0
-  m_FormatArguments: []
-  m_UpdateString:
-    m_PersistentCalls:
-      m_Calls:
-      - {m_Target: {fileID: 1655619798}, m_TargetAssemblyTypeName: TMPro.TMP_Text, Unity.TextMeshPro, m_MethodName: set_text, m_Mode: 0, m_Arguments: {m_ObjectArgument: {fileID: 0}, m_ObjectArgumentAssemblyTypeName: , m_IntArgument: 0, m_FloatArgument: 0, m_StringArgument: , m_BoolArgument: 0}, m_CallState: 1}
-    m_CallsDirty: 1
-  references:
-    version: 2
-    RefIds: []
 --- !u!1 &1673327624
 GameObject:
   m_ObjectHideFlags: 0
@@ -15457,7 +15460,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAimPoint
   _aimPointVisualData:
     None:
-      icon: {fileID: 21300000, guid: be5a19996deef6845bbba48b53313087, type: 3}
+      icon: {fileID: -2755214433932636866, guid: 07733814868eed9429641d6a8182c7d2, type: 3}
       visualOffset: {x: 0, y: 0}
     Check:
       icon: {fileID: 8372052788257586723, guid: 07733814868eed9429641d6a8182c7d2, type: 3}
@@ -16119,7 +16122,7 @@ MonoBehaviour:
     dropToWorld: 1
   - key: 30
     item: {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
-    count: 1
+    count: 527
     dropToWorld: 1
   _enableHotkeys: 1
 --- !u!4 &2024501668

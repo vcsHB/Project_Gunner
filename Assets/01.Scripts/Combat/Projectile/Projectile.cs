@@ -98,12 +98,27 @@ public class Projectile : PoolableMono
 
     private void Explode()
     {
-        if (_explosionCaster == null || _data.explosionRadius <= 0f) return;
+        if (_explosionCaster == null) return;
 
-        _explosionCaster.Radius = _data.explosionRadius;
+        // 스탯에서 반경이 오지 않으면 프리팹에 찍힌 값을 쓴다.
+        // 수류탄처럼 위력과 반경이 무기 스탯이 아니라 프리팹에 붙어 있는 경우다.
+        if (_data.explosionRadius > 0f)
+            _explosionCaster.Radius = _data.explosionRadius;
+        else if (_explosionCaster.Radius <= 0f)
+            return;
+
         _explosionCaster.Owner = _data.owner;
         _explosionCaster.Power = _data.power;
         _explosionCaster.Cast();
+    }
+
+    /// <summary>
+    /// 수명을 덮어쓴다. 신관이 타고 있는 수류탄처럼 남은 시간이 정해져 있을 때 쓴다.
+    /// Launch 직후에 부를 것.
+    /// </summary>
+    public void OverrideLifeTime(float seconds)
+    {
+        _maxLifeTime = Mathf.Max(0.01f, seconds);
     }
 
     /// <summary>

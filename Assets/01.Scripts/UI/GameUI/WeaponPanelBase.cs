@@ -12,7 +12,7 @@ using UnityEngine;
 /// </summary>
 public abstract class WeaponPanelBase : UIPanelBase
 {
-    private PlayerWeaponController _weaponController;
+    private PlayerHandController _weaponController;
 
     /// <summary>지금 든 원거리 무기. 맨손이거나 근접이면 null.</summary>
     protected PlayerRangedWeapon Weapon { get; private set; }
@@ -32,10 +32,10 @@ public abstract class WeaponPanelBase : UIPanelBase
 
         if (player == null) return;
 
-        _weaponController = player.GetCompo<PlayerWeaponController>();
+        _weaponController = player.GetCompo<PlayerHandController>();
         if (_weaponController == null) return;
 
-        _weaponController.OnWeaponChangedEvent += HandleWeaponChanged;
+        _weaponController.OnHandChangedEvent += HandleWeaponChanged;
         HandleWeaponChanged(_weaponController.Current);
     }
 
@@ -43,7 +43,7 @@ public abstract class WeaponPanelBase : UIPanelBase
     {
         if (_weaponController != null)
         {
-            _weaponController.OnWeaponChangedEvent -= HandleWeaponChanged;
+            _weaponController.OnHandChangedEvent -= HandleWeaponChanged;
             _weaponController = null;
         }
 
@@ -52,7 +52,7 @@ public abstract class WeaponPanelBase : UIPanelBase
 
     protected virtual void OnDestroy() => Unbind();
 
-    private void HandleWeaponChanged(PlayerWeaponBase weapon)
+    private void HandleWeaponChanged(HandActionBase hand)
     {
         if (Weapon != null)
         {
@@ -60,8 +60,8 @@ public abstract class WeaponPanelBase : UIPanelBase
             Weapon = null;
         }
 
-        // 근접 무기는 PlayerRangedWeapon이 아니라 여기서 걸러진다.
-        Weapon = weapon as PlayerRangedWeapon;
+        // 근접 무기나 소모품은 PlayerRangedWeapon이 아니라 여기서 걸러진다.
+        Weapon = hand as PlayerRangedWeapon;
 
         if (Weapon != null)
             OnWeaponAttached(Weapon);

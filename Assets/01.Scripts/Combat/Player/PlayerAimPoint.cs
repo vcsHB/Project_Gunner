@@ -29,6 +29,7 @@ public enum PlayerAimPointStateType
 /// 조준 로직은 갖지 않는다. <see cref="PlayerAimController"/>가 계산해 둔 값을 읽어 오기만 한다.
 /// 표현이 시뮬레이션을 끌고 가면 나중에 서버 권한 구조로 옮길 수 없다.
 /// </summary>
+[DefaultExecutionOrder(AimExecutionOrder.AimPoint)]
 public class PlayerAimPoint : MonoBehaviour
 {
     [System.Serializable]
@@ -70,7 +71,7 @@ public class PlayerAimPoint : MonoBehaviour
     private bool _isVisualEnable = true;
 
     private PlayerAimController _aimController;
-    private PlayerWeaponController _weaponController;
+    private PlayerHandController _weaponController;
 
     private void Awake()
     {
@@ -101,11 +102,11 @@ public class PlayerAimPoint : MonoBehaviour
         }
 
         _aimController = player.GetCompo<PlayerAimController>();
-        _weaponController = player.GetCompo<PlayerWeaponController>();
+        _weaponController = player.GetCompo<PlayerHandController>();
 
         if (_weaponController != null)
         {
-            _weaponController.OnWeaponChangedEvent += HandleWeaponChanged;
+            _weaponController.OnHandChangedEvent += HandleWeaponChanged;
             HandleWeaponChanged(_weaponController.Current);
         }
 
@@ -117,7 +118,7 @@ public class PlayerAimPoint : MonoBehaviour
     {
         if (_weaponController != null)
         {
-            _weaponController.OnWeaponChangedEvent -= HandleWeaponChanged;
+            _weaponController.OnHandChangedEvent -= HandleWeaponChanged;
             _weaponController = null;
         }
 
@@ -138,8 +139,8 @@ public class PlayerAimPoint : MonoBehaviour
         SetAimPointPosition(_aimController.AimPosition);
     }
 
-    private void HandleWeaponChanged(PlayerWeaponBase weapon)
-        => SetAimPointState(GetStateFor(weapon != null ? weapon.Data : null));
+    private void HandleWeaponChanged(HandActionBase hand)
+        => SetAimPointState(GetStateFor(hand is PlayerWeaponBase weapon ? weapon.Data : null));
 
     /// <summary>
     /// 무기 분류에 맞는 조준점. 맨손이면 기본값을 쓴다.
