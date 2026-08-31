@@ -17,7 +17,7 @@ MonoBehaviour:
     label: "\uAE30\uD0C0 / \uBBF8\uBD84\uB958"
     start: 1
     end: 999
-    nextId: 1
+    nextId: 2
   - typeName: PlayerWeaponDataSO
     label: "\uBB34\uAE30"
     start: 1000
@@ -32,7 +32,7 @@ MonoBehaviour:
     label: "\uD0C4\uC57D"
     start: 3000
     end: 3999
-    nextId: 3003
+    nextId: 3004
   - typeName: 
     label: "\uC18C\uBAA8\uD488"
     start: 4000
@@ -65,6 +65,7 @@ MonoBehaviour:
     nextId: 9000
   _nextId: 1
   _items:
+  - {fileID: 11400000, guid: f3268ea4ac4d9ac43a456b3763141702, type: 2}
   - {fileID: 11400000, guid: aa993fe814cf6eb439e0ae645664510d, type: 2}
   - {fileID: 11400000, guid: 9e9a6ba3451602e439eb77bc2f17547a, type: 2}
   - {fileID: 11400000, guid: e38f35e9d5a8c9549925ca76862f2a9e, type: 2}
@@ -74,3 +75,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2c0c8489d2692664ba54a98d05725978, type: 2}
   - {fileID: 11400000, guid: c831b0fae6b13444ba27e742aa2e5d16, type: 2}
   - {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
+  - {fileID: 11400000, guid: c3122c77dca47854fac8350cd4e90f8b, type: 2}
