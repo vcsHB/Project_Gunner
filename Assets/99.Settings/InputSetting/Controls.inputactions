@@ -70,15 +70,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Reload",
-                    "type": "Button",
-                    "id": "93988713-91e3-42f8-b793-de7191e229fc",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "InventoryScroll",
                     "type": "Value",
                     "id": "294f4de6-42ef-43ba-8823-4308e344d682",
@@ -372,17 +363,6 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Inventory",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "a087ce1a-c3e3-4b76-b975-8283125a9ac2",
-                    "path": "<Keyboard>/r",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": ";Keyboard&Mouse",
-                    "action": "Reload",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
