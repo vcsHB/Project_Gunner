@@ -15,6 +15,9 @@ public static class AimExecutionOrder
     /// <summary>옮겨간 카메라를 기준으로 커서를 월드 좌표로 바꾼다.</summary>
     public const int Aim = 200;
 
+    /// <summary>계산이 끝난 조준 방향을 향해 기체를 돌린다.</summary>
+    public const int MechaRotation = 250;
+
     /// <summary>계산이 끝난 조준점 위치에 마커를 놓는다.</summary>
     public const int AimPoint = 300;
 }

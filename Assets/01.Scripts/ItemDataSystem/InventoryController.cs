@@ -27,13 +27,6 @@ public class InventoryController : MonoBehaviour, IAgentComponent
 
         int capacity = _status != null ? _status.InventorySize.TotalValue : _fallbackCapacity;
 
-        if (capacity <= InventoryLayout.HotbarSize)
-        {
-            Debug.LogWarning(
-                $"[Inventory] 용량이 {capacity}칸이라 핫바({InventoryLayout.HotbarSize}칸) 뒤에 보관 칸이 없습니다. " +
-                "AgentStatus의 InventorySize를 확인하세요.", this);
-        }
-
         Inventory = new Inventory(ClampCapacity(capacity));
 
         if (_status != null)
@@ -41,10 +34,10 @@ public class InventoryController : MonoBehaviour, IAgentComponent
     }
 
     /// <summary>
-    /// 앞 7칸은 핫바라 절대 줄어들면 안 된다.
-    /// 배낭을 벗어서 스탯이 그 아래로 내려가도 손에 든 것까지 사라지지는 않게 한다.
+    /// 적재 칸이 0 이하로 내려가면 인벤토리가 아예 없는 것이 된다.
+    /// 적재 모듈을 떼어도 최소 한 칸은 남긴다.
     /// </summary>
-    private static int ClampCapacity(int capacity) => Mathf.Max(InventoryLayout.HotbarSize, capacity);
+    private static int ClampCapacity(int capacity) => Mathf.Max(1, capacity);
 
     public void Dispose()
     {

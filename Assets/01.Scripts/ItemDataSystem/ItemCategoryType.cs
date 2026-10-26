@@ -12,4 +12,5 @@ public enum ItemCategoryType
     PlayerWeapon = 3,
     WeaponModule = 4,
     Unit = 5,
+    MechaPart = 6,
 }

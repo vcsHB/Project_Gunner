@@ -71,7 +71,7 @@ public class PlayerAimPoint : MonoBehaviour
     private bool _isVisualEnable = true;
 
     private PlayerAimController _aimController;
-    private PlayerHandController _weaponController;
+    private EquipmentController _equipment;
 
     private void Awake()
     {
@@ -102,12 +102,12 @@ public class PlayerAimPoint : MonoBehaviour
         }
 
         _aimController = player.GetCompo<PlayerAimController>();
-        _weaponController = player.GetCompo<PlayerHandController>();
+        _equipment = player.GetCompo<EquipmentController>();
 
-        if (_weaponController != null)
+        if (_equipment != null)
         {
-            _weaponController.OnHandChangedEvent += HandleWeaponChanged;
-            HandleWeaponChanged(_weaponController.Current);
+            _equipment.OnEquipChangedEvent += HandleEquipChanged;
+            ApplyCore(_equipment.Get<CoreDataSO>(EquipSlotType.Core));
         }
 
         UIInputBlocker.OnBlockedChangedEvent += HandleInputBlocked;
@@ -116,10 +116,10 @@ public class PlayerAimPoint : MonoBehaviour
 
     public void Unbind()
     {
-        if (_weaponController != null)
+        if (_equipment != null)
         {
-            _weaponController.OnHandChangedEvent -= HandleWeaponChanged;
-            _weaponController = null;
+            _equipment.OnEquipChangedEvent -= HandleEquipChanged;
+            _equipment = null;
         }
 
         UIInputBlocker.OnBlockedChangedEvent -= HandleInputBlocked;
@@ -139,28 +139,26 @@ public class PlayerAimPoint : MonoBehaviour
         SetAimPointPosition(_aimController.AimPosition);
     }
 
-    private void HandleWeaponChanged(HandActionBase hand)
-        => SetAimPointState(GetStateFor(hand is PlayerWeaponBase weapon ? weapon.Data : null));
+    private void HandleEquipChanged(EquipSlotType slot, ItemStack stack)
+    {
+        if (slot != EquipSlotType.Core) return;
+
+        ApplyCore(stack.Resolve<CoreDataSO>());
+    }
 
     /// <summary>
-    /// 무기 분류에 맞는 조준점. 맨손이면 기본값을 쓴다.
-    /// 스코프 모듈에 따른 전환은 아직 없다 — 어느 모듈이 어느 조준점인지 데이터가 없다.
+    /// 조준점은 <b>코어가 정한다.</b> 무기별로 두면 좌우 무장이 서로 다른 조준점을 주장하고,
+    /// 둘 다 활성이라 어느 쪽을 띄울지 매 프레임 골라야 한다.
+    ///
+    /// 코어에 지정이 없으면(None) 기본값을 쓴다.
     /// </summary>
-    private PlayerAimPointStateType GetStateFor(PlayerWeaponDataSO data)
+    private void ApplyCore(CoreDataSO core)
     {
-        if (data == null) return _defaultStateType;
+        PlayerAimPointStateType state = core != null && core.AimPoint != PlayerAimPointStateType.None
+            ? core.AimPoint
+            : _defaultStateType;
 
-        switch (data.Category)
-        {
-            case PlayerWeaponCategory.Melee: return PlayerAimPointStateType.MeleeAim;
-            case PlayerWeaponCategory.HandGun: return PlayerAimPointStateType.GunAim_Hg;
-            case PlayerWeaponCategory.AutoRifle: return PlayerAimPointStateType.GunAim_Ar;
-            case PlayerWeaponCategory.SniperRifle: return PlayerAimPointStateType.GunAim_Sr;
-            case PlayerWeaponCategory.Shotgun: return PlayerAimPointStateType.GunAim_Sg;
-
-            // 유탄·로켓처럼 전용 조준점이 없는 것은 기본 총기 조준점을 쓴다.
-            default: return PlayerAimPointStateType.GunAim_Default;
-        }
+        SetAimPointState(state);
     }
 
     public void SetAimPointPosition(Vector2 position)

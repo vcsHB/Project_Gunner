@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 손에 드는 무기. 주/보조 입력의 의미는 파생 클래스가 정한다.
-/// (원거리 무기는 Primary=발사 / Secondary=정조준)
+/// 팔에 다는 무기. 받은 입력 하나가 무슨 뜻인지는 파생 클래스가 정한다.
+/// (원거리 무기는 Use=발사)
 /// </summary>
 public abstract class PlayerWeaponBase : HandActionBase
 {
@@ -46,9 +46,9 @@ public abstract class PlayerWeaponBase : HandActionBase
     /// 스폰 직후 한 번. 장착/해제와는 별개다.
     /// 오버라이드할 때 반드시 base를 먼저 호출할 것.
     /// </summary>
-    public override void Initialize(Agent owner, ItemStack stack)
+    public override void Initialize(Agent owner, EquipSlotType slot, ItemStack stack)
     {
-        base.Initialize(owner, stack);
+        base.Initialize(owner, slot, stack);
 
         Data = stack.Resolve<PlayerWeaponDataSO>();
         if (Data == null)

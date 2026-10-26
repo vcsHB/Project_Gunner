@@ -6,6 +6,21 @@
 
 ---
 
+## MCP로 메뉴 아이템을 못 부른다
+
+**증상** — `execute_menu_item`이 `ExecuteMenuItem failed because there is no menu named '...'`로 실패합니다. 메뉴는 분명히 에디터에 떠 있습니다.
+
+**원인이 두 가지라 섞입니다.**
+
+1. **경로에 ASCII가 아닌 글자가 있으면 매칭에 실패합니다.** `Tools/Localization/표 편집기`처럼 한글이 들어간 메뉴는 MCP로 부를 수 없습니다. `&`도 쓰지 마세요 — 유니티가 단축키 지정자로 먹습니다.
+2. **새로 만든 메뉴는 컴파일을 두 번 돌려야 잡힙니다.** 에디터 밖에서 `.cs`를 만들면 (a) 임포트 (b) 컴파일 + 도메인 리로드가 따로 일어납니다. 파일을 만든 직후의 `recompile_scripts`는 아직 임포트되지 않은 파일을 보지 못합니다.
+
+**대응** — 자동화로 부를 메뉴는 **경로를 ASCII로** 짓습니다(`Tools/Item Database/Rebuild`). 새 에디터 스크립트를 만들었으면 `recompile_scripts` → `Assets/Refresh` → `recompile_scripts` 순으로 한 번 더 돌린 뒤에 호출하세요.
+
+**왜 헷갈리나** — `recompile_scripts`가 두 경우 모두 "0 warnings"로 성공을 보고합니다. 컴파일은 실제로 성공했고, 실패한 것은 메뉴 조회입니다. 실패 원인은 콘솔에만 남으므로 `get_console_logs`를 보세요.
+
+---
+
 ## 총은 왼쪽을 보는데 총알은 오른쪽으로 나간다
 
 **증상** — 조준 방향이 반대로 나오는 것처럼 보입니다. 무기 스프라이트는 한쪽을 보고 있는데 투사체는 반대로 날아갑니다.

@@ -12,7 +12,13 @@ using UnityEngine;
 /// </summary>
 public abstract class WeaponPanelBase : UIPanelBase
 {
+    [Tooltip("이 패널이 따라갈 팔. 좌우 무장이 동시에 활성이라 하나를 지정해야 한다.")]
+    [SerializeField] private EquipSlotType _slot = EquipSlotType.ArmLeft;
+
     private PlayerHandController _weaponController;
+
+    /// <summary>이 패널이 보고 있는 팔.</summary>
+    protected EquipSlotType Slot => _slot;
 
     /// <summary>지금 든 원거리 무기. 맨손이거나 근접이면 null.</summary>
     protected PlayerRangedWeapon Weapon { get; private set; }
@@ -35,24 +41,32 @@ public abstract class WeaponPanelBase : UIPanelBase
         _weaponController = player.GetCompo<PlayerHandController>();
         if (_weaponController == null) return;
 
-        _weaponController.OnHandChangedEvent += HandleWeaponChanged;
-        HandleWeaponChanged(_weaponController.Current);
+        _weaponController.OnHandChangedEvent += HandleHandChanged;
+        Apply(_weaponController.Get(_slot));
     }
 
     public void Unbind()
     {
         if (_weaponController != null)
         {
-            _weaponController.OnHandChangedEvent -= HandleWeaponChanged;
+            _weaponController.OnHandChangedEvent -= HandleHandChanged;
             _weaponController = null;
         }
 
-        HandleWeaponChanged(null);
+        Apply(null);
     }
 
     protected virtual void OnDestroy() => Unbind();
 
-    private void HandleWeaponChanged(HandActionBase hand)
+    // 다른 팔의 변화는 무시한다. 이 판단은 여기 한 곳에만 있어야 한다.
+    private void HandleHandChanged(EquipSlotType slot, HandActionBase hand)
+    {
+        if (slot != _slot) return;
+
+        Apply(hand);
+    }
+
+    private void Apply(HandActionBase hand)
     {
         if (Weapon != null)
         {

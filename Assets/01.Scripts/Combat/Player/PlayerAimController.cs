@@ -15,19 +15,9 @@ using UnityEngine;
 [DefaultExecutionOrder(AimExecutionOrder.Aim)]
 public class PlayerAimController : MonoBehaviour, IAgentComponent
 {
-    [Tooltip("조준 방향으로 회전할 오브젝트. 보통 무기를 들고 있는 루트.")]
-    [SerializeField] private Transform _aimPivot;
-
-    [Tooltip("왼쪽을 조준할 때 무기가 뒤집히지 않도록 Y를 미러링한다. " +
-             "위에서 완전히 내려다보는 리소스라면 꺼도 된다.")]
-    [SerializeField] private bool _keepUpright = true;
-
-    [Tooltip("|조준 x|가 이 값보다 작으면 좌우를 바꾸지 않는다. 위/아래를 겨눌 때 떨리는 것을 막는다.")]
-    [SerializeField, Range(0f, 0.5f)] private float _facingDeadzone = 0.05f;
-
     [Header("조준 거리")]
-    [Tooltip("무기가 없을 때 쓸 조준 가능 거리. 무기를 들면 AimRange 스탯을 쓴다.")]
-    [SerializeField] private float _defaultAimRange = 5f;
+    [Tooltip("코어가 없을 때 쓸 조준 가능 거리. 코어를 달면 그쪽 값을 쓴다.")]
+    [SerializeField] private float _defaultAimRange = 15f;
 
     [Tooltip("조준점이 화면 가장자리에서 안쪽으로 둘 여백(월드 단위). 0이면 화면 끝까지 간다. " +
              "비율이 아니라 거리다 - 비율로 두면 화면이 클수록 여백이 같이 커져서 " +
@@ -50,6 +40,7 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
     private Player _player;
     private Camera _camera;
     private PlayerHandController _weapons;
+    private MechaPartController _parts;
 
     private Vector2 _recoilOffset;
 
@@ -66,27 +57,21 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
     public bool IsAiming { get; private set; }
 
     /// <summary>
-    /// 지금 왼쪽을 보고 있는지. 캐릭터 몸통 스프라이트처럼 같이 뒤집혀야 하는 것이 읽어간다.
-    /// 데드존 안에서는 마지막 값을 유지하므로 조준 x의 부호와 매 프레임 일치하지는 않는다.
-    /// </summary>
-    public bool IsFacingLeft { get; private set; }
-
-    /// <summary>
-    /// 지금 무기 기준 조준 가능 거리.
+    /// 지금 조준 가능 거리. <b>코어가 정한다.</b>
+    ///
+    /// 무기에서 코어로 옮긴 이유는 좌우 무장이 동시에 활성이기 때문이다.
+    /// 무기별로 두면 서로 다른 값을 주장하고, 어느 쪽을 쓸지 매 프레임 골라야 한다.
     ///
     /// <b>조준점을 자르는 데는 쓰지 않는다.</b> 사거리 밖이라고 조준점을 붙들면
     /// 커서와 갈라져 조작이 어긋난 것처럼 보인다. 조준점은 커서를 그대로 따라간다.
-    /// 이 값은 카메라 거리나 명중률 감소 기준처럼 다른 곳에서 쓰라고 남겨둔 것이고,
-    /// 지금은 읽는 곳이 없다.
     /// </summary>
     public float AimRange
     {
         get
         {
-            PlayerRangedWeapon weapon = _weapons != null ? _weapons.Current as PlayerRangedWeapon : null;
-            if (weapon == null || weapon.Status == null) return _defaultAimRange;
+            CoreDataSO core = _parts != null ? _parts.Core : null;
 
-            return Mathf.Max(0.5f, weapon.Status.Value(WeaponStatType.AimRange));
+            return core != null ? Mathf.Max(0.5f, core.AimRange) : _defaultAimRange;
         }
     }
 
@@ -99,11 +84,15 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
     {
         _camera = CameraManager.HasInstance ? CameraManager.Instance.MainCamera : Camera.main;
         _weapons = _player.GetCompo<PlayerHandController>();
+        _parts = _player.GetCompo<MechaPartController>();
 
         if (_weapons != null)
+        {
             _weapons.OnHandChangedEvent += HandleHandChanged;
 
-        SubscribeWeapon(_weapons != null ? _weapons.Current : null);
+            SubscribeWeapon(EquipSlotType.ArmLeft, _weapons.Left);
+            SubscribeWeapon(EquipSlotType.ArmRight, _weapons.Right);
+        }
 
         UIInputBlocker.OnBlockedChangedEvent += HandleInputBlocked;
     }
@@ -113,7 +102,9 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
         if (_weapons != null)
         {
             _weapons.OnHandChangedEvent -= HandleHandChanged;
-            SubscribeWeapon(null);
+
+            SubscribeWeapon(EquipSlotType.ArmLeft, null);
+            SubscribeWeapon(EquipSlotType.ArmRight, null);
         }
 
         UIInputBlocker.OnBlockedChangedEvent -= HandleInputBlocked;
@@ -127,11 +118,6 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
 
         UpdateAim(_player.Input);
         TickRecoil(Time.deltaTime);
-
-        if (_aimPivot == null) return;
-
-        _aimPivot.right = AimDirection;
-        ApplyUpright();
     }
 
     private void UpdateAim(PlayerInput input)
@@ -245,61 +231,31 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
 
     #region 무기 구독
 
-    private PlayerRangedWeapon _subscribed;
+    // 좌우가 동시에 쏘므로 반동도 양쪽에서 들어온다. 슬롯별로 따로 들고 있어야
+    // 한쪽을 떼었을 때 그쪽 구독만 정확히 걷힌다.
+    private PlayerRangedWeapon _subscribedLeft;
+    private PlayerRangedWeapon _subscribedRight;
 
-    private void HandleHandChanged(HandActionBase hand)
-    {
-        // 무기를 놓으면 정조준도 풀린다. 안 그러면 카메라가 확대된 채로 굳는다.
-        SetAiming(false);
-        SubscribeWeapon(hand);
-    }
+    private void HandleHandChanged(EquipSlotType slot, HandActionBase hand)
+        => SubscribeWeapon(slot, hand);
 
-    private void SubscribeWeapon(HandActionBase hand)
+    private void SubscribeWeapon(EquipSlotType slot, HandActionBase hand)
     {
-        if (_subscribed != null)
+        ref PlayerRangedWeapon field = ref _subscribedLeft;
+        if (slot == EquipSlotType.ArmRight) field = ref _subscribedRight;
+        else if (slot != EquipSlotType.ArmLeft) return;
+
+        if (field != null)
         {
-            _subscribed.OnFiredEvent -= HandleFired;
-            _subscribed = null;
+            field.OnFiredEvent -= HandleFired;
+            field = null;
         }
 
-        _subscribed = hand as PlayerRangedWeapon;
+        field = hand as PlayerRangedWeapon;
 
-        if (_subscribed != null)
-            _subscribed.OnFiredEvent += HandleFired;
+        if (field != null)
+            field.OnFiredEvent += HandleFired;
     }
 
     #endregion
-
-    /// <summary>
-    /// 피벗의 +X를 커서로 돌리면 왼쪽을 볼 때 +Y가 아래를 향한다. 무기가 뒤집혀 보이는 이유다.
-    /// Y를 미러링해서 세워둔다.
-    ///
-    /// 무기가 아니라 <b>피벗</b>을 뒤집는 이유는 총구 오프셋 때문이다.
-    /// 총열 위에 찍힌 총구(+Y)는 무기가 뒤집히면 아래로 내려와야 맞는데,
-    /// 피벗을 뒤집으면 스프라이트와 총구·모듈 장착점이 한꺼번에 따라온다.
-    /// </summary>
-    private void ApplyUpright()
-    {
-        bool flip = false;
-
-        if (_keepUpright)
-        {
-            // 위/아래를 정확히 겨누면 x가 0 근처에서 떨린다. 그 구간에서는 마지막 방향을 유지한다.
-            if (Mathf.Abs(AimDirection.x) > _facingDeadzone)
-                IsFacingLeft = AimDirection.x < 0f;
-
-            flip = IsFacingLeft;
-        }
-        else
-        {
-            IsFacingLeft = false;
-        }
-
-        Vector3 scale = _aimPivot.localScale;
-        float target = Mathf.Abs(scale.y) * (flip ? -1f : 1f);
-
-        // 매 프레임 스케일을 쓰면 transform이 계속 dirty가 된다. 부호가 바뀔 때만 건드린다.
-        if (!Mathf.Approximately(scale.y, target))
-            _aimPivot.localScale = new Vector3(scale.x, target, scale.z);
-    }
 }

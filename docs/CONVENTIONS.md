@@ -71,6 +71,7 @@ SO에 런타임 상태를 두지 마세요. 에셋이라 **플레이 모드를 �
 - `Tools > Item Creator` — 아이템 SO 생성, 이름 규칙 일괄 적용
 - `ItemDatabase` 인스펙터 — 프로젝트 스캔 & Id 부여, Id 대역 편집, **Id 충돌 해결**, 전체 재부여
 - `Tools > Asset Highlight Settings` — 에셋 색칠 팔레트. 프로젝트 창에서 `Ctrl+/`
+- `Tools > Item Database > Rebuild` — 프로젝트 스캔 & Id 부여. 인스펙터 버튼과 같은 일을 메뉴로도 부를 수 있게 한 것
 - 하이어라키 장식 (`HierarchyRowDecorator`, `HierarchyActiveToggle`) — 계층선, 휠클릭 활성 토글, 컴포넌트 아이콘
 - `Tools > Part Forge` — **예정.** 스프라이트에서 파츠 SO + 프리팹 생성, 소켓·Pivot 조정 ([PIVOT.md](PIVOT.md#part-forge-에디터-툴))
 
