@@ -276,7 +276,7 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent
     ///
     /// 무기가 아니라 <b>피벗</b>을 뒤집는 이유는 총구 오프셋 때문이다.
     /// 총열 위에 찍힌 총구(+Y)는 무기가 뒤집히면 아래로 내려와야 맞는데,
-    /// 피벗을 뒤집으면 스프라이트와 총구·파츠 장착점이 한꺼번에 따라온다.
+    /// 피벗을 뒤집으면 스프라이트와 총구·모듈 장착점이 한꺼번에 따라온다.
     /// </summary>
     private void ApplyUpright()
     {

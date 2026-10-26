@@ -196,9 +196,9 @@ M1에서 **하지 않습니다.** 넣고 싶어지면 M2 이후로 미루세요.
 
 | 부채 | 갚는 시점 | 안 갚으면 |
 |---|---|---|
-| 장비 슬롯에 장착 효과가 없음 | **M0** (전환) | 기체 파츠를 끼워도 아무 일이 없다 |
-| `ItemInstanceRegistry.Clear()` 호출처 없음 | **M1** (새 판) | 이전 판의 아이템 인스턴스가 남는다 |
-| `GameRandom.Reseed()` 호출처 없음 | **M1** (새 판) | 시드 재현이 안 된다 |
+| ~~장비 슬롯에 장착 효과가 없음~~ | **해결** (M0 2단계) | `MechaPartController` |
+| ~~`ItemInstanceRegistry.Clear()` 호출처 없음~~ | **해결** (M0 2단계) | `MechaLoadoutApplier` |
+| ~~`GameRandom.Reseed()` 호출처 없음~~ | **해결** (M0 2단계) | `MechaLoadoutApplier` |
 | 투사체가 지형을 뚫는다 | **M1** (맵) | 벽 너머 적이 맞는다 |
 | 개량(`UpgradeSO`) Id 없음 | **M4** (저장) | 세이브가 개량을 복원 못 한다 |
 | `Resources` 전량 로드 | M5 전 | 시작할 때 전부 메모리에 올라간다 |

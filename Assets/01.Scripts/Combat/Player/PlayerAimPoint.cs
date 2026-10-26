@@ -144,7 +144,7 @@ public class PlayerAimPoint : MonoBehaviour
 
     /// <summary>
     /// 무기 분류에 맞는 조준점. 맨손이면 기본값을 쓴다.
-    /// 스코프 파츠에 따른 전환은 아직 없다 — 어느 파츠가 어느 조준점인지 데이터가 없다.
+    /// 스코프 모듈에 따른 전환은 아직 없다 — 어느 모듈이 어느 조준점인지 데이터가 없다.
     /// </summary>
     private PlayerAimPointStateType GetStateFor(PlayerWeaponDataSO data)
     {

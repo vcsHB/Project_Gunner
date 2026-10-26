@@ -3,7 +3,7 @@ using System;
 /// <summary>
 /// 무기 인스턴스 하나의 런타임 스탯.
 /// SO는 여러 무기가 공유하므로 기본값만 읽어와 인스턴스마다 따로 만든다.
-/// 파츠는 자기 자신을 origin으로 modifier를 걸고, 탈착 시 그것만 걷어간다.
+/// 모듈은 자기 자신을 origin으로 modifier를 걸고, 탈착 시 그것만 걷어간다.
 /// </summary>
 public class WeaponStatus
 {
@@ -38,7 +38,7 @@ public class WeaponStatus
 
     public float Value(WeaponStatType type) => Get(type)?.TotalValue ?? 0f;
 
-    /// <summary>파츠 탈착용. 그 origin이 건 modifier만 전부 걷어낸다.</summary>
+    /// <summary>모듈 탈착용. 그 origin이 건 modifier만 전부 걷어낸다.</summary>
     public void RemoveModifiers(object origin)
     {
         for (int i = 1; i < StatCount; i++)

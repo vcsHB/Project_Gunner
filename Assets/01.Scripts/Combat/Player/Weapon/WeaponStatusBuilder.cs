@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// 개체 상태(파츠·개량)를 WeaponStatus에 반영하는 규칙.
+/// 개체 상태(모듈·개량)를 WeaponStatus에 반영하는 규칙.
 ///
-/// 살아있는 무기(WeaponModController)와 UI 미리보기가 같은 결과를 내야 하므로
+/// 살아있는 무기(ModdingController)와 UI 미리보기가 같은 결과를 내야 하므로
 /// 계산을 여기 한 곳에 모은다.
 /// </summary>
 public static class WeaponStatusBuilder
@@ -26,27 +26,27 @@ public static class WeaponStatusBuilder
     {
         if (status == null || instance == null) return;
 
-        foreach (KeyValuePair<WeaponUpgradeSO, int> pair in instance.Upgrades)
+        foreach (KeyValuePair<UpgradeSO, int> pair in instance.Upgrades)
             ApplyUpgrade(status, pair.Key, pair.Value);
 
-        foreach (KeyValuePair<WeaponPartSlotType, WeaponPartDataSO> pair in instance.Parts)
-            ApplyPart(status, pair.Value);
+        foreach (KeyValuePair<ModuleSlotType, ModuleDataSO> pair in instance.Modules)
+            ApplyModule(status, pair.Value);
 
         // 장전된 탄약도 성능의 일부다. 빼고 계산하면 UI가 실제와 다른 수치를 보여준다.
         ApplyAmmo(status, instance.LoadedAmmo);
     }
 
-    public static void ApplyPart(WeaponStatus status, WeaponPartDataSO part)
+    public static void ApplyModule(WeaponStatus status, ModuleDataSO module)
     {
-        if (status == null || part == null) return;
+        if (status == null || module == null) return;
 
-        IReadOnlyList<WeaponStatDelta> deltas = part.Deltas;
+        IReadOnlyList<WeaponStatDelta> deltas = module.Deltas;
         for (int i = 0; i < deltas.Count; i++)
-            ApplyDelta(status, deltas[i], part);
+            ApplyDelta(status, deltas[i], module);
     }
 
     /// <summary>
-    /// 장전된 탄종의 성능 차이를 반영한다. 파츠와 같은 규칙이고 origin은 탄약 SO 자신이다.
+    /// 장전된 탄종의 성능 차이를 반영한다. 모듈과 같은 규칙이고 origin은 탄약 SO 자신이다.
     /// 탄종을 바꾸기 전에 이전 탄약을 Remove해야 한다.
     /// </summary>
     public static void ApplyAmmo(WeaponStatus status, AmmoDataSO ammo)
@@ -61,7 +61,7 @@ public static class WeaponStatusBuilder
     /// <summary>
     /// 개량 단계는 누적이 아니라 교체다. 부르기 전에 이전 단계를 걷어내야 한다.
     /// </summary>
-    public static void ApplyUpgrade(WeaponStatus status, WeaponUpgradeSO upgrade, int level)
+    public static void ApplyUpgrade(WeaponStatus status, UpgradeSO upgrade, int level)
     {
         if (status == null || upgrade == null || level <= 0) return;
 

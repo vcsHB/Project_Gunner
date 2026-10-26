@@ -26,7 +26,7 @@ public class WeaponUpgradeLevel
 }
 
 /// <summary>
-/// 무기 개량 경로 하나. 파츠와 달리 갈아끼우는 게 아니라 무기 자체를 단계별로 손보는 것이다.
+/// 무기 개량 경로 하나. 모듈과 달리 갈아끼우는 게 아니라 무기 자체를 단계별로 손보는 것이다.
 ///
 /// 각 단계의 deltas는 "그 단계에서의 최종 값"이다. 누적이 아니다.
 /// 2단계를 적용하면 1단계 효과는 걷히고 2단계 값만 남는다.
@@ -35,7 +35,7 @@ public class WeaponUpgradeLevel
 /// 어떤 무기가 어떤 개량을 할 수 있는지는 PlayerWeaponDataSO가 정한다.
 /// </summary>
 [CreateAssetMenu(menuName = "SO/Item/WeaponUpgrade")]
-public class WeaponUpgradeSO : ScriptableObject
+public class UpgradeSO : ScriptableObject
 {
     [SerializeField] private string _upgradeName;
     [SerializeField, TextArea] private string _description;

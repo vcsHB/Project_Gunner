@@ -10,6 +10,6 @@ public enum ItemCategoryType
     Resources = 1,
     UseableItem = 2,
     PlayerWeapon = 3,
-    PlayerWeaponPart = 4,
+    WeaponModule = 4,
     Unit = 5,
 }

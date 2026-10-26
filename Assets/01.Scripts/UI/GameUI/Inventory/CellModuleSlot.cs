@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CellWeaponPartSlot : MonoBehaviour
+public class CellModuleSlot : MonoBehaviour
 {
     [SerializeField] private Image _imageEquipmentIcon;
     [SerializeField] private GameObject _plusMark; // 빈 슬롯일때 활성화

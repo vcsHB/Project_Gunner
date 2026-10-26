@@ -23,8 +23,8 @@ MonoBehaviour:
     start: 1000
     end: 1999
     nextId: 1004
-  - typeName: WeaponPartDataSO
-    label: "\uBB34\uAE30 \uD30C\uCE20"
+  - typeName: ModuleDataSO
+    label: "\uBB34\uAE30 \uBAA8\uB4C8"
     start: 2000
     end: 2999
     nextId: 2002
@@ -43,8 +43,8 @@ MonoBehaviour:
     start: 5000
     end: 5999
     nextId: 5000
-  - typeName: 
-    label: "\uBC29\uC5B4\uAD6C"
+  - typeName: PartDataSO
+    label: "\uAE30\uCCB4 \uD30C\uCE20"
     start: 6000
     end: 6999
     nextId: 6000
@@ -73,6 +73,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f5cab53e7556c654ab198ca933014009, type: 2}
   - {fileID: 11400000, guid: f4196b1aae1596d419fd2c186d00f932, type: 2}
   - {fileID: 11400000, guid: 2c0c8489d2692664ba54a98d05725978, type: 2}
+  - {fileID: 11400000, guid: c3122c77dca47854fac8350cd4e90f8b, type: 2}
   - {fileID: 11400000, guid: c831b0fae6b13444ba27e742aa2e5d16, type: 2}
   - {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
-  - {fileID: 11400000, guid: c3122c77dca47854fac8350cd4e90f8b, type: 2}

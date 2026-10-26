@@ -1,7 +1,7 @@
 /// <summary>
 /// 아이템 칸을 가진 무언가. 드래그 시스템이 말을 거는 유일한 창구다.
 ///
-/// 인벤토리(칸 인덱스), 장비(EquipSlotType), 파츠(WeaponPartSlotType)가 모두 이걸 구현하면
+/// 인벤토리(칸 인덱스), 장비(EquipSlotType), 모듈(ModuleSlotType)가 모두 이걸 구현하면
 /// 드래그 쪽은 셋을 구분하지 않아도 된다.
 ///
 /// slotKey의 의미는 구현체가 정한다. 인벤토리는 인덱스, 장비는 (int)EquipSlotType 식이다.

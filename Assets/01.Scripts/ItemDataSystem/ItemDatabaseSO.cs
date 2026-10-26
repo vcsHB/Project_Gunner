@@ -37,13 +37,15 @@ public class ItemDatabaseSO : ScriptableObject
         new(nameof(ItemDataSO), "기타 / 미분류", 1, 999),
 
         new(nameof(PlayerWeaponDataSO), "무기", 1000, 1999),
-        new(nameof(WeaponPartDataSO), "무기 파츠", 2000, 2999),
+        new(nameof(ModuleDataSO), "무기 모듈", 2000, 2999),
         new(nameof(AmmoDataSO), "탄약", 3000, 3999),
 
+        // 코어·추진체가 여기서 Id를 받는다. 파생 타입은 자기 설정이 없으면 이 대역을 물려받는다.
+        new(nameof(PartDataSO), "기체 파츠", 6000, 6999),
+
         // 아직 타입이 없는 예약 대역. 클래스를 만들면 typeName만 채우면 된다.
-        new(string.Empty, "소모품", 4000, 4999),
+        new(string.Empty, "(폐기) 소모품", 4000, 4999),
         new(string.Empty, "도구", 5000, 5999),
-        new(string.Empty, "방어구", 6000, 6999),
         new(string.Empty, "자원", 7000, 7999),
         new(string.Empty, "블럭", 8000, 8999),
         new(string.Empty, "유닛", 9000, 9999),

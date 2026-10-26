@@ -3,34 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 무기 한 정의 개체 상태. 파츠와 개량의 <b>주인</b>이다.
+/// 무기 한 정의 개체 상태. 모듈과 개량의 <b>주인</b>이다.
 ///
 /// 인벤토리에 들어있는(오브젝트가 없는) 무기도 모딩할 수 있어야 해서, 상태를 여기 둔다.
-/// 살아있는 PlayerWeaponBase는 이 상태를 따라가기만 한다. (WeaponModController가 그 역할)
+/// 살아있는 PlayerWeaponBase는 이 상태를 따라가기만 한다. (ModController가 그 역할)
 ///
-/// 파츠 칸도 IItemSlotContainer라서 인벤토리에서 파츠를 끌어다 놓는 게 그대로 동작한다.
+/// 모듈 칸도 IItemSlotContainer라서 인벤토리에서 모듈을 끌어다 놓는 게 그대로 동작한다.
 /// </summary>
 public class WeaponItemInstance : ItemInstance, IItemSlotContainer
 {
-    /// <summary>(슬롯, 새 파츠). 떼면 두 번째가 null.</summary>
-    public event Action<WeaponPartSlotType, WeaponPartDataSO> OnPartChangedEvent;
+    /// <summary>(슬롯, 새 모듈). 떼면 두 번째가 null.</summary>
+    public event Action<ModuleSlotType, ModuleDataSO> OnModuleChangedEvent;
 
     /// <summary>(개량 경로, 새 단계)</summary>
-    public event Action<WeaponUpgradeSO, int> OnUpgradeChangedEvent;
+    public event Action<UpgradeSO, int> OnUpgradeChangedEvent;
 
     /// <summary>(장전된 탄종, 남은 발수). 탄종이 없으면 첫 번째가 null.</summary>
     public event Action<AmmoDataSO, int> OnAmmoChangedEvent;
 
-    private readonly Dictionary<WeaponPartSlotType, WeaponPartDataSO> _parts = new();
-    private readonly Dictionary<WeaponUpgradeSO, int> _upgrades = new();
+    private readonly Dictionary<ModuleSlotType, ModuleDataSO> _modules = new();
+    private readonly Dictionary<UpgradeSO, int> _upgrades = new();
 
     private uint _loadedAmmoId;
     private int _ammoInMagazine;
 
     public PlayerWeaponDataSO WeaponData => Data as PlayerWeaponDataSO;
 
-    public IReadOnlyDictionary<WeaponPartSlotType, WeaponPartDataSO> Parts => _parts;
-    public IReadOnlyDictionary<WeaponUpgradeSO, int> Upgrades => _upgrades;
+    public IReadOnlyDictionary<ModuleSlotType, ModuleDataSO> Modules => _modules;
+    public IReadOnlyDictionary<UpgradeSO, int> Upgrades => _upgrades;
 
     /// <summary>
     /// 레지스트리에 등록하지 않는 임시 개체. 테스트용으로 직접 스폰한 무기 등에 쓴다.
@@ -45,52 +45,52 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
         return instance;
     }
 
-    #region Parts
+    #region Modules
 
-    public WeaponPartDataSO GetPart(WeaponPartSlotType slot)
-        => _parts.TryGetValue(slot, out WeaponPartDataSO part) ? part : null;
+    public ModuleDataSO GetModule(ModuleSlotType slot)
+        => _modules.TryGetValue(slot, out ModuleDataSO module) ? module : null;
 
-    public bool CanAttach(WeaponPartDataSO part) => string.IsNullOrEmpty(GetAttachBlockReason(part));
+    public bool CanAttach(ModuleDataSO module) => string.IsNullOrEmpty(GetAttachBlockReason(module));
 
     /// <summary>못 끼우는 이유. 끼울 수 있으면 빈 문자열. UI 툴팁에 그대로 쓴다.</summary>
-    public string GetAttachBlockReason(WeaponPartDataSO part)
+    public string GetAttachBlockReason(ModuleDataSO module)
     {
-        if (part == null) return "파츠가 없습니다.";
+        if (module == null) return "모듈이 없습니다.";
 
-        string reason = part.GetIncompatibleReason(WeaponData);
+        string reason = module.GetIncompatibleReason(WeaponData);
         if (!string.IsNullOrEmpty(reason)) return reason;
 
-        // modifier를 파츠 SO로 식별하므로 같은 파츠가 두 칸에 들어가면 해제가 꼬인다.
-        foreach (KeyValuePair<WeaponPartSlotType, WeaponPartDataSO> pair in _parts)
+        // modifier를 모듈 SO로 식별하므로 같은 모듈이 두 칸에 들어가면 해제가 꼬인다.
+        foreach (KeyValuePair<ModuleSlotType, ModuleDataSO> pair in _modules)
         {
-            if (pair.Value == part && pair.Key != part.Slot)
-                return "같은 파츠가 이미 장착되어 있습니다.";
+            if (pair.Value == module && pair.Key != module.Slot)
+                return "같은 모듈이 이미 장착되어 있습니다.";
         }
 
         return string.Empty;
     }
 
-    public bool AttachPart(WeaponPartDataSO part)
+    public bool AttachModule(ModuleDataSO module)
     {
-        string reason = GetAttachBlockReason(part);
+        string reason = GetAttachBlockReason(module);
         if (!string.IsNullOrEmpty(reason))
         {
-            Debug.LogWarning($"[WeaponInstance] {part?.DisplayName} 장착 불가 - {reason}");
+            Debug.LogWarning($"[WeaponInstance] {module?.DisplayName} 장착 불가 - {reason}");
             return false;
         }
 
-        if (GetPart(part.Slot) == part) return true;
+        if (GetModule(module.Slot) == module) return true;
 
-        _parts[part.Slot] = part;
-        OnPartChangedEvent?.Invoke(part.Slot, part);
+        _modules[module.Slot] = module;
+        OnModuleChangedEvent?.Invoke(module.Slot, module);
         return true;
     }
 
-    public bool DetachPart(WeaponPartSlotType slot)
+    public bool DetachModule(ModuleSlotType slot)
     {
-        if (!_parts.Remove(slot)) return false;
+        if (!_modules.Remove(slot)) return false;
 
-        OnPartChangedEvent?.Invoke(slot, null);
+        OnModuleChangedEvent?.Invoke(slot, null);
         return true;
     }
 
@@ -99,20 +99,20 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
     #region Upgrades
 
     /// <summary>걸려있지 않으면 0.</summary>
-    public int GetUpgradeLevel(WeaponUpgradeSO upgrade)
+    public int GetUpgradeLevel(UpgradeSO upgrade)
         => upgrade != null && _upgrades.TryGetValue(upgrade, out int level) ? level : 0;
 
-    public bool IsUpgradeAllowed(WeaponUpgradeSO upgrade)
+    public bool IsUpgradeAllowed(UpgradeSO upgrade)
         => upgrade != null && WeaponData != null && WeaponData.CanUpgrade(upgrade);
 
-    public bool CanLevelUp(WeaponUpgradeSO upgrade)
+    public bool CanLevelUp(UpgradeSO upgrade)
         => IsUpgradeAllowed(upgrade) && GetUpgradeLevel(upgrade) < upgrade.MaxLevel;
 
-    public bool TryLevelUp(WeaponUpgradeSO upgrade)
+    public bool TryLevelUp(UpgradeSO upgrade)
         => CanLevelUp(upgrade) && SetUpgradeLevel(upgrade, GetUpgradeLevel(upgrade) + 1);
 
     /// <summary>단계를 직접 지정한다. 0이면 해제. 세이브 복원에도 이걸 쓴다.</summary>
-    public bool SetUpgradeLevel(WeaponUpgradeSO upgrade, int level)
+    public bool SetUpgradeLevel(UpgradeSO upgrade, int level)
     {
         if (!IsUpgradeAllowed(upgrade))
         {
@@ -181,51 +181,51 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
 
     #region IItemSlotContainer
 
-    // slotKey는 (int)WeaponPartSlotType 이다.
+    // slotKey는 (int)ModuleSlotType 이다.
 
     public ItemStack Peek(int slotKey)
     {
-        WeaponPartDataSO part = GetPart((WeaponPartSlotType)slotKey);
+        ModuleDataSO module = GetModule((ModuleSlotType)slotKey);
 
-        return part != null ? new ItemStack(part.Id, 1) : ItemStack.Empty;
+        return module != null ? new ItemStack(module.Id, 1) : ItemStack.Empty;
     }
 
     public bool CanAccept(int slotKey, ItemStack stack, out string reason)
     {
         reason = string.Empty;
 
-        WeaponPartSlotType slot = (WeaponPartSlotType)slotKey;
-        if (slot == WeaponPartSlotType.None)
+        ModuleSlotType slot = (ModuleSlotType)slotKey;
+        if (slot == ModuleSlotType.None)
         {
             reason = "없는 슬롯입니다.";
             return false;
         }
 
-        WeaponPartDataSO part = stack.Resolve<WeaponPartDataSO>();
-        if (part == null)
+        ModuleDataSO module = stack.Resolve<ModuleDataSO>();
+        if (module == null)
         {
-            reason = "파츠가 아닙니다.";
+            reason = "모듈이 아닙니다.";
             return false;
         }
 
-        if (part.Slot != slot)
+        if (module.Slot != slot)
         {
-            reason = $"{slot} 칸에 들어가는 파츠가 아닙니다.";
+            reason = $"{slot} 칸에 들어가는 모듈이 아닙니다.";
             return false;
         }
 
-        reason = GetAttachBlockReason(part);
+        reason = GetAttachBlockReason(module);
         return string.IsNullOrEmpty(reason);
     }
 
     public ItemStack Take(int slotKey, int count)
     {
-        WeaponPartSlotType slot = (WeaponPartSlotType)slotKey;
+        ModuleSlotType slot = (ModuleSlotType)slotKey;
 
-        WeaponPartDataSO part = GetPart(slot);
-        if (part == null) return ItemStack.Empty;
+        ModuleDataSO module = GetModule(slot);
+        if (module == null) return ItemStack.Empty;
 
-        return DetachPart(slot) ? new ItemStack(part.Id, 1) : ItemStack.Empty;
+        return DetachModule(slot) ? new ItemStack(module.Id, 1) : ItemStack.Empty;
     }
 
     public ItemStack Place(int slotKey, ItemStack stack)
@@ -233,11 +233,11 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
         if (!CanAccept(slotKey, stack, out _)) return stack;
 
         // 이미 차 있으면 여기서 밀어내지 않는다. 교환은 ItemTransfer가 순서를 맞춰서 처리한다.
-        if (GetPart((WeaponPartSlotType)slotKey) != null) return stack;
+        if (GetModule((ModuleSlotType)slotKey) != null) return stack;
 
-        if (!AttachPart(stack.Resolve<WeaponPartDataSO>())) return stack;
+        if (!AttachModule(stack.Resolve<ModuleDataSO>())) return stack;
 
-        // 파츠 칸은 한 개만 받는다. 여러 개를 들고 왔으면 나머지는 돌려준다.
+        // 모듈 칸은 한 개만 받는다. 여러 개를 들고 왔으면 나머지는 돌려준다.
         stack.count -= 1;
         return stack.count <= 0 ? ItemStack.Empty : stack;
     }

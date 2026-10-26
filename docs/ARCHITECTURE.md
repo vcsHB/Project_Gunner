@@ -55,7 +55,7 @@ public class Health : MonoBehaviour, IAgentComponent
 (기본값 + 덧셈 전부) * (1 + 비율 전부)
 ```
 
-덧셈을 다 적용한 뒤 비율을 곱하므로 **적용 순서가 결과를 바꾸지 않습니다.** 파츠 끼운 순서에 따라 최종 수치가 달라지면 재현 안 되는 밸런싱 버그가 됩니다.
+덧셈을 다 적용한 뒤 비율을 곱하므로 **적용 순서가 결과를 바꾸지 않습니다.** 모듈 끼운 순서에 따라 최종 수치가 달라지면 재현 안 되는 밸런싱 버그가 됩니다.
 
 타입별 합산 규칙은 `StatusCombiner`에 있습니다 (float/int 합산, bool OR). 닫힌 제네릭 타입마다 델리게이트를 한 번만 해석해서 박싱이 없습니다.
 
@@ -92,7 +92,7 @@ final = max(damage - defense, floor) * (1 - clamp01(resistance))
 
 ## 아이템 데이터
 
-모든 게임 데이터(무기·파츠·블럭·자원·유닛)는 `ItemDataSO` 파생입니다. **식별은 `uint Id` 하나로만** 합니다.
+모든 게임 데이터(무기·모듈·블럭·자원·유닛)는 `ItemDataSO` 파생입니다. **식별은 `uint Id` 하나로만** 합니다.
 
 `ItemDatabaseSO`가 유일한 레지스트리이고, 인스펙터의 "프로젝트 스캔 & 갱신"이 Id를 부여합니다. **한 번 부여된 Id는 절대 바뀌지 않고 재사용되지 않습니다.**
 
@@ -103,7 +103,7 @@ Id를 만든 순서대로 1, 2, 3으로 주면 **번호만 보고는 그게 무�
 ```
     1 ~   999   기타 / 미분류   ItemDataSO      ← 대역을 못 찾은 것이 여기로 떨어진다
  1000 ~  1999   무기            PlayerWeaponDataSO
- 2000 ~  2999   모듈            ModuleDataSO    ← 전환 중. 지금 이름은 WeaponPartDataSO
+ 2000 ~  2999   모듈            ModuleDataSO
  3000 ~  3999   탄약            AmmoDataSO
  4000 ~  9999   도구·기체 파츠·자원·블럭·유닛 (예약)
 ```
@@ -209,52 +209,89 @@ TMP 인스펙터를 덮어쓰지 않고 **컴포넌트 ⋮ 메뉴의 `Localize`*
 
 `EquipmentController`가 SO가 아니라 `ItemStack`을 들고 있는 이유도 `instanceId`를 잃지 않기 위해서입니다.
 
+## 기체 파츠
+
+기체는 **코어 / 좌팔 / 우팔 / 추진체** 네 슬롯입니다(`EquipSlotType`). 더 세분된 것(적재 용량, 전력량)은 슬롯을 늘리지 않고 **파츠의 하위 모듈로 내려갑니다.**
+
+팔에 들어가는 것은 `PlayerWeaponDataSO`(또는 도구)이고, 코어·추진체는 `PartDataSO` 파생입니다. 무기를 `PartDataSO`로 묶지 않은 이유는 **스탯 체계가 다르기 때문**입니다 — 무기는 `WeaponStatus`를 따로 갖습니다.
+
+### 장착이 스탯이 되는 지점
+
+`EquipmentController`는 "어느 슬롯에 무엇이 끼워져 있는가"만 압니다. 그게 무슨 의미인지는 구독자가 정하고, **`MechaPartController`가 그 유일한 구독자**입니다.
+
+```
+EquipmentController.OnEquipChangedEvent
+        │
+        ▼
+MechaPartController  ← PartDataSO.Deltas 를 AgentStatus modifier 로
+```
+
+**origin은 슬롯마다 다른 객체입니다**(`SlotOrigin`). `PartDataSO` 자신을 origin으로 쓰면 같은 파츠를 두 슬롯에 달았을 때 한쪽을 빼는 순간 양쪽이 같이 걷힙니다 — origin은 참조 동일성으로 비교되기 때문입니다.
+
+교체든 해제든 **먼저 걷어내고 다시 겁니다.** 교체에서 제거를 빼먹으면 조용히 중첩됩니다.
+
+**`Status<int>`에는 Percent를 걸 수 없습니다.** modifier 값이 int라서 0.2가 0으로 잘립니다(`StatusCombiner.CombineInt`). `MechaPartController`가 경고를 내고 건너뜁니다 — 조용히 틀리는 것보다 낫습니다.
+
+**비주얼은 여기서 만들지 않습니다.** 스탯과 프리팹 생성을 한 클래스가 들면, 프리팹이 없는 파츠에서 스탯까지 같이 빠집니다. 아트가 안 나온 파츠로도 밸런스를 볼 수 있어야 합니다.
+
+### 진입할 때 기체를 채우는 것
+
+핫바가 없으므로 **`EquipmentController`가 비어 있으면 무장이 아예 생기지 않습니다.** `MechaLoadoutApplier`가 `MechaLoadoutSO`(구성표)를 읽어 채웁니다.
+
+`AfterInitialize`가 아니라 **`Start`에서** 적용합니다. 컴포넌트 초기화 순서는 보장되지 않아서, `AfterInitialize`에서 장착하면 아직 구독하지 않은 컴포넌트가 장착 이벤트를 통째로 놓칩니다. (`MechaPartController`는 그래도 안전하도록 구독 직후 현재 상태를 한 번 훑습니다.)
+
+**여기가 "새 판 시작" 지점입니다.** 월드 상태를 되돌릴 유일한 자리라 `ItemInstanceRegistry.Clear()`와 `GameRandom.Reseed()`를 같이 부릅니다. 안 부르면 플레이 모드를 들락거릴 때마다 이전 판의 인스턴스가 쌓입니다 — 정적이라 플레이 모드를 나가도 남습니다.
+
+무기처럼 `RequiresInstance`인 아이템은 `ItemInstanceRegistry.CreateStack`으로 만듭니다. 그냥 `ItemStack`을 만들면 모딩·내구도가 붙을 자리가 없습니다.
+
 ## 무기 모딩
 
-> ⚠ **용어가 바뀝니다.** 여기서 "파츠"라 부르는 것이 **모듈**이 되고(`WeaponPartDataSO` → `ModuleDataSO`), "파츠"는 기체를 구성하는 코어·팔·추진체를 가리키게 됩니다. 모딩 구조 자체는 그대로 유지되고 코어·추진체까지 확장됩니다. ([PIVOT.md](PIVOT.md#용어))
+> ⚠ **구조가 일반화될 예정입니다.** 지금은 무기만 모딩할 수 있는데, 코어·추진체도 하위 모듈을 받게 됩니다(`ModdableItemInstance` 추출). 아래 규칙은 그대로 유지됩니다. ([PIVOT.md](PIVOT.md#용어))
+>
+> 용어 리네임은 끝났습니다 — 무기에 끼우는 것이 **모듈**, 기체를 구성하는 코어·팔·추진체가 **파츠**입니다.
 
 무기 스탯은 **모든 스탯을 다 가지는 단일 클래스**입니다(`WeaponStatus`). 근접무기도 탄창 크기를 갖습니다. 호환 판정은 스탯 보유 여부가 아니라 **슬롯과 카테고리로 명시**하기 때문에 그래도 됩니다.
 
 `WeaponStatType`을 배열 인덱스로 쓰므로 **enum 값이 0부터 빈틈없이 이어져야 합니다.** 중간에 끼워 넣지 말고 뒤에 추가하세요.
 
-`WeaponStatus`는 **무기 인스턴스마다 따로** 만듭니다. SO는 여러 무기가 공유하므로 기본값만 읽어옵니다. 같은 소총 두 정에 다른 파츠를 끼울 수 있어야 합니다.
+`WeaponStatus`는 **무기 인스턴스마다 따로** 만듭니다. SO는 여러 무기가 공유하므로 기본값만 읽어옵니다. 같은 소총 두 정에 다른 모듈을 끼울 수 있어야 합니다.
 
-### 개량과 파츠의 차이
+### 개량과 모듈의 차이
 
-| | 개량 (`WeaponUpgradeSO`) | 파츠 (`WeaponPartDataSO`) |
+| | 개량 (`UpgradeSO`) | 모듈 (`ModuleDataSO`) |
 |---|---|---|
 | 성격 | 무기 자체를 단계별로 손봄 | 갈아끼움 |
 | 트레이드오프 | 올리는 대신 떨굼 | 보통 순수 강화 |
 | 단계 | 있음 (누적 아닌 **교체**) | 없음 |
 | 제한 | 무기별 허용 목록 | 슬롯 + 카테고리 |
-| origin | `WeaponUpgradeSO` 자신 | `WeaponPartDataSO` 자신 |
+| origin | `UpgradeSO` 자신 | `ModuleDataSO` 자신 |
 
 개량 단계가 **누적이 아니라 교체**인 이유: 누적하면 3단계쯤에서 실제 수치가 얼마인지 아무도 못 읽습니다.
 
-파츠는 **스탯만 바꾸면 프리팹이 필요 없습니다.** 동작이 필요한 파츠(유탄 발사기 추가 등)만 `WeaponPartBehaviour` 프리팹을 등록합니다. 프리팹이면 동작·설정·비주얼이 한 덩어리로 갑니다.
+모듈은 **스탯만 바꾸면 프리팹이 필요 없습니다.** 동작이 필요한 모듈(유탄 발사기 추가 등)만 `ModuleBehaviour` 프리팹을 등록합니다. 프리팹이면 동작·설정·비주얼이 한 덩어리로 갑니다.
 
-**스탯 적용/해제는 프리팹 유무와 무관하게 `WeaponModController` 한 곳에서만** 합니다. `WeaponPartBehaviour`는 동작과 비주얼만 담당합니다. 경로가 둘로 갈리면 "프리팹 있는 파츠만 해제 시 스탯이 안 돌아옴" 같은 버그가 반드시 납니다.
+**스탯 적용/해제는 프리팹 유무와 무관하게 `ModdingController` 한 곳에서만** 합니다. `ModuleBehaviour`는 동작과 비주얼만 담당합니다. 경로가 둘로 갈리면 "프리팹 있는 모듈만 해제 시 스탯이 안 돌아옴" 같은 버그가 반드시 납니다.
 
-"연사 → 점사 전환" 정도는 파츠의 `AddFireModes`로 처리되므로 프리팹이 필요 없습니다.
+"연사 → 점사 전환" 정도는 모듈의 `AddFireModes`로 처리되므로 프리팹이 필요 없습니다.
 
-### 파츠·개량의 주인은 WeaponItemInstance
+### 모듈·개량의 주인은 WeaponItemInstance
 
 **인벤토리에 들어있는(오브젝트가 없는) 무기도 모딩할 수 있어야 하므로**, 상태는 `WeaponItemInstance`가 갖습니다. 살아있는 `PlayerWeaponBase`는 그 상태를 따라가기만 합니다.
 
 ```
-WeaponItemInstance   ← 파츠 / 개량 단계의 주인. 인벤토리에 있어도 편집 가능
+WeaponItemInstance   ← 모듈 / 개량 단계의 주인. 인벤토리에 있어도 편집 가능
         │ 이벤트
         ▼
-WeaponModController  ← 살아있는 무기에 반영 (스탯 modifier, 파츠 프리팹)
+ModdingController  ← 살아있는 무기에 반영 (스탯 modifier, 모듈 프리팹)
 ```
 
-`WeaponItemInstance`는 `IItemSlotContainer`도 구현하므로, **인벤토리에서 파츠를 끌어다 파츠 칸에 놓는 게 별도 코드 없이 동작합니다.**
+`WeaponItemInstance`는 `IItemSlotContainer`도 구현하므로, **인벤토리에서 모듈을 끌어다 모듈 칸에 놓는 게 별도 코드 없이 동작합니다.**
 
-`WeaponModController.Unbind()`는 **개체 상태를 건드리지 않습니다.** 거기서 파츠를 떼면 무기를 인벤토리에 넣는 순간 모딩이 통째로 날아갑니다.
+`ModdingController.Unbind()`는 **개체 상태를 건드리지 않습니다.** 거기서 모듈을 떼면 무기를 인벤토리에 넣는 순간 모딩이 통째로 날아갑니다.
 
 장착하지 않은 무기의 최종 스탯은 `WeaponStatusBuilder.Build(instance)`로 계산합니다. 살아있는 무기와 UI 미리보기가 같은 결과를 내도록 계산 규칙을 한 곳에 모았습니다.
 
-**미해결** — 파츠는 `ItemDataSO`라 Id가 있지만 `WeaponUpgradeSO`에는 Id가 없습니다. 저장 시스템을 붙일 때 개량을 `ItemDataSO` 파생으로 올리거나(도감에도 뜸) 별도 Id 체계를 두어야 합니다.
+**미해결** — 모듈은 `ItemDataSO`라 Id가 있지만 `UpgradeSO`에는 Id가 없습니다. 저장 시스템을 붙일 때 개량을 `ItemDataSO` 파생으로 올리거나(도감에도 뜸) 별도 Id 체계를 두어야 합니다.
 
 ## 탄약
 
@@ -271,22 +308,22 @@ WeaponModController  ← 살아있는 무기에 반영 (스탯 modifier, 파츠 
 
 ### 성능 차이를 WeaponStatDelta로 표현한다
 
-철갑탄(`Penetration +2`, `Damage -10%`), 고폭탄(`ExplosionRadius +1.5`), 소이탄 — 전부 파츠·개량과 **똑같은 `WeaponStatDelta` 목록**입니다. origin은 탄약 SO 자신입니다.
+철갑탄(`Penetration +2`, `Damage -10%`), 고폭탄(`ExplosionRadius +1.5`), 소이탄 — 전부 모듈·개량과 **똑같은 `WeaponStatDelta` 목록**입니다. origin은 탄약 SO 자신입니다.
 
-전용 필드(`damageMultiplier` 등)를 두지 않은 이유는 스탯 적용 경로가 둘로 갈리기 때문입니다. 한번 갈리면 "파츠는 반영되는데 탄약은 안 되는" 버그가 반드시 납니다. 적용은 파츠와 마찬가지로 **`WeaponModController` 한 곳에서만** 합니다.
+전용 필드(`damageMultiplier` 등)를 두지 않은 이유는 스탯 적용 경로가 둘로 갈리기 때문입니다. 한번 갈리면 "모듈은 반영되는데 탄약은 안 되는" 버그가 반드시 납니다. 적용은 모듈과 마찬가지로 **`ModdingController` 한 곳에서만** 합니다.
 
 `WeaponStatusBuilder.ApplyAll`도 장전된 탄약을 포함하므로, UI 미리보기가 실제 성능과 같은 수치를 냅니다.
 
-**스탯으로 표현되지 않는 것**(화상 부여, 폭발 연출, 예광 색)은 `AmmoDataSO.ProjectilePool`에 다른 투사체 프리팹을 지정해서 처리합니다. 프리팹이면 동작·설정·비주얼이 한 덩어리로 가고, 순수 스탯 탄은 비워두면 무기 기본 투사체를 씁니다. 파츠의 `BehaviourPrefab`과 같은 판단입니다.
+**스탯으로 표현되지 않는 것**(화상 부여, 폭발 연출, 예광 색)은 `AmmoDataSO.ProjectilePool`에 다른 투사체 프리팹을 지정해서 처리합니다. 프리팹이면 동작·설정·비주얼이 한 덩어리로 가고, 순수 스탯 탄은 비워두면 무기 기본 투사체를 씁니다. 모듈의 `BehaviourPrefab`과 같은 판단입니다.
 
 ### 탄창의 주인도 WeaponItemInstance
 
-파츠·개량과 같은 이유입니다. 인벤토리에 넣었다 다시 들었을 때 반쯤 남은 탄창이 유지되어야 하고, 그대로 저장되어야 합니다.
+모듈·개량과 같은 이유입니다. 인벤토리에 넣었다 다시 들었을 때 반쯤 남은 탄창이 유지되어야 하고, 그대로 저장되어야 합니다.
 
 ```
 WeaponItemInstance   ← LoadedAmmoId + AmmoInMagazine
         │ 이벤트
-        ├──▶ WeaponModController   ← 탄종이 바뀌면 스탯 modifier 교체
+        ├──▶ ModdingController   ← 탄종이 바뀌면 스탯 modifier 교체
         └──▶ WeaponAmmoController  ← 재장전 진행 (오브젝트가 살아있는 동안만)
 ```
 
@@ -306,13 +343,13 @@ PlayerRangedWeapon ──(발사 시점의 스탯을 값으로 복사)──▶ 
                                                       ProjectileCaster ──▶ 이펙터
 ```
 
-무기 스탯을 참조로 넘기지 않는 이유는, 총알이 날아가는 동안 무기를 바꾸거나 파츠를 갈아도 **이미 나간 탄의 위력이 변하면 안 되기** 때문입니다.
+무기 스탯을 참조로 넘기지 않는 이유는, 총알이 날아가는 동안 무기를 바꾸거나 모듈을 갈아도 **이미 나간 탄의 위력이 변하면 안 되기** 때문입니다.
 
 ### +X가 앞이다
 
-조준 피벗의 **+X가 항상 커서 방향**입니다(`PlayerAimController`). 발사 방향, 총구 위치, 파츠 장착점이 전부 이 규칙 하나 위에 서 있습니다.
+조준 피벗의 **+X가 항상 커서 방향**입니다(`PlayerAimController`). 발사 방향, 총구 위치, 모듈 장착점이 전부 이 규칙 하나 위에 서 있습니다.
 
-리소스가 왼쪽을 보고 그려졌으면 `PlayerWeaponBase._spriteFacing`을 `Left`로 두세요. 무기를 통째로 X 미러링해서 규칙에 맞춰줍니다. **발사 방향에서 부호를 뒤집는 식으로 맞추지 마세요** — 규칙이 두 개가 되는 순간 스프라이트·총구·파츠가 따로 놉니다. ([INCIDENTS.md](INCIDENTS.md#총은-왼쪽을-보는데-총알은-오른쪽으로-나간다))
+리소스가 왼쪽을 보고 그려졌으면 `PlayerWeaponBase._spriteFacing`을 `Left`로 두세요. 무기를 통째로 X 미러링해서 규칙에 맞춰줍니다. **발사 방향에서 부호를 뒤집는 식으로 맞추지 마세요** — 규칙이 두 개가 되는 순간 스프라이트·총구·모듈이 따로 놉니다. ([INCIDENTS.md](INCIDENTS.md#총은-왼쪽을-보는데-총알은-오른쪽으로-나간다))
 
 미러링은 두 축에서 각각 다른 이유로 일어납니다. 축이 다르고 대상이 다르므로 서로 간섭하지 않습니다.
 
@@ -321,7 +358,7 @@ PlayerRangedWeapon ──(발사 시점의 스탯을 값으로 복사)──▶ 
 | X | 무기 (`PlayerWeaponBase`) | 스폰 시 한 번 | 리소스가 어느 쪽을 보고 그려졌는가 |
 | Y | 조준 피벗 (`PlayerAimController`) | 조준 x의 부호가 바뀔 때 | 왼쪽을 볼 때 무기가 뒤집히지 않게 |
 
-Y 미러링을 무기가 아니라 **피벗**에 거는 이유는 총구 오프셋 때문입니다. 총열 위(+Y)에 찍힌 총구는 무기가 뒤집히면 아래로 내려와야 맞는데, 피벗을 뒤집으면 스프라이트와 총구·파츠 장착점이 한꺼번에 따라옵니다.
+Y 미러링을 무기가 아니라 **피벗**에 거는 이유는 총구 오프셋 때문입니다. 총열 위(+Y)에 찍힌 총구는 무기가 뒤집히면 아래로 내려와야 맞는데, 피벗을 뒤집으면 스프라이트와 총구·모듈 장착점이 한꺼번에 따라옵니다.
 
 위/아래를 정확히 겨누면 조준 x가 0 근처에서 떨리므로 `_facingDeadzone` 안에서는 마지막 방향을 유지합니다. 캐릭터 몸통처럼 같이 뒤집혀야 하는 것은 `PlayerAimController.IsFacingLeft`를 읽으면 됩니다.
 
@@ -473,7 +510,7 @@ PlayerInput ──▶ PlayerHandController ──▶ 현재 손 하나에게만 
 
 ### 상태를 어디에 두는가
 
-> ⚠ **전제가 바뀝니다.** 핫바가 없어지고 교체가 안전지대에서만 일어나면 손 오브젝트는 **전투 중에 파괴되지 않습니다.** 그래서 과열 같은 런타임 상태를 `ItemInstance`에 올릴 필요가 없어집니다 — 무기 오브젝트가 그냥 들고 있으면 됩니다. 파츠·내구도처럼 인벤토리에서도 남아야 하는 것만 `ItemInstance`에 둡니다.
+> ⚠ **전제가 바뀝니다.** 핫바가 없어지고 교체가 안전지대에서만 일어나면 손 오브젝트는 **전투 중에 파괴되지 않습니다.** 그래서 과열 같은 런타임 상태를 `ItemInstance`에 올릴 필요가 없어집니다 — 무기 오브젝트가 그냥 들고 있으면 됩니다. 모듈·내구도처럼 인벤토리에서도 남아야 하는 것만 `ItemInstance`에 둡니다.
 
 손 오브젝트는 **핫바를 넘길 때마다 파괴됩니다.** 그래서 무엇을 어디에 둘지가 갈립니다.
 
@@ -482,7 +519,7 @@ PlayerInput ──▶ PlayerHandController ──▶ 현재 손 하나에게만 
 | 안전핀 뽑힘 | `ThrowableHand` | 들고 있는 동안만 의미 있다. 칸을 넘기면 핀은 다시 꽂힌다 |
 | 사용 쿨타임 | `PlayerItemUseController` | 손을 바꿔도 남아야 한다 |
 | 정조준 | `PlayerAimController` | 카메라와 조준점도 봐야 하는 값이다 |
-| 파츠·탄창·내구도 | `ItemInstance` | 인벤토리에 넣어도 남아야 한다 |
+| 모듈·탄창·내구도 | `ItemInstance` | 인벤토리에 넣어도 남아야 한다 |
 
 정조준을 무기가 직접 들면 무기를 바꾸는 순간 카메라가 확대된 채 굳습니다. 그래서 무기는 `_aim.SetAiming(true/false)`를 부르기만 합니다.
 

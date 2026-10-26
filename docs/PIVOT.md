@@ -50,7 +50,7 @@
 
 "파츠마다 모듈이 더 붙는다"가 이 체계의 한 줄 요약입니다.
 
-**리네임** — `WeaponPartDataSO` → `ModuleDataSO`, `WeaponPartSlotType` → `ModuleSlotType`, `WeaponPartBehaviour` → `ModuleBehaviour`, `WeaponModController` → `ModController`.
+**리네임** — `WeaponPartDataSO` → `ModuleDataSO`, `WeaponPartSlotType` → `ModuleSlotType`, `WeaponPartBehaviour` → `ModuleBehaviour`, `WeaponModController` → `ModdingController`.
 
 ## 슬롯
 
@@ -160,7 +160,7 @@ Equipment[Core] 변경
   → 좌팔의 Socket(Scope)에 모듈 프리팹 생성
 ```
 
-**스탯과 비주얼은 끝까지 분리합니다.** 프리팹이 안 꽂힌 파츠도 스탯은 적용되어야 합니다 — 안 그러면 아트가 안 나온 파츠로 밸런스를 볼 수 없습니다. `ModController`가 "프리팹 유무와 무관하게 스탯은 한 곳에서"를 이미 그렇게 해두었고, 같은 원칙을 가져갑니다.
+**스탯과 비주얼은 끝까지 분리합니다.** 프리팹이 안 꽂힌 파츠도 스탯은 적용되어야 합니다 — 안 그러면 아트가 안 나온 파츠로 밸런스를 볼 수 없습니다. `ModdingController`가 "프리팹 유무와 무관하게 스탯은 한 곳에서"를 이미 그렇게 해두었고, 같은 원칙을 가져갑니다.
 
 적 메카도 같은 조립기를 씁니다. `UnitDataSO`에 파츠 구성을 넣으면 플레이어와 **완전히 같은 경로로** 생성됩니다.
 
@@ -259,8 +259,8 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 
 | | 단계 | 왜 이 순서인가 |
 |---|---|---|
-| 1 | 용어 리네임 (파츠/모듈/개량) | 기계적이고 지금이 가장 쌈. 에셋 2개뿐 |
-| 2 | `EquipSlotType` 재편 + `MechaPartController` + Id 대역 | 독립적이고 컴파일 안전. 3단계의 전제 |
+| ~~1~~ | ~~용어 리네임 (파츠/모듈/개량)~~ | **완료 (2026-10-25).** 코드·문서 반영됨. 에셋 이름만 남음 |
+| ~~2~~ | ~~슬롯 재편 + `MechaPartController` + 로드아웃 + Id 대역~~ | **완료 (2026-10-25).** 구조는 ARCHITECTURE로 옮김 |
 | 3 | 좌우 2손 라우팅 + `OnUse` 통일 + 핫바·소모품·정조준 제거 | **가장 큰 덩어리.** 컴파일이 넓게 깨짐 |
 | 4 | 과열 | 재장전이 비운 자리를 메움 |
 | 5 | 자동 급탄 전환 | 4와 함께 "제재한 = 열 + 재고"가 완성 |
