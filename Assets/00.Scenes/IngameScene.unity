@@ -6902,14 +6902,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PartHudHotbar
   _cellPrefab: {fileID: 8793245430901224927, guid: 37cdfa8c541c06c4988e12173ecc2c78, type: 3}
   _cellRoot: {fileID: 413330959}
-  _presetSlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  _presetSlots: []
 --- !u!1 &965180095
 GameObject:
   m_ObjectHideFlags: 0
