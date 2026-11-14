@@ -23,7 +23,8 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public event Action<bool> OnSecondaryEvent;
 
     public event Action<bool> OnSprintEvent;
-    public event Action<bool> OnCrawlEvent;
+    /// <summary>활공/착륙 전환(Space). 누른 순간만 온다 — 토글이라 뗌은 의미가 없다.</summary>
+    public event Action OnGlideToggleEvent;
     public event Action OnInteractEvent;
 
     /// <summary>
@@ -47,7 +48,6 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public bool IsPrimaryHeld { get; private set; }
     public bool IsSecondaryHeld { get; private set; }
     public bool IsSprinting { get; private set; }
-    public bool IsCrawling { get; private set; }
     public bool IsReloadHeld { get; private set; }
 
     /// <summary>
@@ -89,7 +89,6 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
         IsPrimaryHeld = false;
         IsSecondaryHeld = false;
         IsSprinting = false;
-        IsCrawling = false;
         IsReloadHeld = false;
     }
 
@@ -133,12 +132,10 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
             SetSprinting(false);
     }
 
-    public void OnCrawl(InputAction.CallbackContext context)
+    public void OnGlide(InputAction.CallbackContext context)
     {
         if (context.performed)
-            SetCrawling(true);
-        else if (context.canceled)
-            SetCrawling(false);
+            OnGlideToggleEvent?.Invoke();
     }
 
     public void OnReload(InputAction.CallbackContext context)
@@ -196,14 +193,6 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
 
         IsSprinting = value;
         OnSprintEvent?.Invoke(value);
-    }
-
-    private void SetCrawling(bool value)
-    {
-        if (IsCrawling == value) return;
-
-        IsCrawling = value;
-        OnCrawlEvent?.Invoke(value);
     }
 
     private void SetReloadHeld(bool value)

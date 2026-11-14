@@ -133,3 +133,23 @@ PlayerInput ──▶ PlayerHandController ──┬─▶ ArmLeft  (좌클릭)
 조준은 지금 마우스 전용입니다(`Look` 액션 없음). 패드 조준을 넣으려면 `Look`을 추가하고 `PlayerInput.PointerPosition` 자리를 갈아끼우세요.
 
 **짧게/길게 누름 판정은 `PlayerInput`이 하지 않습니다.** 재장전 키는 눌림/뗌만 이벤트로 내보내고, "몇 초 이상이면 탄종 전환"은 `PlayerWeaponController`가 판단합니다. 시간 임계값은 게임 규칙이라 입력 리더에 들어가면 안 됩니다.
+
+## 이동 — 착륙 / 활공
+
+`PlayerMoveController`가 두 모드(`MechaMoveMode`)를 갖습니다. Space(`Glide` 액션, 옛 `Crawl`)가 토글입니다.
+
+| | 착륙 | 활공 |
+|---|---|---|
+| 판정 | `TargetType` 기본값(Ground) | **`TargetType.Air`** — `TargetBase.SetTargetType`으로 레이어까지 바뀐다 |
+| 속도 | `MoveSpeed` | `+_glideBonus` (Percent modifier, origin `_glideOrigin`) |
+| 연료 | 부스터만 | 떠 있는 것만으로 `_glideFuelPerSecond`. 바닥나면 **강제 착륙** |
+
+Shift 부스터는 두 모드 모두에서 따로 얹힙니다. modifier origin이 부스터(`this`)와 활공(`_glideOrigin`)으로 갈려 있어서 하나만 걷어낼 수 있습니다.
+
+**미끄러짐** — 착륙 순간 속도가 착륙 상태 최고 속도(활공 배율을 걷어낸 뒤, 부스터는 포함)의 `_skidSpeedRatio`배를 넘으면 미끄러집니다. 진행 방향으로 `_skidDeceleration`만큼 감속하고, 입력은 방향을 `_skidTurnRate`(도/초)만큼만 꺾습니다. 속도가 최고 속도의 `_skidEndRatio`까지 떨어지면 정상 조작으로 돌아옵니다. 기준이 전부 **비율**인 이유 — 절대값이면 추진체마다 미끄러지는 길이가 달라집니다.
+
+착륙 직후 `_glideLockAfterLanding`(1초) 동안은 다시 뜰 수 없습니다. 잠금이 풀리면 미끄러지는 중에도 뜰 수 있습니다.
+
+**화면 흔들림은 이동이 부르지 않습니다.** `OnSkidStartedEvent`를 `SkidCameraShake`(`CameraManager` 오브젝트)가 듣습니다.
+
+**죽은 뒤에는 판정을 건드리지 않습니다.** 사망으로 `TargetType.None`이 된 뒤에 착륙 처리가 `ResetTargetType()`을 부르면 시체가 다시 맞습니다.

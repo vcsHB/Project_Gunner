@@ -53,7 +53,8 @@
 | 시스템 | 상태 | 비고 |
 |---|---|---|
 | PlayerInput | ✅ | 입력 리더 SO. `PlayerInput.asset` 존재 |
-| 이동 | ✅ | Rigidbody2D, 질주는 Percent modifier, 기절 시 정지 |
+| 이동 | ✅ | Rigidbody2D, 질주는 Percent modifier, 기절 시 정지. **착륙 / 활공 두 모드** |
+| 활공 / 착륙 (Space) | 🟡 | `PlayerMoveController`. 활공 = `TargetType.Air` + 속도↑ + 연료 상시 소모. 고속 착륙 미끄러짐 + `SkidCameraShake`, 착륙 후 1초 잠금. **수치 미조정** |
 | 조준 | ✅ | 마우스 절대 조준 + `AimRange` 제한 + 반동 오프셋 |
 | 주/보조 입력 | ✅ | 좌=Primary, 우=Secondary. **좌=좌무기 / 우=우무기로 고정 배분됨** |
 | 정조준(총 + 우클릭) | ❌ | 기능 폐기. `SetAiming`과 카메라 줌 기계장치는 남김 |
@@ -63,7 +64,7 @@
 | 무기 들기 | ✅ | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
-| 포복(Crawl) | 🟡 | 입력만 받고 이동에 반영 안 됨 |
+| 포복(Crawl) | ❌ | 폐기. 액션이 `Glide`로 이름이 바뀌었다 |
 | 재장전 | ❌ | 제거됨. R 키도 사라졌다 |
 | 상호작용(Interact/Use) | 🟡 | 입력만 있고 대상 탐색 없음 |
 | 장비 → 스탯 연결 | ✅ | `MechaPartController`. 슬롯별 origin, 교체 시 먼저 걷어냄 |
@@ -172,7 +173,7 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 |---|---|
 | CameraManager | ✅ |
 | CameraFollowEffector | ✅ (플레이어↔조준점 중간, 정조준 줌) |
-| 발사 / 피격 화면 흔들림 | ✅ (`WeaponFireCameraShake`, `DamageCameraShake`) |
+| 발사 / 피격 / 착륙 화면 흔들림 | ✅ (`WeaponFireCameraShake`, `DamageCameraShake`, `SkidCameraShake`) |
 | CameraShakeEffector | ✅ (`CameraRig` 아래 `MainCamera`를 흔든다) |
 | Map / MapGenerator | ⬜ |
 | SoundPlayer | ⬜ |
