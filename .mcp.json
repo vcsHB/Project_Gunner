@@ -1,10 +1,15 @@
 {
   "mcpServers": {
-    "mcp-unity": {
-      "command": "node",
+    "unityMCP": {
+      "command": "C:\\Users\\hoonb\\.local\\bin\\uvx.exe",
       "args": [
-        "Library/PackageCache/com.gamelovers.mcp-unity@d572dc88f1b9/Server~/build/index.js"
-      ]
+        "--from",
+        "mcpforunityserver==10.3.0",
+        "mcp-for-unity",
+        "--transport",
+        "stdio"
+      ],
+      "type": "stdio"
     }
   }
 }
