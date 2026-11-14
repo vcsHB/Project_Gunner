@@ -49,6 +49,11 @@ public class UnitDataSO : ItemDataSO
 
     [SerializeField, Min(0f)] private float _defense;
 
+    [Header("기체 구성")]
+    [Tooltip("메카 유닛이면 여기서 구성을 굴린다. 비우면 조립하지 않는다 — " +
+             "짐승·드론처럼 파츠로 만들어지지 않는 적이 그렇다.")]
+    [SerializeField] private MechaLoadoutTableSO _loadoutTable;
+
     [Header("전리품")]
     [Tooltip("죽을 때 떨구는 것. 줄마다 따로 굴린다 — 여러 줄이 동시에 나올 수 있다.")]
     [SerializeField] private List<LootEntry> _loot = new();
@@ -58,6 +63,8 @@ public class UnitDataSO : ItemDataSO
     public float MoveSpeed => _moveSpeed;
     public float Damage => _damage;
     public float Defense => _defense;
+
+    public MechaLoadoutTableSO LoadoutTable => _loadoutTable;
 
     public IReadOnlyList<LootEntry> Loot => _loot;
 

@@ -66,6 +66,9 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
 
     private Agent _owner;
     private AgentStatus _status;
+
+    // 구성이 이미 정해졌는가. Start가 스포너의 구성을 덮어쓰지 않게 막는다.
+    private bool _resolved;
     private EquipmentController _equipment;
 
     /// <summary>지금 달려 있는 코어. 조준점·조준 거리를 읽을 쪽이 쓴다. 없으면 null.</summary>
@@ -195,40 +198,78 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
     /// </summary>
     private void Start()
     {
-        ApplyLoadout(PendingLoadout != null ? PendingLoadout : _loadout.defaultLoadout);
+        // 스폰하는 쪽이 이미 넣어줬으면 덮지 않는다. 적은 스포너가 굴려서 넘긴다.
+        if (_resolved) return;
+
+        // 월드 리셋은 <b>진입 시점에만</b> 일어난다. SetLoadout은 "구성을 바꾼다"지
+        // "새 판을 시작한다"가 아니다 — 적이 스폰될 때마다 레지스트리를 비우면 안 된다.
+        if (_loadout.resetWorldState)
+            ResetWorldState();
+
+        ApplyLoadout(ResolveStartLoadout());
     }
 
+    /// <summary>
+    /// 진입 구성. <b>격납고가 넘긴 것은 플레이어 것이다</b> —
+    /// 정적이라 적까지 읽으면 적이 플레이어의 기체를 입고 나온다.
+    /// 적 구성은 스포너가 <see cref="ApplyEntries"/>로 넘긴다.
+    /// </summary>
+    private MechaLoadoutSO ResolveStartLoadout()
+    {
+        if (PendingLoadout != null && _owner is Player) return PendingLoadout;
+
+        return _loadout.defaultLoadout;
+    }
+
+    /// <summary>밖에서 구성을 넣는다. 스포너·격납고가 쓴다.</summary>
     public void SetLoadout(MechaLoadoutSO loadout) => ApplyLoadout(loadout);
 
     private void ApplyLoadout(MechaLoadoutSO loadout)
     {
+        AppliedLoadout = loadout;
+
+        if (loadout == null)
+        {
+            _resolved = true;
+            return;
+        }
+
+        ApplyEntries(loadout.Entries, loadout.CargoItems, loadout);
+    }
+
+    /// <summary>
+    /// 에셋이 아닌 곳에서 만든 구성을 적용한다. 런타임에 굴린 조합
+    /// (<see cref="MechaLoadoutTableSO"/>)이 이 경로로 들어온다.
+    /// </summary>
+    public void ApplyEntries(
+        IReadOnlyList<MechaLoadoutSO.Entry> entries,
+        IReadOnlyList<MechaLoadoutSO.Cargo> cargo,
+        UnityEngine.Object context = null)
+    {
+        _resolved = true;
+
         if (_equipment == null)
         {
             Debug.LogError("[Loadout] EquipmentController가 없어 구성을 적용할 수 없습니다.", this);
             return;
         }
 
-        if (_loadout.resetWorldState)
-            ResetWorldState();
+        if (entries != null)
+        {
+            for (int i = 0; i < entries.Count; i++)
+                Equip(entries[i], context);
+        }
 
-        AppliedLoadout = loadout;
-        if (loadout == null) return;
-
-        IReadOnlyList<MechaLoadoutSO.Entry> entries = loadout.Entries;
-        for (int i = 0; i < entries.Count; i++)
-            Equip(entries[i], loadout);
-
-        LoadCargo(loadout);
+        LoadCargo(cargo, context);
     }
 
     /// <summary>
     /// 적재함을 채운다. 장착보다 <b>나중</b>이어야 한다 —
     /// 적재 칸 수가 파츠 스탯(InventorySize)을 따라가므로, 먼저 실으면 칸이 모자란다.
     /// </summary>
-    private void LoadCargo(MechaLoadoutSO loadout)
+    private void LoadCargo(IReadOnlyList<MechaLoadoutSO.Cargo> cargo, UnityEngine.Object context)
     {
-        IReadOnlyList<MechaLoadoutSO.Cargo> cargo = loadout.CargoItems;
-        if (cargo.Count == 0) return;
+        if (cargo == null || cargo.Count == 0) return;
 
         InventoryController controller = _owner.GetCompo<InventoryController>();
         if (controller == null || controller.Inventory == null)
@@ -241,11 +282,11 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
         {
             if (!cargo[i].IsValid) continue;
 
-            Load(controller.Inventory, cargo[i], loadout);
+            Load(controller.Inventory, cargo[i], context);
         }
     }
 
-    private void Load(Inventory inventory, MechaLoadoutSO.Cargo cargo, MechaLoadoutSO loadout)
+    private void Load(Inventory inventory, MechaLoadoutSO.Cargo cargo, UnityEngine.Object context)
     {
         // 개체 상태가 있는 아이템은 겹쳐지지 않으므로 한 칸에 하나씩 넣는다.
         if (cargo.item.RequiresInstance)
@@ -256,7 +297,7 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
 
                 if (stack.IsEmpty || !inventory.AddStack(stack))
                 {
-                    Debug.LogWarning($"[Loadout] {cargo.item.DisplayName}을 다 싣지 못했습니다.", loadout);
+                    Debug.LogWarning($"[Loadout] {cargo.item.DisplayName}을 다 싣지 못했습니다.", context);
                     return;
                 }
             }
@@ -267,17 +308,17 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
         int left = inventory.Add(cargo.item.Id, cargo.count);
 
         if (left > 0)
-            Debug.LogWarning($"[Loadout] 적재 칸이 모자라 {cargo.item.DisplayName} {left}개를 못 실었습니다.", loadout);
+            Debug.LogWarning($"[Loadout] 적재 칸이 모자라 {cargo.item.DisplayName} {left}개를 못 실었습니다.", context);
     }
 
-    private void Equip(MechaLoadoutSO.Entry entry, MechaLoadoutSO loadout)
+    private void Equip(MechaLoadoutSO.Entry entry, UnityEngine.Object context)
     {
         if (!entry.IsValid) return;
 
         if (!entry.item.CanEquipTo(entry.slot))
         {
             Debug.LogWarning(
-                $"[Loadout] {entry.item.DisplayName}은 {entry.slot} 슬롯에 들어가지 않습니다.", loadout);
+                $"[Loadout] {entry.item.DisplayName}은 {entry.slot} 슬롯에 들어가지 않습니다.", context);
             return;
         }
 
@@ -288,7 +329,7 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
         {
             Debug.LogWarning(
                 $"[Loadout] {entry.item.DisplayName}을 만들지 못했습니다. " +
-                "ItemDatabase에 등록되어 있는지 확인하세요.", loadout);
+                "ItemDatabase에 등록되어 있는지 확인하세요.", context);
             return;
         }
 

@@ -1,14 +1,19 @@
 using UnityEngine;
 
 /// <summary>
-/// 사정권이다. 멈춰서 때린다.
+/// 사정권이다. 멈춰서 공격한다. <b>무장이 있으면 쏘고, 없으면 때린다.</b>
 ///
-/// 한 번의 공격은 <b>선딜 → 타격 → 후딜</b>로 돈다. 쿨타임만 두고 즉시 때리면
-/// 플레이어가 반응할 구간이 없어서 "붙으면 무조건 맞는" 적이 된다.
-/// 선딜 동안에도 대상을 계속 바라본다 — 어느 쪽에서 맞는지 읽혀야 한다.
+/// | | 사격 (메카) | 근접 (비메카) |
+/// |---|---|---|
+/// | 속도를 정하는 것 | 무기 쿨타임 + 과열 | AI의 선딜·쿨타임 |
+/// | 판정 | 투사체 | <see cref="CasterBase"/> |
 ///
-/// 판정은 <see cref="CasterBase"/>가 한다. 적이 직접 데미지를 계산하면
-/// 방어력·치명타·상태이상이 플레이어 무기와 다르게 걸린다.
+/// **사격 속도를 AI가 재지 않는 이유** — 같은 무기가 플레이어 손에서와 적 손에서
+/// 다른 속도로 나가면 안 된다. 트리거만 당겨두고 나머지는 무기에 맡긴다.
+///
+/// **근접에 선딜을 두는 이유** — 쿨타임만 두고 즉시 때리면 반응할 구간이 없어서
+/// "붙으면 무조건 맞는" 적이 된다. 선딜이 끝난 시점의 자리에서 판정하므로,
+/// 그 사이 빠져나갔으면 안 맞는다. 회피가 성립해야 한다.
 /// </summary>
 public class EnemyAttackState : EnemyState
 {
@@ -32,6 +37,9 @@ public class EnemyAttackState : EnemyState
     {
         _swinging = false;
         _windupLeft = 0f;
+
+        // 트리거를 놓지 않으면 사정권을 벗어난 뒤에도 계속 쏜다.
+        Ai.StopFiring();
     }
 
     public override void Tick(float deltaTime)
@@ -45,6 +53,29 @@ public class EnemyAttackState : EnemyState
         Ai.Move.Stop();
         Ai.Move.LookAt(Ai.DirectionToTarget);
 
+        if (Ai.IsArmed)
+        {
+            TickRanged(deltaTime);
+            return;
+        }
+
+        TickMelee(deltaTime);
+    }
+
+    /// <summary>쏘는 쪽. 사정권 안이면 방아쇠를 민다. 발사 속도는 무기가 정한다.</summary>
+    private void TickRanged(float deltaTime)
+    {
+        if (Ai.DistanceToTarget > Ai.AttackLeaveRange)
+        {
+            Ai.ChangeState(EnemyStateType.Chase);
+            return;
+        }
+
+        Ai.SetFiring(true, deltaTime);
+    }
+
+    private void TickMelee(float deltaTime)
+    {
         // 휘두르는 중에는 놓아주지 않는다. 중간에 끊으면 선딜만 보여주고 아무 일도 안 일어난다.
         if (_swinging)
         {
@@ -79,8 +110,6 @@ public class EnemyAttackState : EnemyState
         _swinging = false;
         _cooldownLeft = Ai.AttackCooltime;
 
-        // 선딜이 끝난 시점의 자리에서 친다. 대상이 빠져나갔으면 캐스터가 아무도 못 잡는다 —
-        // 그게 맞다. 회피가 성립해야 한다.
         Ai.PerformAttack();
     }
 }

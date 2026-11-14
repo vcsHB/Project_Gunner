@@ -15,7 +15,7 @@ using UnityEngine;
 [DefaultExecutionOrder(AimExecutionOrder.Aim)]
 [RequireAgentComponent(typeof(PlayerHandController), optional: true)]
 [RequireAgentComponent(typeof(MechaPartController), optional: true)]
-public class PlayerAimController : MonoBehaviour, IAgentComponent
+public class PlayerAimController : MonoBehaviour, IAgentComponent, IAimDirectionProvider
 {
     [Header("조준 거리")]
     [Tooltip("코어가 없을 때 쓸 조준 가능 거리. 코어를 달면 그쪽 값을 쓴다.")]

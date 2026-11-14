@@ -1,6 +1,6 @@
 # 개발 현황
 
-최종 갱신: 2026-11-14 (M1 적 AI·스폰). 계획은 [MILESTONE.md](MILESTONE.md).
+최종 갱신: 2026-11-15 (적 메카 + 랜덤 로드아웃). 계획은 [MILESTONE.md](MILESTONE.md).
 
 범례 — ✅ 동작함 / 🟡 뼈대만 / ⬜ 미착수 / 🔄 전환 예정 / ❌ 폐기 예정
 
@@ -35,9 +35,12 @@
 | ProjectileCaster | ✅ | 직전 위치→현재 위치 CircleCast. 터널링·중복타 방지 |
 | `Enemy` | ✅ | 데이터 주입·사망·드랍 |
 | `EnemyMoveController` | ✅ | Rigidbody2D 이동 + 진행 방향 바라보기 |
-| `EnemyAIController` | ✅ | 상태 머신 Idle / Chase / Attack. 선딜 있는 근접 공격 |
+| `EnemyAIController` | ✅ | 상태 머신 Idle / Chase / Attack. 무장이 있으면 사격, 없으면 선딜 근접 |
 | `EnemyManager` | ✅ | 플레이어 주위 고리에 스폰. 최대 수·주기 |
 | 편 가르기 (`FactionType`) | ✅ | 캐스터가 때릴 편을 고른다. 적끼리 오사 방지 |
+| 적 메카 조립 | ✅ | 플레이어와 같은 경로. `MechaLoadoutTableSO`가 매번 굴린다 |
+| `HandController` 분리 | ✅ | 만들고 붙이는 일은 공용, 방아쇠만 플레이어/적이 다르다 |
+| `IAimDirectionProvider` | ✅ | 무기가 겨누는 쪽을 인터페이스로 묻는다 |
 | `UnitDataSO` | ✅ | 유닛 데이터 + 전리품 테이블. Id 대역 9000~9999 |
 | Shadow | 🟡 | 크기 설정만 |
 
@@ -179,7 +182,7 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 ## 지금 바로 걸리는 문제
 
-1. **개량(`UpgradeSO`)에 안정적인 Id가 없습니다.** 저장 시스템을 붙일 때 걸립니다. ([ARCHITECTURE.md](ARCHITECTURE.md#무기-모딩) 참고)
+1. **개량(`UpgradeSO`)에 안정적인 Id가 없습니다.** 저장 시스템을 붙일 때 걸립니다. ([ARCHITECTURE.md](arch/weapon.md#무기-모딩) 참고)
 2. ~~`ItemInstanceRegistry.Clear()` 호출처 없음~~ → 해결됨 (`MechaLoadoutApplier`가 진입 시 호출).
 3. **`Resources` 아래에 아이템 에셋이 통째로 들어가 있습니다.** 지금은 괜찮지만 아이템이 수백 개가 되면 시작할 때 전부 메모리에 올라갑니다. Addressables로 옮길 시점을 정해둘 것.
 4. **투사체가 지형을 뚫습니다.** 벽이 아직 없어서 증상이 안 보일 뿐입니다. 맵을 만들 때 같이 처리해야 합니다.
@@ -188,11 +191,14 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 ## 다음 작업 후보
 
-**M1(적이 살아 움직인다)의 코드는 끝났습니다.** 적이 스폰되고, 쫓아오고, 때립니다.
+**적이 메카 유닛이 됐습니다.** 랜덤 구성으로 조립되고, 팔에 든 무기로 쏩니다. **사격은 아직 눈으로 검증하지 않았습니다** — 아래 "확인할 것"을 먼저 보세요.
 
-남은 M1 다듬기:
+남은 다듬기:
 
-1. **적 아트와 수치** — `Enemy_Test`는 기존 더미 스프라이트 그대로입니다. 탐지·사정권·선딜은 눈으로 보고 맞춰야 합니다
-2. **적이 서로 겹친다** — 유닛 Rigidbody2D가 전부 Kinematic이라 밀어내기가 없습니다. 여럿이 한 점에 포개집니다
+1. **중구경·산탄 탄약 에셋이 없습니다** — `Hunter`(Middle), `Burster`(Buckshot)는 맞는 탄이 없어 적 구성 후보에서 빠집니다. 탄약을 만들면 자동으로 들어옵니다
+2. **적 기체가 플레이어와 같은 무기 수치를 씁니다** — 적 전용 수치 조정 수단이 없습니다. `UnitDataSO`의 `_damage`는 근접 캐스터에만 걸립니다
+3. **적끼리 유탄 오사** — 근접 캐스터는 편을 가리지만 **투사체는 전부 때립니다.** 아래 참고
+4. **적끼리 겹칩니다** — 유닛 Rigidbody2D가 전부 Kinematic이라 밀어내기가 없습니다
+5. **코어가 한 종류뿐** — `Unit_Core.png`에 13종이 있지만 프리팹은 하나입니다. Part Forge로 늘리면 구성 변화가 눈에 보입니다
 
 그 다음은 [MILESTONE.md](MILESTONE.md)의 **M2 — 한 판이 끝난다**(맵·지형 충돌·죽음·새 판)입니다.

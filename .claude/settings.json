@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/*.unity)",
+      "Read(**/*.prefab)",
+      "Read(**/*.csproj)",
+      "Read(./Library/**)",
+      "Read(./Temp/**)",
+      "Read(./Logs/**)",
+      "Read(./Assets/11.Fonts/**)"
+    ]
+  }
+}

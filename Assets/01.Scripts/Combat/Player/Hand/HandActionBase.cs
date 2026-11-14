@@ -106,4 +106,16 @@ public abstract class HandActionBase : MonoBehaviour
 
     public virtual void OnUsePressed() { }
     public virtual void OnUseReleased() { }
+
+    /// <summary>
+    /// 방아쇠를 <b>잡고 있어야</b> 계속 쓰이는가. 연사 무기가 그렇다.
+    ///
+    /// AI는 손가락이 없어서 이걸 물어봐야 한다. 잡고 있으면 되는 것을 눌렀다 떼면 발사가 끊기고,
+    /// 눌렀다 떼야 하는 것을 잡고만 있으면 <b>한 발만 나가고 영영 멈춘다.</b>
+    /// 단발 무기를 든 적이 가만히 서 있던 이유가 이것이었다.
+    /// </summary>
+    public virtual bool HoldsTrigger => true;
+
+    /// <summary>떼기 전에 눌러두어야 하는 시간(초). 차지 무기가 쓴다.</summary>
+    public virtual float TriggerHoldTime => 0f;
 }

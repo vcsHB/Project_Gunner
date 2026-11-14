@@ -2,6 +2,18 @@
 
 2026-10-25 결정. 전환이 끝나면 이 문서는 지워집니다.
 
+## 요약 — 먼저 이것만 읽기
+
+본문 전체는 아래에 걸릴 때만 읽습니다.
+
+- **남은 단계** — 8 모딩 일반화(`ModdableItemInstance`), 10 안전지대 잠금(`LoadoutLocked`, M4). 나머지는 완료. [작업 순서](#작업-순서)
+- **폐기 대상을 건드리면** [제거 목록](#제거-목록)을 보세요 — 핫바, 소모품 사용, `ThrowableHand`, 재장전·탄종순환, 정조준 입력, `GunAim_*`/`Scrope_*`, 허기·갈증, `LargeHeavyMagazine`.
+- **새로 생길 것을 만들면** [신설 목록](#신설-목록)을 보세요 — 특히 `ToolDataSO`/`PlayerToolBase`(도구는 무기와 판정 분리), `ModdableItemInstance`, `AgentStatDelta`.
+- **아직 결정되지 않은 것** — [아직 안 정한 것](#아직-안-정한-것). 여기 걸리는 작업은 진행 전에 사용자에게 물어볼 것.
+- 용어(파츠/모듈/개량)는 [용어](#용어).
+
+이 요약은 작업 순서·제거 목록·신설 목록이 바뀔 때 같이 고칩니다.
+
 ## 이 문서의 수명
 
 여기 적힌 **"전환 후" 구조는 아직 코드에 없습니다.** 결정과 근거를 모아두는 곳이고, 각 단계를 구현할 때마다 해당 내용을 [ARCHITECTURE.md](ARCHITECTURE.md)로 옮기고 여기서 지웁니다. 전부 옮겨지면 이 파일을 삭제합니다.
@@ -94,7 +106,7 @@ OnPrimaryPressed / OnSecondaryPressed  →  OnUsePressed / OnUseReleased
 
 ## ~~과열~~ → 완료
 
-구조는 [ARCHITECTURE.md의 "과열"](ARCHITECTURE.md#과열)으로 옮겼습니다.
+구조는 [ARCHITECTURE.md의 "과열"](arch/weapon.md#과열)으로 옮겼습니다.
 
 **게이지 UI도 붙었습니다** — 무장 HUD가 좌/우 두 개로 나뉘고 각자 열 게이지를 그립니다. 잠기면 남은 시간이 줄어드는 것으로 바뀝니다.
 
@@ -110,7 +122,7 @@ OnPrimaryPressed / OnSecondaryPressed  →  OnUsePressed / OnUseReleased
 
 ## ~~전력과 연료~~ → 완료
 
-구조는 [ARCHITECTURE.md의 "기체 자원"](ARCHITECTURE.md#기체-자원--전력과-연료)으로 옮겼습니다.
+구조는 [ARCHITECTURE.md의 "기체 자원"](arch/mecha.md#기체-자원--전력과-연료)으로 옮겼습니다.
 
 **아직 소모처가 하나뿐입니다** — 부스터가 연료를 씁니다. 전력을 쓰는 쪽(발사·실드)은 과열(4단계)과 같이 붙입니다. 그때까지 전력은 가득 찬 채로 아무 일도 하지 않습니다.
 

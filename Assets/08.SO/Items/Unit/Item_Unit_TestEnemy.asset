@@ -28,4 +28,5 @@ MonoBehaviour:
   _moveSpeed: 2.6
   _damage: 6
   _defense: 0
+  _loadoutTable: {fileID: 11400000, guid: bb4411781a76fb547a40c967b83fc434, type: 2}
   _loot: []

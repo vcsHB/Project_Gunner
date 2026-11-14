@@ -95,6 +95,6 @@ PlayerWeaponDataSO + "Glock7"  →  Item_PlayerWeapon_Glock7
 
 `Tools > Item Creator`가 자동으로 붙이고, "이름 규칙 일괄 적용"으로 기존 에셋도 맞춥니다.
 
-**에셋 이름의 재료는 `_editorName`(에디터 식별자)입니다.** 화면에 나가는 이름이 아니므로 영문으로 짧게 씁니다. 표시명과 로컬라이즈 키는 따로입니다 — [ARCHITECTURE.md](ARCHITECTURE.md#이름은-세-겹이다)를 보세요.
+**에셋 이름의 재료는 `_editorName`(에디터 식별자)입니다.** 화면에 나가는 이름이 아니므로 영문으로 짧게 씁니다. 표시명과 로컬라이즈 키는 따로입니다 — [ARCHITECTURE.md](arch/items.md#이름은-세-겹이다)를 보세요.
 
 **화면에 문자열을 낼 때는 `Localization.Get`을 통합니다.** 아이템은 `DisplayName`/`Description`이 이미 그렇게 되어 있습니다. SO 필드를 직접 읽으면 나중에 시트를 붙여도 그 자리만 안 바뀝니다.

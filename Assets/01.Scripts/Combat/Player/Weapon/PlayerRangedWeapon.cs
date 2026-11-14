@@ -29,7 +29,7 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
     public WeaponAmmoController Ammo { get; private set; }
 
-    private PlayerAimController _aim;
+    private IAimDirectionProvider _aim;
 
     private float _cooldown;
     private bool _triggerHeld;
@@ -59,7 +59,7 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         InventoryController inventoryController = null;
         if (owner != null)
         {
-            _aim = owner.GetCompo<PlayerAimController>();
+            _aim = owner.GetCompo<IAimDirectionProvider>();
             inventoryController = owner.GetCompo<InventoryController>();
         }
 
@@ -103,6 +103,18 @@ public class PlayerRangedWeapon : PlayerWeaponBase
     }
 
     #region Input
+
+    /// <summary>
+    /// 연사만 잡고 있으면 된다. 단발·점사는 눌렀다 떼야 다음 발이 나가고,
+    /// 차지는 떼는 순간 나간다. (<see cref="HandActionBase.HoldsTrigger"/>)
+    /// </summary>
+    public override bool HoldsTrigger => CurrentFireMode == WeaponFireMode.Auto;
+
+    /// <summary>차지는 다 차야 제 위력이 나온다. 그만큼 눌러두라고 알려준다.</summary>
+    public override float TriggerHoldTime
+        => CurrentFireMode == WeaponFireMode.Charge
+            ? Mathf.Max(0f, Status.Value(WeaponStatType.ChargeTime))
+            : 0f;
 
     public override void OnUsePressed()
     {
@@ -212,6 +224,14 @@ public class PlayerRangedWeapon : PlayerWeaponBase
     /// <summary>실제 격발. 쿨타임은 보지 않는다(점사가 자기 간격으로 돌기 때문).</summary>
     private bool Shoot(float powerRatio)
     {
+        // Initialize를 거치지 않은 무기다. 입력은 나중에 오지만 AI는 만들어진 프레임에
+        // 바로 당길 수 있어서, 이 경로가 실제로 열린다. 터지기 전에 알려준다.
+        if (Ammo == null)
+        {
+            Debug.LogError($"[Weapon] {name}이 초기화되지 않은 채 격발되었습니다.", this);
+            return false;
+        }
+
         // 과열로 잠겨 있으면 트리거를 당겨도 나가지 않는다. 기다리면 풀리므로
         // 트리거를 놓게 하지 않는다 — 식자마자 연사가 이어지는 쪽이 자연스럽다.
         if (Heat != null && Heat.IsLocked) return false;
@@ -257,7 +277,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         }
 
         Vector2 origin = _muzzle != null ? _muzzle.position : transform.position;
-        Vector2 aim = _aim != null ? _aim.AimDirection : (Vector2)transform.right;
+        // 겨누는 쪽이 없으면 무기가 보고 있는 쪽으로 나간다. 팔에 달린 것은 아트 공간에 살아서
+        // +Y가 앞이다(HandActionBase) — right를 쓰면 90도 틀어진다.
+        Vector2 aim = _aim != null ? _aim.AimDirection : (Vector2)transform.up;
 
         int count = Mathf.Max(1, Mathf.RoundToInt(Status.Value(WeaponStatType.ProjectileCount)));
 

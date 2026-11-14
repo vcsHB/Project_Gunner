@@ -17,7 +17,7 @@ using UnityEngine;
 /// 체력·공격력처럼 밸런스로 조정되는 값은 데이터에 있다.
 /// </summary>
 [RequireAgentComponent(typeof(EnemyMoveController))]
-public class EnemyAIController : MonoBehaviour, IAgentComponent
+public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionProvider
 {
     [Header("거리")]
     [Tooltip("이 안에 들어오면 쫓기 시작한다.")]
@@ -27,8 +27,12 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent
              "0으로 두면 경계에서 쫓았다 멈췄다 하며 떨린다.")]
     [SerializeField, Min(0f)] private float _loseMargin = 4f;
 
-    [Tooltip("이 안에 들어오면 멈춰서 때린다.")]
+    [Tooltip("무장이 없을 때 쓰는 근접 사정권. 이 안에 들어오면 멈춰서 때린다.")]
     [SerializeField, Min(0.1f)] private float _attackRange = 1.6f;
+
+    [Tooltip("팔에 무기를 달고 있을 때 멈춰서 쏘기 시작하는 거리. " +
+             "근접 사정권과 따로 두는 이유는 총을 든 기체가 코앞까지 붙을 이유가 없기 때문이다.")]
+    [SerializeField, Min(0.5f)] private float _fireRange = 8f;
 
     [Tooltip("사정권에 더해지는 여유. 이만큼 벌어져야 다시 쫓는다.")]
     [SerializeField, Min(0f)] private float _attackLeaveMargin = 0.6f;
@@ -56,16 +60,42 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent
     private readonly Dictionary<EnemyStateType, EnemyState> _states = new();
     private EnemyState _current;
 
+    // 메카 적은 팔에 무기를 달고 쏜다. 비메카(짐승·드론)는 없으므로 null일 수 있다.
+    private EnemyHandController _hands;
+
     public EnemyMoveController Move { get; private set; }
 
     public EnemyStateType CurrentState { get; private set; } = EnemyStateType.Idle;
 
     public float DetectRange => _detectRange;
     public float LoseRange => _detectRange + _loseMargin;
-    public float AttackRange => _attackRange;
-    public float AttackLeaveRange => _attackRange + _attackLeaveMargin;
+
+    /// <summary>
+    /// 멈춰서 공격하기 시작하는 거리. <b>무장을 달았으면 사격 거리, 없으면 근접 사정권이다.</b>
+    /// 총을 든 기체가 주먹 거리까지 붙을 이유가 없다.
+    /// </summary>
+    public float AttackRange => IsArmed ? _fireRange : _attackRange;
+
+    public float AttackLeaveRange => AttackRange + _attackLeaveMargin;
     public float AttackWindup => _attackWindup;
     public float AttackCooltime => _attackCooltime;
+
+    /// <summary>팔에 무기가 달려 있는가. 달려 있으면 때리지 않고 쏜다.</summary>
+    public bool IsArmed => _hands != null && _hands.HasAnyHand;
+
+    /// <summary>
+    /// 무기가 탄을 보낼 방향. 기체가 아직 다 돌지 않았어도 겨눈 곳으로 나간다 —
+    /// 표현(회전)이 판정을 끌고 가면 "보이는 곳과 맞는 곳이 다른" 문제가 생긴다.
+    /// </summary>
+    public Vector2 AimDirection
+    {
+        get
+        {
+            Vector2 direction = DirectionToTarget;
+
+            return direction.sqrMagnitude > 0.0001f ? direction : (Vector2)transform.right;
+        }
+    }
 
     /// <summary>노릴 대상이 있는가. 죽었거나 무적이면 false가 된다.</summary>
     public bool HasTarget => _target != null && _target.IsTargetable;
@@ -100,11 +130,14 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent
             return;
         }
 
+        _hands = _owner.GetCompo<EnemyHandController>();
+
         if (_attackCaster == null)
             _attackCaster = GetComponentInChildren<CasterBase>(true);
 
-        if (_attackCaster == null)
-            Debug.LogWarning($"[EnemyAI] {name}에 공격 캐스터가 없습니다. 쫓아오기만 합니다.", this);
+        // 무장도 캐스터도 없으면 영영 못 때린다. 둘 중 하나는 있어야 한다.
+        if (_attackCaster == null && _hands == null)
+            Debug.LogWarning($"[EnemyAI] {name}에 무장도 공격 캐스터도 없습니다. 쫓아오기만 합니다.", this);
 
         _states[EnemyStateType.Idle] = new EnemyIdleState(this);
         _states[EnemyStateType.Chase] = new EnemyChaseState(this);
@@ -126,7 +159,13 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent
     private void Update()
     {
         // 죽은 뒤에도 Update가 한두 프레임 더 돈다. 시체가 마지막 한 대를 때리면 안 된다.
-        if (_owner == null || _owner.IsDead) return;
+        if (_owner == null || _owner.IsDead)
+        {
+            // 연사 무기는 트리거를 들고 있는 동안 스스로 발사를 이어간다.
+            // 놓아주지 않으면 파괴되기까지의 한두 프레임 동안 계속 쏜다.
+            StopFiring();
+            return;
+        }
 
         if (!HasTarget)
             AcquireTarget();
@@ -167,6 +206,20 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent
     public void NotifyWindup() => OnWindupEvent?.Invoke();
 
     /// <summary>
+    /// 양팔의 방아쇠. <b>발사 속도는 AI가 재지 않는다</b> — 무기의 쿨타임과 과열이 정한다.
+    /// AI가 따로 재면 같은 무기가 플레이어 손에서와 적 손에서 다른 속도로 나간다.
+    /// </summary>
+    public void SetFiring(bool firing, float deltaTime)
+    {
+        if (_hands == null) return;
+
+        _hands.Tick(firing, deltaTime);
+    }
+
+    /// <summary>즉시 놓는다. 죽거나 상태를 벗어날 때.</summary>
+    public void StopFiring() => _hands?.StopFiring();
+
+    /// <summary>
     /// 판정을 내보낸다. 위력은 캐스터가 <see cref="Agent.AgentStatus"/>에서 읽으므로
     /// 여기서 데미지를 계산하지 않는다 — 계산이 두 곳에 생기면 반드시 갈라진다.
     /// </summary>
@@ -192,8 +245,10 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent
     private void OnValidate()
     {
         // 사정권이 탐지 거리보다 멀면 영영 쫓지 않고 그 자리에서 때리기만 한다.
-        if (_attackRange > _detectRange)
-            _detectRange = _attackRange;
+        float longest = Mathf.Max(_attackRange, _fireRange);
+
+        if (longest > _detectRange)
+            _detectRange = longest;
     }
 #endif
 }

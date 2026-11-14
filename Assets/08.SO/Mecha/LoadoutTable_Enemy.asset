@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ada0c8d053699943a2c06779f16658b, type: 3}
+  m_Name: LoadoutTable_Enemy
+  m_EditorClassIdentifier: Assembly-CSharp::MechaLoadoutTableSO
+  _pools:
+  - slot: 6
+    chance: 1
+    candidates:
+    - {fileID: 11400000, guid: 8c41d7b60e59f2a4b93c05d8e7146af2, type: 2}
+  - slot: 1
+    chance: 1
+    candidates:
+    - {fileID: 11400000, guid: e38f35e9d5a8c9549925ca76862f2a9e, type: 2}
+    - {fileID: 11400000, guid: 8769d5808fd97fe47a5db94bcebdfcb1, type: 2}
+  - slot: 2
+    chance: 0.7
+    candidates:
+    - {fileID: 11400000, guid: e38f35e9d5a8c9549925ca76862f2a9e, type: 2}
+    - {fileID: 11400000, guid: 8769d5808fd97fe47a5db94bcebdfcb1, type: 2}
+  _cargo:
+  - item: {fileID: 11400000, guid: 2c0c8489d2692664ba54a98d05725978, type: 2}
+    count: 200
+  - item: {fileID: 11400000, guid: c3122c77dca47854fac8350cd4e90f8b, type: 2}
+    count: 200
+  - item: {fileID: 11400000, guid: c831b0fae6b13444ba27e742aa2e5d16, type: 2}
+    count: 200
+  - item: {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
+    count: 200
+  _symmetricArms: 0

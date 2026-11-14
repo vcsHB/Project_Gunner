@@ -7,15 +7,26 @@
 | 문서 | 내용 | 언제 읽나 |
 |---|---|---|
 | [docs/MILESTONE.md](docs/MILESTONE.md) | 무엇을 언제 만들지 | 다음 할 일을 고를 때 |
-| [docs/STATUS.md](docs/STATUS.md) | 시스템별 개발 현황 | 작업 시작 전 |
+| [docs/STATUS.md](docs/STATUS.md) | 시스템별 개발 현황 | 작업 시작 전 — **건드릴 시스템의 표만** (`## ` 제목으로 찾기) |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | 미뤄둔 작업과 그 이유 | 뭘 할지 고를 때 |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 시스템별 구조와 설계 근거 | 기존 시스템을 건드릴 때 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 목차 + 파일 사이 연결. 본문은 `docs/arch/*.md` | 기존 시스템을 건드릴 때 — **목차를 보고 해당 파일만** |
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | 네이밍, 코드 스타일, 반복 패턴 | 코드를 쓸 때 |
-| [docs/RULES.md](docs/RULES.md) | 어기면 나중에 비싸지는 제약 | 항상 |
+| [docs/RULES.md](docs/RULES.md) | 어기면 나중에 비싸지는 제약 | 아래 "핵심 규칙"에 걸리는 작업일 때 해당 절만 |
 | [docs/INCIDENTS.md](docs/INCIDENTS.md) | 실제로 겪은 함정과 결론 | 비슷한 걸 만들 때 |
 | [docs/PIVOT.md](docs/PIVOT.md) | 메카 전환 기록 — 용어, 남은 2항목 | 용어가 헷갈리거나 전환 이력이 필요할 때 |
 
-새 시스템을 만들면 STATUS와 ARCHITECTURE를, 함정에 빠졌다 나오면 INCIDENTS를 갱신할 것.
+새 시스템을 만들면 STATUS와 ARCHITECTURE(해당 `arch/` 파일 + 목차 표)를, 함정에 빠졌다 나오면 INCIDENTS를 갱신할 것.
+
+### 핵심 규칙
+
+[RULES.md](docs/RULES.md)의 요약입니다. 이 중 하나에 걸리는 작업이면 RULES의 해당 절을 읽으세요.
+
+- **식별자** — Id·enum 값은 재사용 금지. 아이템 Id는 SO 타입별 대역에서. `WeaponStatType`·`VitalType`은 0부터 빈틈없이, 뒤에만 추가. `PoolType.cs`는 자동 생성이라 직접 편집 금지.
+- **상태 되돌리기** — 풀링 대상은 `OnDespawn`에서 런타임 상태 전부 리셋. 건 modifier는 `Dispose`에서 `RemoveModifier(this)`.
+- **멀티플레이** — `Random.value` 직접 호출 금지(시드 기반). 싱글턴에 플레이어별 상태 금지. 이펙트·사운드·카메라는 이벤트 구독으로.
+- **데이터** — `ItemCategoryType`으로 사용처 판정 금지(표시 전용). 개체 상태 있는 아이템은 `AddStack`. modifier origin에 박싱된 enum/struct 금지.
+- **조립** — 소켓은 프리팹 Transform으로. +X 보정은 `PartView` 루트에서 한 번. 스탯 적용 경로는 하나. 루트 Animator로 파츠 경로 애니메이트 금지.
+- **물리** — 캐스터에 LayerMask 직접 금지(`TargetType` + `TargetLayerTableSO`). 레이어 변경은 충돌 매트릭스에도 걸린다.
 
 **메카 전환은 끝났고(M0), 적도 살아 움직입니다(M1).** 코드는 메카 기준입니다 — 핫바·재장전·소모품·정조준은 없습니다. 다음 목표는 [MILESTONE.md](docs/MILESTONE.md)의 **M2 — 한 판이 끝난다**(맵·지형 충돌·죽음·새 판)입니다.
 
@@ -40,11 +51,36 @@
 CLI로 확인하려면:
 
 ```bash
-dotnet build Assembly-CSharp.csproj -v:q -nologo          # 런타임
-dotnet build Assembly-CSharp-Editor.csproj -v:q -nologo   # 에디터
+dotnet build Assembly-CSharp.csproj -v:q -nologo -clp:ErrorsOnly          # 런타임
+dotnet build Assembly-CSharp-Editor.csproj -v:q -nologo -clp:ErrorsOnly   # 에디터
 ```
 
+경고까지 봐야 할 때만 `-clp:ErrorsOnly`를 뺍니다.
+
 **주의** — `.csproj`는 유니티가 생성하며 **새로 만든 파일은 유니티가 한 번 갱신하기 전까지 포함되지 않습니다.** 파일을 추가한 직후 CLI 빌드가 통과해도 그 파일은 검사되지 않은 것입니다. 자세한 내용과 우회 방법은 [INCIDENTS.md](docs/INCIDENTS.md#csproj가-오래되어-새-파일이-빌드에-빠진다).
+
+## 토큰 절약
+
+### 큰 파일은 읽지 않는다
+
+`.claude/settings.json`이 아래 경로의 Read를 막습니다. Grep·Glob도 같이 막히니 우회 방법을 쓰세요.
+
+| 막힌 것 | 대신 |
+|---|---|
+| `*.unity`, `*.prefab` | 내용은 MCP `get_gameobject`. GUID 참조 찾기는 Bash `grep -rl <guid> Assets --include=*.unity --include=*.prefab` |
+| `*.csproj` | 새 파일이 빌드에 들어갔는지는 Bash `grep -c <파일명> Assembly-CSharp.csproj` |
+| `Library/`, `Temp/`, `Logs/`, `Assets/11.Fonts/` | 읽을 일 없음 |
+
+SO `.asset`은 막지 않았습니다. 데이터 값을 볼 때는 읽어도 됩니다.
+
+### MCP(mcp-unity) 사용 규칙
+
+- `get_scenes_hierarchy`(씬 전체 트리)는 쓰지 않는다. 오브젝트 이름·경로를 지정해서 `get_gameobject`로 조회한다. 경로를 모를 때만 예외로 쓴다.
+- `get_gameobject`는 기본값이 무겁다(자식 2단계 + 모든 직렬화 값). 구조만 볼 때는 `includeComponentProperties: false`, 자식이 필요 없으면 `maxDepth: 0`.
+- `get_console_logs`는 `logType: "error"`, `includeStackTrace: false`, `limit: 10` 정도로. 스택트레이스는 원인 추적이 필요할 때만 켠다.
+- 여러 오브젝트를 수정할 때는 `batch_execute`로 한 번에 보낸다.
+- 컴파일 확인: 에디터가 열려 있으면 `recompile_scripts` + 에러 로그, 닫혀 있으면 위 `dotnet build ... -clp:ErrorsOnly`.
+- 원인을 모르는 버그를 추적할 때는 좁은 조회를 여러 번 하는 것보다 한 번 넓게 보는 게 쌀 수 있다. 그때는 넓게 봐도 된다.
 
 ## 폴더
 

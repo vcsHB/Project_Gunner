@@ -24,6 +24,9 @@ public class Enemy : Agent
     /// <summary>전리품을 굴릴 때만 잠깐 쓴다. 한 프레임에 여럿 죽어도 순차 실행이라 안전하다.</summary>
     private static readonly List<ItemStack> s_lootBuffer = new();
 
+    /// <summary>기체 구성을 굴릴 때만 잠깐 쓴다. 적마다 리스트를 새로 만들지 않는다.</summary>
+    private static readonly List<MechaLoadoutSO.Entry> s_loadoutBuffer = new();
+
     public UnitDataSO Data => _data;
 
     private bool _dataApplied;
@@ -64,10 +67,41 @@ public class Enemy : Agent
 
         _data.ApplyTo(AgentStatus);
 
+        // 파츠를 먼저 달아야 한다. 파츠 스탯(체력 +50 등)이 올라간 뒤에 체력을 채워야
+        // 가득 찬 상태로 시작한다.
+        ApplyLoadout();
+
         // 최대 체력이 바뀌었으니 현재 체력을 다시 채운다.
         // Health는 비율을 유지하며 따라오지만, 스폰 시점에는 가득 찬 상태여야 한다.
         if (AgentHealth != null)
             AgentHealth.ResetHealth();
+    }
+
+    /// <summary>
+    /// 기체를 조립한다. 구성은 <see cref="UnitDataSO.LoadoutTable"/>이 <b>매번 굴려서</b> 내놓으므로
+    /// 같은 종류라도 다른 조합으로 나온다.
+    ///
+    /// 테이블이 없으면 아무것도 하지 않는다 — 파츠로 만들어지지 않는 적(짐승·드론)이 그렇다.
+    /// </summary>
+    private void ApplyLoadout()
+    {
+        MechaLoadoutTableSO table = _data.LoadoutTable;
+        if (table == null) return;
+
+        MechaPartController parts = GetCompo<MechaPartController>();
+        if (parts == null)
+        {
+            Debug.LogWarning(
+                $"[Enemy] {name}에 MechaPartController가 없어 구성을 적용할 수 없습니다.", this);
+            return;
+        }
+
+        s_loadoutBuffer.Clear();
+        table.Roll(s_loadoutBuffer);
+
+        parts.ApplyEntries(s_loadoutBuffer, table.CargoItems, table);
+
+        s_loadoutBuffer.Clear();
     }
 
     protected override void HandleDead()
