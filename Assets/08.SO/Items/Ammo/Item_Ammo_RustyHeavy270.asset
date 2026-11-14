@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7908b49b58404e74fbed3e461486b044, type: 3}
+  m_Name: Item_Ammo_RustyHeavy270
+  m_EditorClassIdentifier: Assembly-CSharp::AmmoDataSO
+  _id: 3002
+  <ItemGrade>k__BackingField: 1
+  <ItemCategory>k__BackingField: 3
+  <IconSprite>k__BackingField: {fileID: -2721903142330010463, guid: 6946aaf7276f232438e5cd3f666874ea, type: 3}
+  _worldSprite: {fileID: -2721903142330010463, guid: 6946aaf7276f232438e5cd3f666874ea, type: 3}
+  _maxStackCount: 120
+  _maxDurability: 0
+  _editorName: Rusty_Heavy270
+  _displayName: Rusty_Heavy270
+  _description: 
+  _localizationKey: Item_Ammo_RustyHeavy270
+  _caliber: 3
+  _costPerShot: 1
+  _deltas:
+  - type: 1
+    mode: 0
+    value: -11.2
+  - type: 9
+    mode: 0
+    value: 0.2
+  - type: 12
+    mode: 0
+    value: -0.2
+  _projectilePool: 1

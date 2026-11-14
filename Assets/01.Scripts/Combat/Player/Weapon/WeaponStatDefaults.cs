@@ -18,9 +18,22 @@ public class WeaponStatDefaults
     public float maxTargetCount = 1f;
     public float criticalRate = 0f;
 
-    [Header("탄약")]
-    public float magazineSize = 30f;
-    public float reloadTime = 1.5f;
+    [Header("과열")]
+    [Tooltip("한 발에 오르는 열. 0이면 이 무기는 열을 쓰지 않는다.")]
+    public float heatPerShot = 0f;
+
+    [Tooltip("이 값을 채우면 overheatLockTime 동안 잠긴다.")]
+    public float heatCapacity = 100f;
+
+    [Tooltip("초당 식는 양. 잠긴 동안에는 식지 않고, 풀릴 때 한 번에 비워진다.")]
+    public float heatCooling = 35f;
+
+    [Tooltip("과열로 잠기는 시간(초). 0이면 잠기지 않고 열만 비워진다.")]
+    public float overheatLockTime = 2f;
+
+    // 폐기 — 탄창도 재장전도 없다. WeaponStatType이 인덱스를 쓰므로 자리만 남겨 둔다.
+    [HideInInspector] public float magazineSize = 30f;
+    [HideInInspector] public float reloadTime = 1.5f;
 
     [Header("조작감")]
     public float recoil = 1f;
@@ -70,6 +83,11 @@ public class WeaponStatDefaults
 
             case WeaponStatType.BurstInterval: return burstInterval;
             case WeaponStatType.AimRange: return aimRange;
+
+            case WeaponStatType.HeatPerShot: return heatPerShot;
+            case WeaponStatType.HeatCapacity: return heatCapacity;
+            case WeaponStatType.HeatCooling: return heatCooling;
+            case WeaponStatType.OverheatLockTime: return overheatLockTime;
         }
 
         return 0f;

@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e73577e8272034c4e8e39fed2052b455, type: 3}
+  m_Name: Item_PlayerWeapon_Scatter
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponDataSO
+  _id: 1003
+  <ItemGrade>k__BackingField: 1
+  <ItemCategory>k__BackingField: 3
+  <IconSprite>k__BackingField: {fileID: 21300000, guid: 013131efd4f953f478bfcb9381384477, type: 3}
+  _worldSprite: {fileID: 1408885641, guid: 6b20b914aa1e8cc4589280e68ee7e8a1, type: 3}
+  _maxStackCount: 1
+  _maxDurability: 1500
+  _editorName: Scatter
+  _displayName: Scatter
+  _description: "\uB2E8\uBC1C\uD615 "
+  _localizationKey: Item_Weapon_Scatter
+  _allowedSlots: 0100000002000000
+  playerWeaponPrefab: {fileID: 2678460667007415043, guid: be7a14945f27a2442b4dd4bb5a118bc0, type: 3}
+  _category: 3
+  _moduleSlots: 040000000100000003000000
+  _allowedUpgrades: []
+  _fireModes: 0300000001000000
+  _calibers: 01000000
+  _defaultProjectile: 1
+  _stats:
+    damage: 10
+    attackCooltime: 0.09
+    range: 25
+    aimRange: 17
+    maxTargetCount: 1
+    criticalRate: 0
+    magazineSize: 12
+    reloadTime: 1.5
+    heatPerShot: 7
+    heatCapacity: 100
+    heatCooling: 35
+    overheatLockTime: 1.8
+    recoil: 0.4
+    spread: 10
+    burstCount: 3
+    burstInterval: 0.06
+    projectileCount: 1
+    projectileSpeed: 40
+    penetration: 0
+    chargeTime: 0
+    explosionRadius: 0
+    knockback: 0

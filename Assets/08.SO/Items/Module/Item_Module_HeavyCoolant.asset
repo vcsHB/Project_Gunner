@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d449bdd891400574c84f600916e74cae, type: 3}
+  m_Name: Item_Module_HeavyCoolant
+  m_EditorClassIdentifier: Assembly-CSharp::ModuleDataSO
+  _id: 2000
+  <ItemGrade>k__BackingField: 4
+  <ItemCategory>k__BackingField: 4
+  <IconSprite>k__BackingField: {fileID: -4016742669786146721, guid: 6946aaf7276f232438e5cd3f666874ea, type: 3}
+  _worldSprite: {fileID: 0}
+  _maxStackCount: 1
+  _maxDurability: 0
+  _editorName: HeavyCoolant
+  _displayName: HeavyCoolant
+  _description: 
+  _localizationKey: item.module.heavycoolant
+  _slot: 4
+  _allowedCategories: 04000000
+  _deltas:
+  - type: 20
+    mode: 0
+    value: 40
+  - type: 21
+    mode: 0
+    value: 8
+  _addFireModes: 
+  _behaviourPrefab: {fileID: 0}

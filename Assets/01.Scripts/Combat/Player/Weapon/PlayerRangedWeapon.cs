@@ -97,6 +97,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
         base.OnUnequipped();
 
+        // 떼면 식는다. 교체는 안전지대에서만 일어나므로 그때 식는 것이 자연스럽고,
+        // 들고 있는 동안에만 뜨겁다는 규칙이 저장할 상태를 없앤다.
+        Heat?.Reset();
     }
 
     #region Input
@@ -143,8 +146,10 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
     #endregion
 
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
+
         // Initialize 전에는 스탯도 탄창도 없다. 프리팹을 씬에 직접 놓고 켜두면 여기로 들어온다.
         if (Ammo == null) return;
 
@@ -207,6 +212,10 @@ public class PlayerRangedWeapon : PlayerWeaponBase
     /// <summary>실제 격발. 쿨타임은 보지 않는다(점사가 자기 간격으로 돌기 때문).</summary>
     private bool Shoot(float powerRatio)
     {
+        // 과열로 잠겨 있으면 트리거를 당겨도 나가지 않는다. 기다리면 풀리므로
+        // 트리거를 놓게 하지 않는다 — 식자마자 연사가 이어지는 쪽이 자연스럽다.
+        if (Heat != null && Heat.IsLocked) return false;
+
         // 내구도가 다 닳은 무기는 탄이 있어도 나가지 않는다.
         // 슬롯의 _itemNotUseable과 같은 판정을 쓴다 — 표시와 동작이 갈리면 안 된다.
         if (Instance != null && Instance.IsBroken)
@@ -230,6 +239,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         Instance?.ConsumeDurability();
 
         FireProjectiles(powerRatio);
+
+        // 실제로 나간 뒤에만 달아오른다. 빈 격발로 과열되면 억울하다.
+        Heat?.AddShot();
 
         OnFiredEvent?.Invoke(Status.Value(WeaponStatType.Recoil));
         return true;

@@ -35,6 +35,9 @@ public abstract class PlayerWeaponBase : HandActionBase
     /// <summary>모듈·개량의 주인. 인벤토리에 들어가도 유지된다.</summary>
     public WeaponItemInstance Instance { get; private set; }
 
+    /// <summary>연사를 제한하는 열. 재장전이 없어진 자리를 메운다. 열은 이 오브젝트와 함께 산다.</summary>
+    public WeaponHeatController Heat { get; private set; }
+
     public WeaponFireMode CurrentFireMode { get; private set; }
 
     private readonly List<WeaponFireMode> _fireModeBuffer = new();
@@ -63,12 +66,25 @@ public abstract class PlayerWeaponBase : HandActionBase
 
         Mods = new ModdingController(this, Status);
         Mods.Bind(Instance);
+
+        // 모딩이 끝난 뒤에 만든다. 열 수치도 모듈이 건드릴 수 있어야 한다.
+        Heat = new WeaponHeatController(this);
     }
 
     protected virtual void OnDestroy()
     {
         // 개체 상태는 건드리지 않는다. 여기서 모듈을 떼면 저장된 모딩이 날아간다.
         Mods?.Unbind();
+        Heat?.Dispose();
+    }
+
+    /// <summary>
+    /// 열은 쏘지 않는 동안에도 흘러야 하므로 기반에서 돈다.
+    /// 오버라이드할 때 반드시 base를 부를 것 — 안 부르면 그 무기만 영영 식지 않는다.
+    /// </summary>
+    protected virtual void Update()
+    {
+        Heat?.Tick(Time.deltaTime);
     }
 
 

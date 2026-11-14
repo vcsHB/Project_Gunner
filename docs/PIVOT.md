@@ -92,24 +92,11 @@ OnPrimaryPressed / OnSecondaryPressed  →  OnUsePressed / OnUseReleased
 
 **정조준이 우클릭 자리를 잃습니다.** 기능 자체를 없애되 `PlayerAimController.SetAiming`과 카메라 줌 기계장치는 **지우지 않고 입력 연결만 끊습니다.** 자동조준 모듈이나 저격형 코어가 재사용할 자리입니다.
 
-## 과열
+## ~~과열~~ → 완료
 
-재장전이 없어진 자리를 과열이 메웁니다.
+구조는 [ARCHITECTURE.md의 "과열"](ARCHITECTURE.md#과열)으로 옮겼습니다.
 
-- 발사마다 열이 오르고 시간이 지나면 식습니다
-- 열이 높을수록 공격속도가 **아주 미미하게** 떨어집니다
-- 임계를 넘으면 일정 시간 그 무기를 쓸 수 없습니다 (오버히트 락)
-
-**구현은 기존 패턴에 그대로 얹힙니다.** `WeaponStatus`가 origin 기반 modifier와 `RemoveModifiers(origin)`을 갖고 있으므로, 열 컨트롤러가 `AttackCooltime`에 percent modifier를 걸고 식으면 자기 origin으로 걷어냅니다. 파츠가 쓰는 방식과 똑같습니다.
-
-**열 상태는 무기 오브젝트가 들고 갑니다.** `ItemInstance`가 아닙니다. 핫바가 없어져서 무기 오브젝트가 전투 중에 파괴되지 않고, 교체는 안전지대에서만 일어나므로 그때 식는 것이 자연스럽습니다.
-
-**오버히트 락은 `ItemUsability`가 아니라 쿨타임 쪽 표현입니다.** `ItemUsability`는 "손을 쓰지 않으면 영영 안 풀리는 상태"만 봅니다. 락은 기다리면 풀리므로 `_cooldownFill` 자리에 들어갑니다 — 소모품 쿨타임이 쓰던 UI가 그대로 재활용됩니다.
-
-**새 스탯** — `WeaponStatType` 뒤에 `HeatPerShot`, `HeatCapacity`, `HeatCooling`, `OverheatLockTime`을 추가합니다. 소프트 페널티 계수는 전역 상수로 시작하고, 무기마다 달라야 할 때 스탯으로 올립니다.
-
-**`MagazineSize`(7)와 `ReloadTime`(8)은 지울 수 없습니다.** `WeaponStatus`가 배열 인덱스로 쓰므로 자리를 비워두고 폐기 주석만 답니다.
-
+**남은 것** — 열 게이지 UI는 9단계(UI 재배선)에서 붙입니다. `WeaponHeatController`가 `OnHeatChangedEvent` / `OnOverheatChangedEvent` / `LockRatio01`을 이미 내놓고 있습니다.
 ## 탄약
 
 재장전 동작만 사라지고 탄약 개념은 남습니다. 적재함의 탄을 쉬지 않고 당기다가, 다 떨어지면 그 무기는 끝입니다.
@@ -252,12 +239,10 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 |---|---|---|
 | ~~1~~ | ~~용어 리네임 (파츠/모듈/개량)~~ | **완료 (2026-10-25).** 코드·문서 반영됨. 에셋 이름만 남음 |
 | ~~2~~ | ~~슬롯 재편 + `MechaPartController` + 로드아웃 + Id 대역~~ | **완료 (2026-10-25).** 구조는 ARCHITECTURE로 옮김 |
-| 3 | 좌우 2손 라우팅 + `OnUse` 통일 + 핫바·소모품·정조준 제거 | **가장 큰 덩어리.** 컴파일이 넓게 깨짐 |
-| 4 | 과열 | 재장전이 비운 자리를 메움 |
+| ~~3~~ | ~~좌우 2손 라우팅 + `OnUse` 통일 + 핫바·소모품·정조준 제거~~ | **완료 (2026-11-14).** 구조는 ARCHITECTURE로 옮김 |
+| ~~4~~ | ~~과열~~ | **완료 (2026-11-14).** 구조는 ARCHITECTURE로 옮김. 게이지 UI는 9단계 |
 | ~~5~~ | ~~자동 급탄 전환~~ | **완료 (2026-11-14).** 탄창·재장전 제거, 적재함이 곧 잔탄 |
-
 | ~~6~~ | ~~전력 / 연료~~ | **완료 (2026-10-27).** ARCHITECTURE로 옮김 |
-
 | ~~7~~ | ~~조립 + Part Forge~~ | **완료 (2026-11-14).** 구조는 ARCHITECTURE로 옮길 것 |
 | 8 | 모딩 일반화 (`ModdableItemInstance`) | 코어 하위 모듈이 실제로 필요해질 때 |
 | 9 | UI 재배선 — 무장 HUD 2개, 코어별 조준점, 게이지 2개, 격납고 | |
@@ -267,11 +252,11 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 
 ## 유니티 작업
 
-- `Controls.inputactions` — 재장전 액션 제거, 우클릭을 우무기에 재배선, 휠 슬롯 순환 제거
-- 플레이어 프리팹에 **좌/우 손 루트 Transform 2개** (지금은 `_handRoot` 하나라 둘 다 붙으면 겹칩니다)
-- `Perro`/`Scatter` SO의 `AllowedSlots`에 `ArmLeft`+`ArmRight` 둘 다 지정
-- `LargeHeavyMagazine` 삭제 또는 열 관련 스탯으로 재정의
-- `PartPlayerStatus` 게이지 3→2, 무장 HUD 프리팹 2개, 격납고 패널
+끝난 것 — 입력 재배선(재장전 액션 제거, 우클릭 = 우무기), 무기 SO의 `AllowedSlots`에 양팔 지정, `LargeHeavyMagazine` → `HeavyCoolant`(열 용량 +40, 냉각 +8) 재정의. 팔 루트는 프리팹 소켓으로 대체되어 할 일이 없어졌습니다.
+
+남은 것 (9단계) — `PartPlayerStatus` 게이지 3→2, 무장 HUD 프리팹 2개(열 게이지 포함), 격납고 패널.
+
+씬의 장비 UI 칸들이 아직 **폐기된 `_slotType` 값**(4,5,7,8,9,10)을 참조합니다. 9단계에서 같이 정리합니다.
 
 ## 아직 안 정한 것
 

@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e73577e8272034c4e8e39fed2052b455, type: 3}
+  m_Name: Item_PlayerWeapon_Burster
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWeaponDataSO
+  _id: 1000
+  <ItemGrade>k__BackingField: 1
+  <ItemCategory>k__BackingField: 3
+  <IconSprite>k__BackingField: {fileID: -4961289352516149365, guid: 6b20b914aa1e8cc4589280e68ee7e8a1, type: 3}
+  _worldSprite: {fileID: -4961289352516149365, guid: 6b20b914aa1e8cc4589280e68ee7e8a1, type: 3}
+  _maxStackCount: 1
+  _maxDurability: 1500
+  _editorName: Burster
+  _displayName: Burster
+  _description: '
+
+'
+  _localizationKey: Item_Weapon_Burster
+  _allowedSlots: 0100000002000000
+  playerWeaponPrefab: {fileID: 1014361397215951198, guid: 835e3b106ccc51643881cb33d0c8da5d, type: 3}
+  _category: 2
+  _moduleSlots: 040000000100000003000000
+  _allowedUpgrades: []
+  _fireModes: 01000000
+  _calibers: 04000000
+  _defaultProjectile: 1
+  _stats:
+    damage: 10
+    attackCooltime: 0.2
+    range: 21
+    aimRange: 17
+    maxTargetCount: 1
+    criticalRate: 0
+    magazineSize: 12
+    reloadTime: 1.5
+    heatPerShot: 11
+    heatCapacity: 100
+    heatCooling: 30
+    overheatLockTime: 2
+    recoil: 0.4
+    spread: 0.8
+    burstCount: 3
+    burstInterval: 0.06
+    projectileCount: 1
+    projectileSpeed: 20
+    penetration: 0
+    chargeTime: 0
+    explosionRadius: 0
+    knockback: 0

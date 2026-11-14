@@ -286,6 +286,7 @@ MonoBehaviour:
   - {fileID: 1260458841987982523}
   - {fileID: 5649504481658142487}
   - {fileID: 8517530837247177803}
+  _waistRoot: {fileID: 6667244976851033082}
 --- !u!1 &7024206573342643330
 GameObject:
   m_ObjectHideFlags: 0

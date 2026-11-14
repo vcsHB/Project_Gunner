@@ -16,6 +16,8 @@ public enum WeaponStatType
     MaxTargetCount,
     CriticalRate,
 
+    // 폐기 — 탄창도 재장전도 없다. WeaponStatus가 배열 인덱스로 쓰므로 자리만 비워 둔다.
+    // 값을 지우면 뒤의 스탯이 전부 한 칸씩 밀려 저장된 개량이 엉뚱한 스탯에 붙는다.
     MagazineSize,
     ReloadTime,
 
@@ -37,4 +39,11 @@ public enum WeaponStatType
     // 조준점을 플레이어에서 얼마나 멀리 둘 수 있는가. Range(탄이 날아가는 거리)와는 별개다.
     // 스코프가 이걸 늘린다 — 탄의 사거리는 그대로 두고 조준만 멀리 보게 할 수 있다.
     AimRange,
+
+    // 과열 — 재장전이 비운 자리. 발당 상승, 용량, 초당 냉각, 넘쳤을 때 잠기는 시간.
+    // HeatPerShot이나 HeatCapacity가 0이면 열을 쓰지 않는 무기로 본다.
+    HeatPerShot,
+    HeatCapacity,
+    HeatCooling,
+    OverheatLockTime,
 }

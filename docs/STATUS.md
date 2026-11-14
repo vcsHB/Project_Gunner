@@ -1,6 +1,6 @@
 # 개발 현황
 
-최종 갱신: 2026-10-25 (메카 전환 결정). 계획은 [MILESTONE.md](MILESTONE.md).
+최종 갱신: 2026-11-14 (과열 + 동적 조립). 계획은 [MILESTONE.md](MILESTONE.md).
 
 범례 — ✅ 동작함 / 🟡 뼈대만 / ⬜ 미착수 / 🔄 전환 예정 / ❌ 폐기 예정
 
@@ -49,12 +49,12 @@
 | PlayerInput | ✅ | 입력 리더 SO. `PlayerInput.asset` 존재 |
 | 이동 | ✅ | Rigidbody2D, 질주는 Percent modifier, 기절 시 정지 |
 | 조준 | ✅ | 마우스 절대 조준 + `AimRange` 제한 + 반동 오프셋 |
-| 주/보조 입력 | 🔄 | 좌=Primary, 우=Secondary. **좌=좌무기 / 우=우무기로 고정 배분됨** |
+| 주/보조 입력 | ✅ | 좌=Primary, 우=Secondary. **좌=좌무기 / 우=우무기로 고정 배분됨** |
 | 정조준(총 + 우클릭) | ❌ | 기능 폐기. `SetAiming`과 카메라 줌 기계장치는 남김 |
 | 소모품 사용(우클릭) | ❌ | 안전지대 수리만 남음 |
 | 투척무기 | ❌ | 한 버튼 구조와 충돌. 되살리려면 눌러-떼기로 재작성 |
 | 핫바 (인벤토리 앞 7칸) | ❌ | 무장은 장비 슬롯이 정한다 |
-| 무기 들기 | 🔄 | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
+| 무기 들기 | ✅ | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
 | 포복(Crawl) | 🟡 | 입력만 받고 이동에 반영 안 됨 |
@@ -94,23 +94,23 @@
 | 사용 가능 판정 | ✅ | `ItemUsability` 한 곳. 슬롯 표시와 실제 동작이 같은 답 |
 | 저장/불러오기 | ⬜ | **미착수** |
 
-**에셋** — 무기 `Perro`, `Scatter` / 모듈 `ScopeReddot`, `LargeHeavyMagazine`. 기체 파츠(코어·추진체) 에셋은 아직 없습니다.
+**에셋** — 무기 `Perro`, `Scatter` / 모듈 `ScopeReddot`, `HeavyCoolant`. 추진체 에셋은 아직 없습니다.
 
-**아트** — `Unit_Core.png`에 코어 13종이 들어와 있습니다. 파츠 프리팹은 아직 없습니다.
+**아트** — `Unit_Core.png`에 코어 13종이 들어와 있습니다. 프리팹으로 올린 것은 하나뿐입니다.
 
-**기체 파츠 에셋** — `Item_Core_TestCore`(Id 6000, 체력 +50) 하나. 검증용입니다.
+**기체 파츠 에셋** — `Item_Core_TestCore`(Id 6000, 체력 +50) 하나. 소켓 3개(양팔·추진체)와 `WaistRoot`를 가진 `CoreTest` 프리팹이 붙어 있습니다. 검증용입니다.
 
 ## 무기
 
 | 시스템 | 상태 | 비고 |
 |---|---|---|
-| WeaponStatus | 🔄 | 16종 스탯, 인스턴스별. **과열 스탯 4종 추가 예정** |
+| WeaponStatus | ✅ | 20종 스탯, 인스턴스별. origin 기반 modifier로 모듈·개량·탄약·열이 전부 얹힌다 |
 | 개량 (`UpgradeSO`) | ✅ | 단계별, 누적 아닌 교체 |
 | 모듈 (`ModuleDataSO`) | ✅ | 스탯만 바꾸면 프리팹 불필요 |
 | 발사 모드 | ✅ | Single / Burst / Auto / Charge 전부 동작 |
 | 실제 발사 로직 | ✅ | `PlayerRangedWeapon`. 쿨타임, 산탄, 반동 이벤트 |
 | 탄약 급탄 | ✅ | `WeaponAmmoController`. 적재함에서 바로 당겨 쓴다 |
-| 과열 | ⬜ | 재장전을 대신하는 제재한. `WeaponHeatController` |
+| 과열 | ✅ | `WeaponHeatController`. 소프트(쿨타임 +15%까지) + 하드(락). 게이지 UI는 미착수 |
 | 근접 무기 | ⬜ | `PlayerWeaponBase`를 상속해 캐스터를 직접 Cast하면 됩니다 |
 | 도구 (블럭 파괴) | ⬜ | 팔 슬롯을 무기와 공유하되 **판정은 분리** |
 
@@ -144,7 +144,7 @@
 | PartPlayerStatus | ✅ | 체력 + 전력 / 연료 게이지 |
 | PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
-| PartEquipmentStatus | 🔄 | 잔탄 표시. **좌/우 2개 인스턴스 + 과열 게이지** |
+| PartEquipmentStatus | 🔄 | 잔탄 표시. **좌/우 2개 인스턴스 + 과열 게이지**가 필요 |
 | PopupReload | ❌ | 재장전 폐기 |
 | PlayerAimPoint | 🔄 | 커서 추적. 조준점은 무기가 아니라 **코어**가 정함 |
 | WeaponPanelBase | 🔄 | "지금 든 무기" 가정. **어느 손인지 지정하는 필드 필요** |
