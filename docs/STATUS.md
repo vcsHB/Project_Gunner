@@ -1,6 +1,6 @@
 # 개발 현황
 
-최종 갱신: 2026-11-14 (과열 + 동적 조립). 계획은 [MILESTONE.md](MILESTONE.md).
+최종 갱신: 2026-11-14 (M1 적 AI·스폰). 계획은 [MILESTONE.md](MILESTONE.md).
 
 범례 — ✅ 동작함 / 🟡 뼈대만 / ⬜ 미착수 / 🔄 전환 예정 / ❌ 폐기 예정
 
@@ -33,9 +33,12 @@
 | Caster / CastEffector | ✅ | 중복 제거, 부위 배율, `CastPower`로 위력 주입 |
 | Projectile | ✅ | 경로 스윕, 관통, 사거리 소멸, 폭발 |
 | ProjectileCaster | ✅ | 직전 위치→현재 위치 CircleCast. 터널링·중복타 방지 |
+| `Enemy` | ✅ | 데이터 주입·사망·드랍 |
+| `EnemyMoveController` | ✅ | Rigidbody2D 이동 + 진행 방향 바라보기 |
+| `EnemyAIController` | ✅ | 상태 머신 Idle / Chase / Attack. 선딜 있는 근접 공격 |
+| `EnemyManager` | ✅ | 플레이어 주위 고리에 스폰. 최대 수·주기 |
+| 편 가르기 (`FactionType`) | ✅ | 캐스터가 때릴 편을 고른다. 적끼리 오사 방지 |
 | `UnitDataSO` | ✅ | 유닛 데이터 + 전리품 테이블. Id 대역 9000~9999 |
-| `Enemy` | 🟡 | 데이터 주입·사망·드랍까지. 이동·AI 없음 |
-| EnemyManager | ⬜ | 빈 스텁 |
 | Shadow | 🟡 | 크기 설정만 |
 
 캐스터는 `CircleCaster`와 `ProjectileCaster` 두 종류입니다.
@@ -123,7 +126,7 @@
 | 장전 탄종 | ✅ | `WeaponItemInstance`가 들고 간다. 잔탄은 적재함 재고 |
 | 자동 급탄 | ✅ | 다 떨어지면 그 무기는 끝. 보급 전까지 못 쏜다 |
 | 탄종별 투사체 | ✅ | `AmmoDataSO.ProjectilePool`. 비우면 무기 기본 투사체 |
-| 탄약 HUD | 🔄 | `PartEquipmentStatus`를 좌/우 2개로. `PopupReload`는 폐기 |
+| 탄약 HUD | ✅ | `ArmStatus_Left` / `_Right` 두 인스턴스. 잔탄 + 열 게이지 |
 | 탄종 전환 UI | 🔄 | 안전지대 로드아웃에서 지정 (`CollectAvailableAmmo` 재사용) |
 
 **에셋** — 탄약 SO 4종.
@@ -144,10 +147,10 @@
 | PartPlayerStatus | ✅ | 체력 + 전력 / 연료 게이지 |
 | PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
-| PartEquipmentStatus | 🔄 | 잔탄 표시. **좌/우 2개 인스턴스 + 과열 게이지**가 필요 |
+| PartEquipmentStatus | ✅ | 팔마다 하나. 잔탄 + 열 게이지(잠기면 남은 시간). **위치·크기는 임시** |
 | PopupReload | ❌ | 재장전 폐기 |
-| PlayerAimPoint | 🔄 | 커서 추적. 조준점은 무기가 아니라 **코어**가 정함 |
-| WeaponPanelBase | 🔄 | "지금 든 무기" 가정. **어느 손인지 지정하는 필드 필요** |
+| PlayerAimPoint | ✅ | 커서 추적. 조준점·조준거리를 **코어**가 정함 |
+| WeaponPanelBase | ✅ | `_slot`으로 어느 팔을 볼지 지정. 다른 팔의 변화는 여기서 걸러짐 |
 | ConditionDisplayGroup ↔ 상태이상 | ✅ | 셀 재사용, 남은 시간 갱신 |
 | PartHudHotbar ↔ Equipment | ❌ | 핫바 폐기. 무장 HUD 좌/우 2칸으로 대체 |
 | MainCanvas / SubCanvas | 🟡 | Initialize/LateInitialize 뼈대만 |
@@ -164,8 +167,10 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 | 시스템 | 상태 |
 |---|---|
-| CameraManager / ShakeEffector | ✅ |
+| CameraManager | ✅ |
 | CameraFollowEffector | ✅ (플레이어↔조준점 중간, 정조준 줌) |
+| 발사 / 피격 화면 흔들림 | ✅ (`WeaponFireCameraShake`, `DamageCameraShake`) |
+| CameraShakeEffector | ✅ (`CameraRig` 아래 `MainCamera`를 흔든다) |
 | Map / MapGenerator | ⬜ |
 | SoundPlayer | ⬜ |
 | 블럭 파괴·설치 | ⬜ |
@@ -183,10 +188,11 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 ## 다음 작업 후보
 
-**[PIVOT.md](PIVOT.md#작업-순서)의 전환 작업이 우선입니다.** 전환 대상인 시스템을 지금 다듬으면 그대로 버려집니다.
+**M1(적이 살아 움직인다)의 코드는 끝났습니다.** 적이 스폰되고, 쫓아오고, 때립니다.
 
-전환과 무관하게 살아있는 것:
+남은 M1 다듬기:
 
-- **적 이동·AI** — `Enemy`가 데이터 주입까지만 되어 있습니다
-- **맵 생성** — `MapGenerator`가 빈 스텁입니다. 투사체 지형 충돌도 여기서 같이
-- **저장/불러오기** — 개량 Id 문제를 여기서 같이 정리
+1. **적 아트와 수치** — `Enemy_Test`는 기존 더미 스프라이트 그대로입니다. 탐지·사정권·선딜은 눈으로 보고 맞춰야 합니다
+2. **적이 서로 겹친다** — 유닛 Rigidbody2D가 전부 Kinematic이라 밀어내기가 없습니다. 여럿이 한 점에 포개집니다
+
+그 다음은 [MILESTONE.md](MILESTONE.md)의 **M2 — 한 판이 끝난다**(맵·지형 충돌·죽음·새 판)입니다.

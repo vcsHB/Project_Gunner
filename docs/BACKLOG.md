@@ -44,7 +44,7 @@
 ### 새 판 리셋이 `MechaLoadoutApplier`에 얹혀 있다
 `ItemInstanceRegistry.Clear()`와 `GameRandom.Reseed()`를 로드아웃 적용 직전에 부릅니다. 호출처가 없던 것보다는 낫지만, **"새 판 시작"이라는 개념이 따로 없어서 장비를 채우는 쪽에 얹은 것**입니다. `_resetWorldState`를 켠 Applier가 씬에 둘 이상이면 서로의 인스턴스를 지웁니다.
 
-> **해야 하는 시점** — 죽음·리스폰 흐름을 만들 때(M1). 그쪽으로 옮기고 Applier에서는 빼세요.
+> **해야 하는 시점** — 죽음·리스폰 흐름을 만들 때(M2). 그쪽으로 옮기고 Applier에서는 빼세요.
 
 ---
 

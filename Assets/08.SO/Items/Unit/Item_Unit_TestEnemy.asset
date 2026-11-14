@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0eaf7e09a5b77104ba0e84004a62f37f, type: 3}
   m_Name: Item_Unit_TestEnemy
   m_EditorClassIdentifier: Assembly-CSharp::UnitDataSO
-  _id: 1
+  _id: 9000
   <ItemGrade>k__BackingField: 1
   <ItemCategory>k__BackingField: 5
   <IconSprite>k__BackingField: {fileID: 0}
@@ -23,9 +23,9 @@ MonoBehaviour:
   _displayName: TestEnemy
   _description: 
   _localizationKey: item.unit.testenemy
-  _prefab: {fileID: 1821191627302011356, guid: 22e660d3a1509be4182ab647d7b0d8df, type: 3}
-  _maxHealth: 30
-  _moveSpeed: 3
-  _damage: 5
+  _prefab: {fileID: 4273030754514147594, guid: 152fb4a8314d64243a9b12c0a8ff38c3, type: 3}
+  _maxHealth: 40
+  _moveSpeed: 2.6
+  _damage: 6
   _defense: 0
   _loot: []

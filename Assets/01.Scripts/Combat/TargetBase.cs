@@ -12,6 +12,9 @@ public class TargetBase : MonoBehaviour, IAgentComponent
 {
     [SerializeField] private TargetType _defaultTargetType = TargetType.Ground;
 
+    [Tooltip("누구 편인가. 캐스터가 때릴 편을 고를 때 본다. 지상/공중과는 다른 축이다.")]
+    [SerializeField] private FactionType _faction = FactionType.Neutral;
+
     [Tooltip("비워두면 자기 transform. 큰 유닛은 피벗이 발밑이라 따로 잡아주는 게 좋다.")]
     [SerializeField] private Transform _aimPoint;
 
@@ -33,6 +36,9 @@ public class TargetBase : MonoBehaviour, IAgentComponent
     public IDamageable Damageable => _health;
 
     public TargetType CurrentTargetType { get; private set; }
+
+    /// <summary>누구 편인가. 전투 중에 바뀌지 않는다 — 바뀔 일이 생기면 그때 이벤트를 단다.</summary>
+    public FactionType Faction => _faction;
 
     public bool IsAlive => _health == null || !_health.IsDead;
 
@@ -161,6 +167,10 @@ public class TargetBase : MonoBehaviour, IAgentComponent
         // 조합된 값은 레이어 대응표에서 찾을 수 없다.
         if (_defaultTargetType != TargetType.None && !Mathf.IsPowerOfTwo((int)_defaultTargetType))
             Debug.LogWarning($"[TargetBase] {name}: TargetType은 하나만 선택해야 합니다.", this);
+
+        // 같은 이유로 편도 하나다. 조합된 값은 "누구 편인지 모르는" 상태라 때릴 수도 못 때릴 수도 있다.
+        if (_faction != FactionType.None && !Mathf.IsPowerOfTwo((int)_faction))
+            Debug.LogWarning($"[TargetBase] {name}: Faction은 하나만 선택해야 합니다.", this);
     }
 #endif
 }

@@ -13,11 +13,11 @@
 | [docs/CONVENTIONS.md](docs/CONVENTIONS.md) | 네이밍, 코드 스타일, 반복 패턴 | 코드를 쓸 때 |
 | [docs/RULES.md](docs/RULES.md) | 어기면 나중에 비싸지는 제약 | 항상 |
 | [docs/INCIDENTS.md](docs/INCIDENTS.md) | 실제로 겪은 함정과 결론 | 비슷한 걸 만들 때 |
-| [docs/PIVOT.md](docs/PIVOT.md) | **메카 전환** — 전환 후 구조와 작업 순서 | 전환이 끝날 때까지 항상 |
+| [docs/PIVOT.md](docs/PIVOT.md) | 메카 전환 기록 — 용어, 남은 2항목 | 용어가 헷갈리거나 전환 이력이 필요할 때 |
 
 새 시스템을 만들면 STATUS와 ARCHITECTURE를, 함정에 빠졌다 나오면 INCIDENTS를 갱신할 것.
 
-**지금 코드는 전환 전 상태입니다.** 총을 든 사람 기준으로 짜여 있고, 메카 구조는 아직 들어가지 않았습니다. 무엇을 건드리든 [PIVOT.md](docs/PIVOT.md)를 먼저 보세요 — 손대려는 시스템이 폐기 대상일 수 있습니다.
+**메카 전환은 끝났고(M0), 적도 살아 움직입니다(M1).** 코드는 메카 기준입니다 — 핫바·재장전·소모품·정조준은 없습니다. 다음 목표는 [MILESTONE.md](docs/MILESTONE.md)의 **M2 — 한 판이 끝난다**(맵·지형 충돌·죽음·새 판)입니다.
 
 ## 기획 방향
 

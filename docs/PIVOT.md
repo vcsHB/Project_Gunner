@@ -96,7 +96,8 @@ OnPrimaryPressed / OnSecondaryPressed  →  OnUsePressed / OnUseReleased
 
 구조는 [ARCHITECTURE.md의 "과열"](ARCHITECTURE.md#과열)으로 옮겼습니다.
 
-**남은 것** — 열 게이지 UI는 9단계(UI 재배선)에서 붙입니다. `WeaponHeatController`가 `OnHeatChangedEvent` / `OnOverheatChangedEvent` / `LockRatio01`을 이미 내놓고 있습니다.
+**게이지 UI도 붙었습니다** — 무장 HUD가 좌/우 두 개로 나뉘고 각자 열 게이지를 그립니다. 잠기면 남은 시간이 줄어드는 것으로 바뀝니다.
+
 ## 탄약
 
 재장전 동작만 사라지고 탄약 개념은 남습니다. 적재함의 탄을 쉬지 않고 당기다가, 다 떨어지면 그 무기는 끝입니다.
@@ -245,8 +246,8 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 | ~~6~~ | ~~전력 / 연료~~ | **완료 (2026-10-27).** ARCHITECTURE로 옮김 |
 | ~~7~~ | ~~조립 + Part Forge~~ | **완료 (2026-11-14).** 구조는 ARCHITECTURE로 옮길 것 |
 | 8 | 모딩 일반화 (`ModdableItemInstance`) | 코어 하위 모듈이 실제로 필요해질 때 |
-| 9 | UI 재배선 — 무장 HUD 2개, 코어별 조준점, 게이지 2개, 격납고 | |
-| 10 | 안전지대 잠금 (`LoadoutLocked`) | 안전지대 개념이 생길 때 켜면 됨 |
+| ~~9~~ | ~~UI 재배선~~ | **완료 (2026-11-14).** 무장 HUD 좌/우 2개 + 열 게이지, 장비 칸 4개. 격납고는 M4 |
+| 10 | 안전지대 잠금 (`LoadoutLocked`) | 안전지대 개념이 생길 때 켜면 됨 (M4) |
 
 `EquipmentController.CanAccept`가 이미 `out string reason`을 반환하고 드래그 UI가 그걸 쓰므로, 10단계는 플래그 하나 + 문구 한 줄입니다.
 
@@ -254,9 +255,9 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 
 끝난 것 — 입력 재배선(재장전 액션 제거, 우클릭 = 우무기), 무기 SO의 `AllowedSlots`에 양팔 지정, `LargeHeavyMagazine` → `HeavyCoolant`(열 용량 +40, 냉각 +8) 재정의. 팔 루트는 프리팹 소켓으로 대체되어 할 일이 없어졌습니다.
 
-남은 것 (9단계) — `PartPlayerStatus` 게이지 3→2, 무장 HUD 프리팹 2개(열 게이지 포함), 격납고 패널.
+끝난 것 (9단계) — 무장 HUD가 `ArmStatus_Left` / `ArmStatus_Right` 두 개로 나뉘고 각자 열 게이지를 갖습니다. 생존 게이지는 전력·연료 둘로 줄었고(`GaugeThirsty` 삭제), 장비 칸은 코어·좌팔·우팔·추진체 넷만 남았습니다. 카메라는 `CameraRig`(따라가기)와 `MainCamera`(흔들림)로 나뉘었습니다.
 
-씬의 장비 UI 칸들이 아직 **폐기된 `_slotType` 값**(4,5,7,8,9,10)을 참조합니다. 9단계에서 같이 정리합니다.
+남은 것 — **격납고 패널**(M4, 안전지대와 함께). HUD 두 칸의 **위치·크기는 임시**입니다. `PartItemPreview` 아래 쓰이지 않는 `CellEquipmentSlot` 하나가 폐기된 값을 들고 남아 있습니다 — 코드가 참조하지 않아 동작에는 영향이 없습니다.
 
 ## 아직 안 정한 것
 

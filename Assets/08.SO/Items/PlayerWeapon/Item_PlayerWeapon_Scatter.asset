@@ -38,13 +38,13 @@ MonoBehaviour:
     aimRange: 17
     maxTargetCount: 1
     criticalRate: 0
-    magazineSize: 12
-    reloadTime: 1.5
     heatPerShot: 7
     heatCapacity: 100
     heatCooling: 35
     overheatLockTime: 1.8
-    recoil: 0.4
+    magazineSize: 12
+    reloadTime: 1.5
+    recoil: 0.7
     spread: 10
     burstCount: 3
     burstInterval: 0.06

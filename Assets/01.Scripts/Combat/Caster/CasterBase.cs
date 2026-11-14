@@ -11,6 +11,10 @@ public abstract class CasterBase : MonoBehaviour
     [Tooltip("때릴 수 있는 대상 분류. 물리 LayerMask는 여기서 자동으로 만들어진다.")]
     [SerializeField] private TargetType _targetTypes = TargetType.Ground | TargetType.Air;
 
+    [Tooltip("때릴 수 있는 편. 적의 공격은 보통 Player + Neutral만 켠다. " +
+             "전부 켜두면 적끼리 서로 때린다 — 자기 자신만 자동으로 빠진다.")]
+    [SerializeField] private FactionType _hitFactions = FactionType.All;
+
     /// <summary>
     /// 이 캐스터를 발사한 주체. 투사체처럼 Agent 밑에 있지 않은 경우 스폰 시점에 넣어준다.
     /// </summary>
@@ -108,6 +112,10 @@ public abstract class CasterBase : MonoBehaviour
             if (!TryResolve(colliders[i], out CastHit hit)) continue;
             if (!hit.Target.IsTargetable) continue;
             if (Owner != null && hit.Target.Owner == Owner) continue;
+
+            // 편 거르기. 레이어로는 못 나눈다 — 플레이어와 적이 둘 다 지상 유닛이라 같은 레이어다.
+            if ((_hitFactions & hit.Target.Faction) == 0) continue;
+
             if (!CanAffect(hit.Target)) continue;
 
             if (_hitIndices.TryGetValue(hit.Target, out int index))

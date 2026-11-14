@@ -1,9 +1,13 @@
 using UnityEngine;
 
 /// <summary>
-/// "지금 손에 든 무기"를 따라가는 UI 패널의 공통 베이스.
+/// 팔 하나에 달린 무기를 따라가는 UI 패널의 공통 베이스.
 ///
-/// 무기는 핫바를 넘길 때마다 <b>파괴되고 다시 만들어집니다.</b>
+/// 좌우 무장이 동시에 활성이라 패널도 둘입니다. <b>어느 팔을 볼지는 `_slot`이 정하고,</b>
+/// 다른 팔의 변화는 여기서 걸러집니다. 그 판단이 파생 클래스로 흩어지면
+/// 양쪽 패널이 같은 무기를 그리는 상태가 생깁니다.
+///
+/// 무기는 장비를 바꿀 때 <b>파괴되고 다시 만들어집니다.</b>
 /// 그래서 무기에 직접 건 구독은 매번 갈아끼워야 하고, 한 번이라도 빠뜨리면
 /// 죽은 무기의 이벤트를 붙들고 있거나 새 무기의 갱신을 못 받습니다.
 /// 그 갈아끼우기를 여기 한 곳에 모읍니다.
@@ -19,6 +23,11 @@ public abstract class WeaponPanelBase : UIPanelBase
 
     /// <summary>이 패널이 보고 있는 팔.</summary>
     protected EquipSlotType Slot => _slot;
+
+#if UNITY_EDITOR
+    /// <summary>검증용. 두 패널이 같은 팔을 보고 있지 않은지 HUD가 확인한다.</summary>
+    public EquipSlotType EditorSlot => _slot;
+#endif
 
     /// <summary>지금 든 원거리 무기. 맨손이거나 근접이면 null.</summary>
     protected PlayerRangedWeapon Weapon { get; private set; }

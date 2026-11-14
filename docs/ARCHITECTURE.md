@@ -62,6 +62,8 @@ public class Health : MonoBehaviour, IAgentComponent
 
 지상↔공중 전환 시 물리 캐스터는 매번 새로 질의하므로 자동으로 맞습니다. 참조를 캐시한 쪽(유도탄, AI 어그로, 락온 UI)만 `OnTargetTypeChangedEvent` / `OnTargetLostEvent`를 구독해 다시 판단하면 됩니다.
 
+**누구 편인지는 여기서 못 가립니다.** 플레이어와 적이 둘 다 지상 유닛이라 같은 레이어입니다. 그건 [편 가르기](#편-가르기-faction)가 따로 봅니다.
+
 ## 스탯
 
 `Status<T>`는 기본값 + modifier 목록이고 dirty 캐싱합니다.
@@ -461,6 +463,71 @@ Projectile
  └ Explosion  (CircleCaster + DamageCastEffector [+ ConditionCastEffector])
 ```
 
+## 적
+
+플레이어와 **같은 부품**을 쓴다. `Agent` 컴포지션, `Health`, `TargetBase`, `HitBox`,
+캐스터, `Status<T>` — 적만 다른 길을 쓰면 같은 지형·상태이상·방어력에 서로 다르게 반응한다.
+
+| 컴포넌트 | 하는 일 |
+|---|---|
+| `Enemy : Agent` | 데이터 주입과 죽음·드랍 |
+| `EnemyMoveController` | Rigidbody2D 이동과 바라보기. **어디로 갈지는 안 정한다** |
+| `EnemyAIController` | 상태 전환과 대상 선택 |
+| `EnemyManager` | 스폰 |
+
+### 머리와 다리를 나눈다
+
+`EnemyAIController`는 **방향만 넘기고**, 실제 이동은 `EnemyMoveController`가 한다.
+AI가 Rigidbody를 직접 만지면 둔화·기절·넉백이 걸릴 때마다 AI 쪽에도 같은 조건이 생긴다.
+"못 움직이는 상태"의 판단은 이동 컴포넌트 한 곳에만 있다.
+
+### 상태는 클래스다
+
+`EnemyState` 파생이 상태 하나씩 맡는다(Idle / Chase / Attack). **MonoBehaviour가 아니다** —
+상태가 컴포넌트면 적 하나에 컴포넌트가 상태 수만큼 붙는다.
+
+지금은 셋뿐이라 `if`로도 되지만, 원거리 적과 보스가 들어오면 반드시 갈아엎게 된다.
+상태를 나누는 비용은 지금이 가장 싸다.
+
+**전환 경계마다 여유(hysteresis)를 둔다.** 쫓기 시작하는 거리(`DetectRange`)보다
+놓아주는 거리(`LoseRange`)가 넓고, 사정권에 드는 거리보다 벗어나는 거리가 넓다.
+같은 값이면 경계에서 상태가 매 프레임 뒤집히며 떨린다. (하체 회전과 같은 문제다)
+
+### 공격은 선딜을 거친다
+
+쿨타임만 두고 즉시 때리면 반응할 구간이 없어서 "붙으면 무조건 맞는" 적이 된다.
+`AttackWindup` 동안 대상을 바라보며 기다리고, 그 시점의 자리에서 판정을 낸다 —
+그 사이에 빠져나갔으면 안 맞는다. **회피가 성립해야 한다.**
+
+판정은 `CasterBase`가 한다. 적이 직접 데미지를 계산하면 방어력·치명타·상태이상이
+플레이어 무기와 다르게 걸린다.
+
+### 거리는 프리팹에, 능력치는 데이터에
+
+탐지·사정권은 `EnemyAIController`(프리팹)에, 체력·공격력·이동속도는 `UnitDataSO`에 있다.
+앞은 몸집과 무기 길이가 정하는 값이라 비주얼과 같이 움직여야 하고,
+뒤는 밸런스로 조정되는 값이라 아트를 건드리지 않고 바뀌어야 한다.
+
+### 풀링하지 않는다
+
+`Agent`와 `PoolableMono`가 둘 다 MonoBehaviour 직계라 `Enemy`가 양쪽을 상속할 수 없다.
+`Instantiate`/`Destroy`로 가고, `Agent.OnDestroy`가 컴포넌트 `Dispose()`를 부르므로 상태가 새지 않는다.
+스폰이 잦아지는 시점에 다시 본다. ([MILESTONE.md](MILESTONE.md))
+
+## 편 가르기 (Faction)
+
+`TargetType`(지상/공중)과 **축이 다르다.** 그쪽은 "어떻게 생겼나"고 이쪽은 "누구를 때려도 되나"다.
+한 enum에 섞으면 "공중에 뜬 플레이어"를 표현할 수 없다.
+
+레이어로는 못 나눈다 — 플레이어와 적이 **둘 다 지상 유닛이라 같은 레이어**다.
+
+- 유닛은 `TargetBase._faction`에 하나만 갖는다
+- 캐스터는 `_hitFactions`에 때릴 편을 조합한다 (기본값은 전부)
+
+**같은 편이라고 자동으로 빠지지 않는다.** 이 게임은 PVPVE라 플레이어끼리도 싸운다.
+자기 자신만 자동으로 제외되고(`CasterBase.Owner`), 나머지는 캐스터가 명시한다.
+적의 근접 공격은 `Player + Neutral`만 켠다 — 전부 켜두면 적끼리 서로 때려 죽는다.
+
 ## 조준
 
 **마우스는 조준점의 절대 위치입니다.** FPS처럼 마우스 이동량으로 조준점을 미는 방식(상대 조준)을 쓰지 않습니다. 인벤토리가 커서를 그대로 쓰기 때문에, 커서를 잠그는 방식으로 가면 UI를 열고 닫을 때마다 입력 모드를 갈아타야 하고 그 경계에서 버그가 납니다.
@@ -515,9 +582,28 @@ AimPosition ──▶ AimDirection ──▶ 발사 / 무기 회전 / 조준점 
 
 조준을 `Update`에서 계산하면, 그 뒤 `LateUpdate`에서 카메라가 움직인 만큼 **조준점이 커서에서 밀립니다.** 카메라가 계속 이어서 따라오므로 밀린 채로 고정됩니다.
 
-### 흔들림과 따라가기
+### 흔들림과 따라가기는 다른 Transform을 건드린다
 
-**따라가기는 리그의 `position`을, 흔들림은 카메라의 `localPosition`을 건드립니다.** 둘이 같은 오브젝트에 있으면 매 프레임 서로를 덮어써서 흔들림이 아예 안 보입니다. 따라가기는 부모(리그), 흔들림은 자식(카메라)에 두세요. 같이 있으면 경고가 뜹니다.
+**따라가기는 리그의 `position`을, 흔들림은 카메라의 `localPosition`을 씁니다.** 둘이 같은 오브젝트를 겨냥하면 매 프레임 서로를 덮어써서 **흔들림이 아예 보이지 않습니다** — 그리고 에러는 나지 않습니다.
+
+씬 구조가 이 분리를 담당합니다.
+
+```
+Environment/Rendering/Camera
+ └ CameraRig          ← CameraFollowEffector._rig  (월드 position)
+    └ MainCamera      ← CameraShakeEffector._target (로컬 position)
+ └ UICamera           ← 리그 밖. 따라다니지 않는다
+```
+
+두 컴포넌트는 `CameraManager`에 붙어 있습니다. `GetEffector<T>()`가 자식에서 모으기 때문에 **거기 있어야 찾아집니다.** 무엇을 움직일지는 각자 참조로 들고 갑니다.
+
+### 발사 흔들림
+
+`WeaponFireCameraShake`가 좌우 무기의 `OnFiredEvent`를 듣고 `Shake`를 부릅니다. 세기는 `Recoil` 스탯을 따릅니다 — 고정값으로 두면 모듈·탄종으로 반동이 달라져도 화면은 똑같이 흔들립니다.
+
+**무기 프리팹이 아니라 카메라 쪽에 붙입니다.** 프리팹마다 붙이면 새 무기를 만들 때 빠뜨릴 수 있고, 빠뜨려도 그 무기만 조용히 안 흔들립니다.
+
+좌우가 동시에 쏘면 `CameraShakeEffector`가 **센 쪽을 남깁니다.** 더하면 양손 연사에서 화면을 못 봅니다.
 
 ## 기체 자원 — 전력과 연료
 
