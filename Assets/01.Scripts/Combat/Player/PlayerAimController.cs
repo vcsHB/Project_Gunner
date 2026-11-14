@@ -13,6 +13,8 @@ using UnityEngine;
 /// 대신 반동은 스스로 회복하는 연출·명중률 효과이지, 플레이어가 내려서 잡는 조작이 아니다.
 /// </summary>
 [DefaultExecutionOrder(AimExecutionOrder.Aim)]
+[RequireAgentComponent(typeof(PlayerHandController), optional: true)]
+[RequireAgentComponent(typeof(MechaPartController), optional: true)]
 public class PlayerAimController : MonoBehaviour, IAgentComponent
 {
     [Header("조준 거리")]

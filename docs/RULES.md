@@ -14,7 +14,9 @@
 
 **`전체 Id 재부여`는 세이브가 붙기 전까지만 쓸 수 있습니다.** Id 불변 규칙을 깨는 유일한 경로입니다. 세이브·네트워크에 Id가 한 번이라도 나간 뒤에는 절대 누르지 마세요.
 
-**`WeaponStatType`은 0부터 빈틈없이 이어져야 합니다.** `WeaponStatus`가 배열 인덱스로 씁니다. 중간에 끼워 넣지 말고 뒤에 추가하세요. 쓰지 않게 된 값도 지우지 말고 자리를 비워둡니다(`MagazineSize`, `ReloadTime`이 그렇습니다).
+**`WeaponStatType`과 `VitalType`은 0부터 빈틈없이 이어져야 합니다.** `WeaponStatus`와 `VitalStatus`가 배열 인덱스로 씁니다.
+
+중간에 끼워 넣지 말고 뒤에 추가하세요. `WeaponStatType`은 쓰지 않게 된 값도 지우지 말고 자리를 비워둡니다(`MagazineSize`, `ReloadTime`이 그렇습니다).
 
 **`EquipSlotType`의 폐기된 값은 재사용하지 않습니다.** 메카 전환으로 3, 4, 5, 7, 8, 9, 10이 비었습니다. 새 슬롯은 뒤에 붙이세요.
 

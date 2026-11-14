@@ -12,6 +12,7 @@ using UnityEngine;
 /// 표현이 판정을 끌고 가면 "보이는 곳과 맞는 곳이 다른" 문제를 연출로 덮게 된다.
 /// </summary>
 [DefaultExecutionOrder(AimExecutionOrder.MechaRotation)]
+[RequireAgentComponent(typeof(PlayerAimController))]
 public class MechaRotationController : MonoBehaviour, IAgentComponent
 {
     [Tooltip("상체. 무기가 달린 루트가 이 아래에 있어야 총구가 같이 돈다.")]

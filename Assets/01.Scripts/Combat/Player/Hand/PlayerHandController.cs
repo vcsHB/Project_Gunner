@@ -14,6 +14,7 @@ using UnityEngine;
 /// 공급원은 <see cref="EquipmentController"/>다. 핫바는 없다 — 들고 들어간 것만 쓴다.
 /// 개체 상태는 ItemInstance에 있으므로 오브젝트를 부수고 다시 만들어도 유지된다.
 /// </summary>
+[RequireAgentComponent(typeof(EquipmentController))]
 public class PlayerHandController : MonoBehaviour, IAgentComponent
 {
     [Serializable]

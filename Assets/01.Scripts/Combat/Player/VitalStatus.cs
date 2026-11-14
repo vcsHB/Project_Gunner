@@ -1,58 +1,61 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 스테미너·허기·갈증. 최대값은 AgentStatus가, 현재값은 여기가 들고 간다.
+/// 전력과 연료. 최대값은 AgentStatus가, 현재값은 여기가 들고 간다.
 /// Health와 같은 구조다 — 스탯은 "얼마까지 찰 수 있나"고, 이 컴포넌트는 "지금 얼마인가"다.
 ///
-/// 스테미너를 무엇이 쓰는지는 여기가 정하지 않는다. <see cref="TryConsumeStamina"/>를
-/// 쓰는 쪽(지금은 질주)이 정한다. 여기서 질주를 알게 되면 구르기·근접공격이 생길 때마다 고쳐야 한다.
+/// <b>무엇이 쓰는지는 여기가 정하지 않는다.</b> <see cref="TryConsume"/>를 부르는 쪽이 정한다.
+/// 여기서 부스터를 알게 되면 발사·실드가 생길 때마다 이 파일을 고쳐야 한다.
+///
+/// 둘의 성격이 다르다 — <b>전력은 스스로 차고, 연료는 안 찬다.</b>
+/// 연료가 시간만 지나면 차면 보급이라는 선택이 사라지고, 전력이 안 차면 무장이 일회용이 된다.
 /// </summary>
+[RequireAgentComponent(typeof(AgentStatus))]
+[RequireAgentComponent(typeof(Health))]
 public class VitalStatus : MonoBehaviour, IAgentComponent
 {
     /// <summary>(종류, 현재, 최대)</summary>
     public event Action<VitalType, float, float> OnVitalChangedEvent;
 
-    [Header("소모")]
-    [Tooltip("허기가 초당 줄어드는 양.")]
-    [SerializeField] private float _hungerDrainPerSecond = 0.15f;
+    [Header("전력")]
+    [Tooltip("제너레이터가 초당 채우는 양.")]
+    [SerializeField] private float _powerRegenPerSecond = 20f;
 
-    [Tooltip("갈증이 초당 줄어드는 양. 보통 허기보다 빠르다.")]
-    [SerializeField] private float _thirstDrainPerSecond = 0.25f;
-
-    [Header("스테미너")]
-    [SerializeField] private float _staminaRegenPerSecond = 20f;
-
-    [Tooltip("마지막으로 스테미너를 쓴 뒤 이 시간이 지나야 다시 찬다.")]
-    [SerializeField] private float _staminaRegenDelay = 1f;
+    [Tooltip("마지막으로 전력을 쓴 뒤 이 시간이 지나야 다시 찬다.")]
+    [SerializeField] private float _powerRegenDelay = 1f;
 
     [Tooltip("바닥나면 이 비율만큼 찰 때까지 다시 쓸 수 없다. 0.2면 20%.")]
-    [SerializeField, Range(0f, 1f)] private float _staminaRecoverThreshold = 0.2f;
+    [SerializeField, Range(0f, 1f)] private float _powerRecoverThreshold = 0.2f;
 
-    [Header("고갈 페널티")]
-    [Tooltip("허기나 갈증이 0일 때 초당 들어오는 피해. 방어력을 무시한다.")]
-    [SerializeField] private float _starvingDamagePerSecond = 1f;
+    [Header("연료 고갈")]
+    [Tooltip("연료가 0일 때 초당 들어오는 손상. 방어력을 무시한다.")]
+    [SerializeField] private float _emptyFuelDamagePerSecond = 1f;
 
-    [Tooltip("허기나 갈증이 0일 때 이동속도 감소율. 0.3이면 -30%. 둘 다 0이면 두 번 걸린다.")]
-    [SerializeField, Range(0f, 1f)] private float _starvingMoveSpeedPenalty = 0.3f;
+    [Tooltip("연료가 0일 때 이동속도 감소율. 0.5면 -50%.")]
+    [SerializeField, Range(0f, 1f)] private float _emptyFuelMoveSpeedPenalty = 0.5f;
 
-    [Tooltip("허기나 갈증이 0일 때 스테미너 회복 배율.")]
-    [SerializeField, Range(0f, 1f)] private float _starvingStaminaRegenScale = 0.4f;
+    [Tooltip("연료가 0일 때 전력 회복 배율. 제너레이터도 연료를 먹는다.")]
+    [SerializeField, Range(0f, 1f)] private float _emptyFuelPowerRegenScale = 0.4f;
 
-    // 값 타입을 origin으로 쓰면 참조 동일성 비교라 제거가 안 된다. 굶주림·탈수를 따로 떼기 위해 각각 키를 둔다.
-    private readonly object _hungerPenaltyOrigin = new();
-    private readonly object _thirstPenaltyOrigin = new();
+    // 값 타입을 origin으로 쓰면 참조 동일성 비교라 제거가 안 된다.
+    private readonly object _fuelPenaltyOrigin = new();
 
-    private readonly float[] _current = new float[3];
+    private readonly float[] _current = new float[Enum.GetValues(typeof(VitalType)).Length];
 
     private Agent _owner;
     private AgentStatus _status;
     private Health _health;
 
-    private float _staminaIdleTime;
-    private bool _staminaLocked;
+    private float _powerIdleTime;
+    private bool _powerLocked;
 
-    public bool IsStaminaEmpty => _staminaLocked;
+    /// <summary>전력이 바닥나 잠긴 상태인지. 임계치까지 차야 풀린다.</summary>
+    public bool IsPowerEmpty => _powerLocked;
+
+    /// <summary>연료가 바닥났는지. 이동 페널티와 손상이 걸린다.</summary>
+    public bool IsFuelEmpty => Get(VitalType.Fuel) <= 0f;
 
     public float Get(VitalType type) => _current[(int)type];
 
@@ -82,81 +85,90 @@ public class VitalStatus : MonoBehaviour, IAgentComponent
     {
         // modifier를 걸어둔 채로 사라지면 안 된다.
         if (_status != null)
-            _status.MoveSpeed.RemoveModifier(_hungerPenaltyOrigin);
-
-        if (_status != null)
-            _status.MoveSpeed.RemoveModifier(_thirstPenaltyOrigin);
+            _status.MoveSpeed.RemoveModifier(_fuelPenaltyOrigin);
     }
 
     private void OnDestroy() => Dispose();
 
-    /// <summary>새 게임·리스폰. 전부 가득 채운다.</summary>
+    /// <summary>새 판·출격. 전부 가득 채운다.</summary>
     public void ResetAll()
     {
         for (int i = 0; i < _current.Length; i++)
             Set((VitalType)i, GetMax((VitalType)i));
 
-        _staminaLocked = false;
-        _staminaIdleTime = _staminaRegenDelay;
+        _powerLocked = false;
+        _powerIdleTime = _powerRegenDelay;
     }
 
     private void Update()
     {
-        float deltaTime = Time.deltaTime;
         if (_owner != null && _owner.IsDead) return;
 
-        TickDrain(deltaTime);
-        TickStamina(deltaTime);
-        TickStarving(deltaTime);
+        float deltaTime = Time.deltaTime;
+
+        TickPowerRegen(deltaTime);
+        TickEmptyFuel(deltaTime);
     }
 
     #region 소모와 회복
 
-    private void TickDrain(float deltaTime)
+    /// <summary>
+    /// 연료는 시간만으로 줄지 않는다. 부스터·이동이 <see cref="TryConsume"/>로 빼간다.
+    /// 시간당 자동 감소를 두면 가만히 서 있어도 손해라 "아껴 쓴다"는 선택이 사라진다.
+    /// </summary>
+    private void TickPowerRegen(float deltaTime)
     {
-        Add(VitalType.Hunger, -_hungerDrainPerSecond * deltaTime);
-        Add(VitalType.Thirst, -_thirstDrainPerSecond * deltaTime);
-    }
+        _powerIdleTime += deltaTime;
+        if (_powerIdleTime < _powerRegenDelay) return;
 
-    private void TickStamina(float deltaTime)
-    {
-        _staminaIdleTime += deltaTime;
-        if (_staminaIdleTime < _staminaRegenDelay) return;
-
-        float scale = IsStarving ? _starvingStaminaRegenScale : 1f;
+        float scale = IsFuelEmpty ? _emptyFuelPowerRegenScale : 1f;
         if (scale <= 0f) return;
 
-        Add(VitalType.Stamina, _staminaRegenPerSecond * scale * deltaTime);
+        Add(VitalType.Power, _powerRegenPerSecond * scale * deltaTime);
 
         // 바닥난 뒤에는 어느 정도 차야 다시 쓸 수 있다. 안 그러면 한 방울씩 차며 딸꾹질한다.
-        if (_staminaLocked && GetNormalized(VitalType.Stamina) >= _staminaRecoverThreshold)
-            _staminaLocked = false;
+        if (_powerLocked && GetNormalized(VitalType.Power) >= _powerRecoverThreshold)
+            _powerLocked = false;
     }
 
     /// <summary>
-    /// 스테미너를 쓴다. 모자라거나 잠겨 있으면 아무것도 쓰지 않고 false.
-    /// 질주처럼 매 프레임 조금씩 쓰는 쪽이 그대로 호출한다.
+    /// 자원을 쓴다. 모자라거나 잠겨 있으면 아무것도 쓰지 않고 false.
+    /// 부스터처럼 매 프레임 조금씩 쓰는 쪽이 그대로 호출한다.
+    ///
+    /// 전력만 잠금이 걸린다. 연료는 바닥나도 "못 쓰는 상태"가 아니라 "없는 상태"라서,
+    /// 보급하면 바로 다시 쓸 수 있어야 한다.
     /// </summary>
-    public bool TryConsumeStamina(float amount)
+    public bool TryConsume(VitalType type, float amount)
     {
         if (amount <= 0f) return true;
-        if (_staminaLocked) return false;
 
-        if (Get(VitalType.Stamina) < amount)
+        bool isPower = type == VitalType.Power;
+
+        if (isPower && _powerLocked) return false;
+
+        if (Get(type) < amount)
         {
-            // 바닥났다. 조금씩 찰 때마다 다시 쓰이는 것을 막는다.
-            Set(VitalType.Stamina, 0f);
-            _staminaLocked = true;
-            _staminaIdleTime = 0f;
+            Set(type, 0f);
+
+            if (isPower)
+            {
+                // 바닥났다. 조금씩 찰 때마다 다시 쓰이는 것을 막는다.
+                _powerLocked = true;
+                _powerIdleTime = 0f;
+            }
+
             return false;
         }
 
-        Add(VitalType.Stamina, -amount);
-        _staminaIdleTime = 0f;
+        Add(type, -amount);
+
+        if (isPower)
+            _powerIdleTime = 0f;
+
         return true;
     }
 
-    /// <summary>음식·물·회복 아이템이 쓴다.</summary>
+    /// <summary>보급 아이템이 쓴다.</summary>
     public void Restore(VitalType type, float amount)
     {
         if (amount <= 0f) return;
@@ -184,47 +196,42 @@ public class VitalStatus : MonoBehaviour, IAgentComponent
 
     #endregion
 
-    #region 고갈 페널티
-
-    private bool IsHungry => Get(VitalType.Hunger) <= 0f;
-    private bool IsThirsty => Get(VitalType.Thirst) <= 0f;
-    private bool IsStarving => IsHungry || IsThirsty;
+    #region 연료 고갈
 
     /// <summary>
-    /// 굶주림·탈수는 페널티와 피해를 <b>둘 다</b> 준다.
-    /// 페널티는 modifier라 켜고 끄는 순간에만 손대고, 피해는 매 프레임 들어간다.
+    /// 연료가 바닥나면 페널티와 손상을 <b>둘 다</b> 준다.
+    /// 페널티는 modifier라 켜고 끄는 순간에만 손대고, 손상은 매 프레임 들어간다.
+    /// 손상이 방어력을 무시하는 이유 — 장갑을 둘렀다고 연료가 덜 떨어지지는 않는다.
     /// </summary>
-    private void TickStarving(float deltaTime)
+    private void TickEmptyFuel(float deltaTime)
     {
-        ApplyPenalty(_hungerPenaltyOrigin, IsHungry);
-        ApplyPenalty(_thirstPenaltyOrigin, IsThirsty);
+        ApplyFuelPenalty(IsFuelEmpty);
 
-        if (!IsStarving || _health == null) return;
+        if (!IsFuelEmpty || _health == null) return;
 
-        _health.ApplyDirectDamage(_starvingDamagePerSecond * deltaTime);
+        _health.ApplyDirectDamage(_emptyFuelDamagePerSecond * deltaTime);
     }
 
-    private void ApplyPenalty(object origin, bool active)
+    private void ApplyFuelPenalty(bool active)
     {
         if (_status == null) return;
 
         // 이미 걸려 있는지 확인하지 않고 매번 걸면 modifier가 무한히 쌓인다.
-        bool applied = IsPenaltyApplied(origin);
-        if (applied == active) return;
+        if (IsPenaltyApplied() == active) return;
 
         if (active)
-            _status.MoveSpeed.AddModifier(origin, -_starvingMoveSpeedPenalty, ModifierMode.Percent);
+            _status.MoveSpeed.AddModifier(_fuelPenaltyOrigin, -_emptyFuelMoveSpeedPenalty, ModifierMode.Percent);
         else
-            _status.MoveSpeed.RemoveModifier(origin);
+            _status.MoveSpeed.RemoveModifier(_fuelPenaltyOrigin);
     }
 
-    private bool IsPenaltyApplied(object origin)
+    private bool IsPenaltyApplied()
     {
-        System.Collections.Generic.IReadOnlyList<ModifierData<float>> modifiers = _status.MoveSpeed.Modifiers;
+        IReadOnlyList<ModifierData<float>> modifiers = _status.MoveSpeed.Modifiers;
 
         for (int i = 0; i < modifiers.Count; i++)
         {
-            if (ReferenceEquals(modifiers[i].origin, origin)) return true;
+            if (ReferenceEquals(modifiers[i].origin, _fuelPenaltyOrigin)) return true;
         }
 
         return false;

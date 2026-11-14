@@ -55,13 +55,14 @@
 | 투척무기 | ❌ | 한 버튼 구조와 충돌. 되살리려면 눌러-떼기로 재작성 |
 | 핫바 (인벤토리 앞 7칸) | ❌ | 무장은 장비 슬롯이 정한다 |
 | 무기 들기 | 🔄 | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
-| 스테미너 / 허기 / 갈증 | 🔄 | `VitalStatus` 기계장치는 유지. **전력 / 연료**로 교체 |
+| 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
 | 포복(Crawl) | 🟡 | 입력만 받고 이동에 반영 안 됨 |
 | 재장전 | ❌ | **과열**이 대체. 탄은 적재함에서 자동 급탄 |
 | 상호작용(Interact/Use) | 🟡 | 입력만 있고 대상 탐색 없음 |
 | 장비 → 스탯 연결 | ✅ | `MechaPartController`. 슬롯별 origin, 교체 시 먼저 걷어냄 |
-| 출격 로드아웃 | ✅ | `MechaLoadoutSO` + `MechaLoadoutApplier`. 새 판 리셋도 여기서 |
+| 기체 회전 | ✅ | `MechaRotationController`. 상체가 먼저, 하체가 뒤따라옴 |
+| 출격 로드아웃 | ✅ | `MechaLoadoutSO` + `MechaPartController`. 새 판 리셋도 여기서 |
 | 기체 조립 (소켓·프리팹) | ⬜ | `PartView` / `MechaAssembler` / Part Forge |
 
 ## 아이템 / 인벤토리
@@ -138,7 +139,7 @@
 | 아이템 선택 | ✅ | `ItemSelectionController`, 어느 칸이든 클릭 |
 | 버리기 영역 | 🟡 | `ItemDropArea` — 이벤트만 쏨. 월드 픽업 필요 |
 | PartItemDetail / ItemPreview | ⬜ | 모듈 슬롯 배치 방식 미정 |
-| PartPlayerStatus | 🔄 | 체력 + 스테미너 / 허기 / 갈증 게이지 → **체력 + 전력 / 연료** |
+| PartPlayerStatus | ✅ | 체력 + 전력 / 연료 게이지 |
 | PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
 | PartEquipmentStatus | 🔄 | 잔탄 표시. **좌/우 2개 인스턴스 + 과열 게이지** |

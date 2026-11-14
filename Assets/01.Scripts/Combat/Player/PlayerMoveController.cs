@@ -1,13 +1,16 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireAgentComponent(typeof(AgentStatus))]
+[RequireAgentComponent(typeof(AgentConditionEffector), optional: true)]
+[RequireAgentComponent(typeof(VitalStatus), optional: true)]
 public class PlayerMoveController : MonoBehaviour, IAgentComponent
 {
-    [Tooltip("질주 시 이동속도 배율. 0.4면 +40%.")]
+    [Tooltip("부스터 가동 시 이동속도 배율. 0.4면 +40%.")]
     [SerializeField] private float _sprintBonus = 0.4f;
 
-    [Tooltip("질주가 초당 소모하는 스테미너.")]
-    [SerializeField] private float _sprintStaminaPerSecond = 15f;
+    [Tooltip("부스터가 초당 소모하는 연료.")]
+    [SerializeField] private float _boostFuelPerSecond = 15f;
 
     [Tooltip("입력이 바뀔 때 속도가 따라붙는 속도. 클수록 즉각적이다.")]
     [SerializeField] private float _acceleration = 40f;
@@ -21,7 +24,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     private Vector2 _moveInput;
 
     // 누르고 있는지(_sprintHeld)와 실제로 질주 중인지(_sprintActive)는 다르다.
-    // 스테미너가 바닥나면 누르고 있어도 질주가 아니다.
+    // 연료가 바닥나면 누르고 있어도 부스터가 안 켜진다.
     private bool _sprintHeld;
     private bool _sprintActive;
 
@@ -61,7 +64,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
         _player.Input.OnMoveEvent -= HandleMove;
         _player.Input.OnSprintEvent -= HandleSprint;
 
-        // 질주 modifier를 걸어둔 채로 사라지면 안 된다.
+        // 부스터 modifier를 걸어둔 채로 사라지면 안 된다.
         if (_status != null)
             _status.MoveSpeed.RemoveModifier(this);
     }
@@ -80,18 +83,18 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
     private void HandleMove(Vector2 input) => _moveInput = input;
 
-    // 입력은 눌림 여부만 기록한다. 실제로 질주가 되는지는 스테미너를 보고 FixedUpdate에서 정한다.
+    // 입력은 눌림 여부만 기록한다. 실제로 부스터가 켜지는지는 연료를 보고 FixedUpdate에서 정한다.
     private void HandleSprint(bool value) => _sprintHeld = value;
 
     /// <summary>
-    /// 제자리에서는 스테미너를 쓰지 않는다. 가만히 서서 Shift를 누르고 있다고 지치면 이상하다.
+    /// 제자리에서는 연료를 쓰지 않는다. 가만히 서서 Shift를 누르고 있다고 연료가 닳으면 이상하다.
     /// </summary>
     private void UpdateSprint(float deltaTime)
     {
         bool wanted = _sprintHeld && CanMove && _moveInput.sqrMagnitude > 0.01f;
 
         if (wanted && _vitals != null)
-            wanted = _vitals.TryConsumeStamina(_sprintStaminaPerSecond * deltaTime);
+            wanted = _vitals.TryConsume(VitalType.Fuel, _boostFuelPerSecond * deltaTime);
 
         SetSprintActive(wanted);
     }
@@ -104,7 +107,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
         if (_status == null) return;
 
-        // 질주는 다른 버프와 곱해지지 않고 더해지도록 비율 modifier로 건다.
+        // 부스터는 다른 버프와 곱해지지 않고 더해지도록 비율 modifier로 건다.
         if (value)
             _status.MoveSpeed.AddModifier(this, _sprintBonus, ModifierMode.Percent);
         else

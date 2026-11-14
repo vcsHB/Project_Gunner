@@ -12,10 +12,9 @@ public enum StatusType
     MoveSpeed,
     InventorySize,
 
-    // 생존 수치의 최대값. 현재값은 VitalStatus가 들고 간다.
-    MaxStamina,
-    MaxHunger,
-    MaxThirst,
+    // 기체 자원의 최대값. 현재값은 VitalStatus가 들고 간다.
+    MaxPower,
+    MaxFuel,
 }
 
 public class AgentStatus : MonoBehaviour, IAgentComponent
@@ -31,10 +30,11 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     [Tooltip("인벤토리 칸 수. 가방 같은 걸로 늘어난다.")]
     [SerializeField] private Status<int> inventorySize = new(30);
 
-    [Header("생존")]
-    [SerializeField] private Status<float> maxStamina = new(100f);
-    [SerializeField] private Status<float> maxHunger = new(100f);
-    [SerializeField] private Status<float> maxThirst = new(100f);
+    [Header("기체 자원")]
+    [UnityEngine.Serialization.FormerlySerializedAs("maxStamina")]
+    [SerializeField] private Status<float> maxPower = new(100f);
+    [UnityEngine.Serialization.FormerlySerializedAs("maxHunger")]
+    [SerializeField] private Status<float> maxFuel = new(100f);
 
     public Status<float> Damage => damage;
     public Status<float> Health => health;
@@ -44,18 +44,16 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     public Status<bool> IsResist => isResist;
     public Status<float> MoveSpeed => moveSpeed;
     public Status<int> InventorySize => inventorySize;
-    public Status<float> MaxStamina => maxStamina;
-    public Status<float> MaxHunger => maxHunger;
-    public Status<float> MaxThirst => maxThirst;
+    public Status<float> MaxPower => maxPower;
+    public Status<float> MaxFuel => maxFuel;
 
     /// <summary>VitalStatus가 종류로 최대값을 찾을 때 쓴다.</summary>
     public Status<float> GetMaxVital(VitalType type)
     {
         switch (type)
         {
-            case VitalType.Stamina: return maxStamina;
-            case VitalType.Hunger: return maxHunger;
-            case VitalType.Thirst: return maxThirst;
+            case VitalType.Power: return maxPower;
+            case VitalType.Fuel: return maxFuel;
         }
 
         return null;
@@ -79,9 +77,8 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
             { StatusType.IsResist, isResist },
             { StatusType.MoveSpeed, moveSpeed },
             { StatusType.InventorySize, inventorySize },
-            { StatusType.MaxStamina, maxStamina },
-            { StatusType.MaxHunger, maxHunger },
-            { StatusType.MaxThirst, maxThirst },
+            { StatusType.MaxPower, maxPower },
+            { StatusType.MaxFuel, maxFuel },
         };
     }
 

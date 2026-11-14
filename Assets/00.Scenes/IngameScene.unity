@@ -1377,9 +1377,7 @@ GameObject:
   - component: {fileID: 240768541}
   - component: {fileID: 240768540}
   - component: {fileID: 240768544}
-  - component: {fileID: 240768545}
   - component: {fileID: 240768548}
-  - component: {fileID: 240768550}
   - component: {fileID: 240768549}
   - component: {fileID: 240768551}
   m_Layer: 9
@@ -1433,11 +1431,9 @@ MonoBehaviour:
     _defaultValue: 5
   inventorySize:
     _defaultValue: 30
-  maxStamina:
+  maxPower:
     _defaultValue: 100
-  maxHunger:
-    _defaultValue: 100
-  maxThirst:
+  maxFuel:
     _defaultValue: 100
 --- !u!114 &240768535
 MonoBehaviour:
@@ -1526,7 +1522,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMoveController
   _sprintBonus: 0.4
-  _sprintStaminaPerSecond: 15
+  _boostFuelPerSecond: 15
   _acceleration: 40
 --- !u!114 &240768540
 MonoBehaviour:
@@ -1571,6 +1567,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryController
   _fallbackCapacity: 30
+  _pickup:
+    radius: 1.2
+    itemLayer:
+      serializedVersion: 2
+      m_Bits: 8192
+    interval: 0.1
 --- !u!114 &240768543
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1600,23 +1602,6 @@ MonoBehaviour:
   _recoilKickPerLevel: 0.25
   _recoilRecoverSpeed: 6
   _maxRecoilOffset: 1.5
---- !u!114 &240768545
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 240768531}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23536971af1b4a04c9256c1ed5b095a1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemPickupSensor
-  _radius: 0.8
-  _itemLayer:
-    serializedVersion: 2
-    m_Bits: 8192
-  _interval: 0.1
 --- !u!114 &240768548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1629,14 +1614,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f75a8c201e87af418b34f31830483b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VitalStatus
-  _hungerDrainPerSecond: 0.15
-  _thirstDrainPerSecond: 0.25
-  _staminaRegenPerSecond: 20
-  _staminaRegenDelay: 1
-  _staminaRecoverThreshold: 0.2
-  _starvingDamagePerSecond: 1
-  _starvingMoveSpeedPenalty: 0.3
-  _starvingStaminaRegenScale: 0.4
+  _powerRegenPerSecond: 20
+  _powerRegenDelay: 1
+  _powerRecoverThreshold: 0.2
+  _emptyFuelDamagePerSecond: 1
+  _emptyFuelMoveSpeedPenalty: 0.5
+  _emptyFuelPowerRegenScale: 0.4
 --- !u!114 &240768549
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1649,22 +1632,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52cb2859e884bb24982922b9244dc14b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MechaPartController
---- !u!114 &240768550
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 240768531}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d32ebb60b0eb17342aa2ca8f67b8b142, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MechaLoadoutApplier
-  _defaultLoadout: {fileID: 11400000, guid: 2b6f93ac5d10e7b48a5c1e03f9d26c84, type: 2}
-  _resetWorldState: 1
-  _useFixedSeed: 0
-  _seed: 0
+  _loadout:
+    defaultLoadout: {fileID: 11400000, guid: 2b6f93ac5d10e7b48a5c1e03f9d26c84, type: 2}
+    resetWorldState: 1
+    useFixedSeed: 0
+    seed: 0
 --- !u!114 &240768551
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3157,9 +3129,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PartPlayerStatus
   _healthGauge: {fileID: 2132699640}
-  _staminaGauge: {fileID: 1715054086}
-  _hungerGauge: {fileID: 1148559497}
-  _thirstyGauge: {fileID: 274738300}
+  _powerGauge: {fileID: 1715054086}
+  _fuelGauge: {fileID: 1148559497}
   _conditionDisplayGroup: {fileID: 1841750394}
 --- !u!1 &432013230
 GameObject:

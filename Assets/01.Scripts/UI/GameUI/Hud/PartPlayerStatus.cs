@@ -5,9 +5,10 @@ public class PartPlayerStatus : MonoBehaviour
     [Header("Default Status Displays")]
     [SerializeField] private SimpleGauge _healthGauge;
 
-    [SerializeField] private SimpleGauge _staminaGauge;
-    [SerializeField] private SimpleGauge _hungerGauge;
-    [SerializeField] private SimpleGauge _thirstyGauge;
+    [UnityEngine.Serialization.FormerlySerializedAs("_staminaGauge")]
+    [SerializeField] private SimpleGauge _powerGauge;
+    [UnityEngine.Serialization.FormerlySerializedAs("_hungerGauge")]
+    [SerializeField] private SimpleGauge _fuelGauge;
 
     [Header("Additional")]
     [SerializeField] private ConditionDisplayGroup _conditionDisplayGroup;
@@ -72,9 +73,8 @@ public class PartPlayerStatus : MonoBehaviour
     {
         switch (type)
         {
-            case VitalType.Stamina: return _staminaGauge;
-            case VitalType.Hunger: return _hungerGauge;
-            case VitalType.Thirst: return _thirstyGauge;
+            case VitalType.Power: return _powerGauge;
+            case VitalType.Fuel: return _fuelGauge;
         }
 
         return null;
