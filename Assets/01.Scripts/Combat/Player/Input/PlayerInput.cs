@@ -27,8 +27,9 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public event Action OnInteractEvent;
 
     /// <summary>
-    /// true=누름, false=뗌. 짧게 눌렀는지 길게 눌렀는지는 여기서 판단하지 않는다 —
-    /// 입력 리더에 시간 로직이 들어가면 게임 규칙이 SO로 새어 들어간다.
+    /// <b>듣는 쪽이 없다.</b> 재장전은 자동 급탄으로 대체되어 사라졌다.
+    /// 액션 자체를 지우면 <c>IPlayerActions</c> 구현이 깨지므로(INCIDENTS) 콜백만 남겨둔다.
+    /// 다른 용도로 R을 쓰게 되면 여기에 새 이벤트를 붙이고 이 주석을 지울 것.
     /// </summary>
     public event Action<bool> OnReloadEvent;
 

@@ -18,14 +18,13 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
     /// <summary>(개량 경로, 새 단계)</summary>
     public event Action<UpgradeSO, int> OnUpgradeChangedEvent;
 
-    /// <summary>(장전된 탄종, 남은 발수). 탄종이 없으면 첫 번째가 null.</summary>
-    public event Action<AmmoDataSO, int> OnAmmoChangedEvent;
+    /// <summary>쓰기로 고른 탄종이 바뀌었을 때. 없으면 null.</summary>
+    public event Action<AmmoDataSO> OnAmmoChangedEvent;
 
     private readonly Dictionary<ModuleSlotType, ModuleDataSO> _modules = new();
     private readonly Dictionary<UpgradeSO, int> _upgrades = new();
 
     private uint _loadedAmmoId;
-    private int _ammoInMagazine;
 
     public PlayerWeaponDataSO WeaponData => Data as PlayerWeaponDataSO;
 
@@ -136,45 +135,23 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
 
     #region Ammo
 
-    // 탄창은 무기 오브젝트가 아니라 여기 있다.
-    // 인벤토리에 넣었다 다시 들어도 반쯤 남은 탄창이 유지되어야 하고, 그대로 저장되어야 한다.
+    // 탄창은 없다. 적재함에서 바로 당겨 쓰므로 잔탄은 저장할 것이 없다.
+    // 여기 남는 것은 "무슨 탄을 쓰기로 했나" 하나다 —
+    // 무기를 인벤토리에 넣었다 빼도 고른 탄종은 유지되어야 하고, 세이브에도 들어간다.
 
-    /// <summary>장전된 탄종의 아이템 Id. 0이면 비어있다.</summary>
+    /// <summary>쓰기로 고른 탄종의 아이템 Id. 0이면 적재함에서 알아서 고른다.</summary>
     public uint LoadedAmmoId => _loadedAmmoId;
-
-    /// <summary>탄창에 남은 발수.</summary>
-    public int AmmoInMagazine => _ammoInMagazine;
 
     public AmmoDataSO LoadedAmmo => AmmoDataSO.Find(_loadedAmmoId);
 
-    /// <summary>
-    /// 탄창 내용을 통째로 바꾼다. 재장전과 세이브 복원이 같은 길을 쓴다.
-    /// count가 0이면 탄종도 함께 비운다 — 빈 탄창에 탄종만 남아있으면 UI가 거짓말을 한다.
-    /// </summary>
-    public void SetMagazine(uint ammoItemId, int count)
+    /// <summary>탄종을 지정한다. 0이면 자동 선택으로 되돌린다. 세이브 복원도 이 길을 쓴다.</summary>
+    public void SetLoadedAmmo(uint ammoItemId)
     {
-        if (count <= 0)
-        {
-            ammoItemId = 0;
-            count = 0;
-        }
-
-        if (_loadedAmmoId == ammoItemId && _ammoInMagazine == count) return;
+        if (_loadedAmmoId == ammoItemId) return;
 
         _loadedAmmoId = ammoItemId;
-        _ammoInMagazine = count;
 
-        OnAmmoChangedEvent?.Invoke(LoadedAmmo, _ammoInMagazine);
-    }
-
-    /// <summary>격발로 탄을 뺀다. 모자라면 아무것도 빼지 않고 false.</summary>
-    public bool TryConsumeAmmo(int count)
-    {
-        if (count <= 0) return true;
-        if (_ammoInMagazine < count) return false;
-
-        SetMagazine(_loadedAmmoId, _ammoInMagazine - count);
-        return true;
+        OnAmmoChangedEvent?.Invoke(LoadedAmmo);
     }
 
     #endregion

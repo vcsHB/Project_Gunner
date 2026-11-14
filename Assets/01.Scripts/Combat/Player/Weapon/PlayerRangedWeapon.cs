@@ -12,8 +12,11 @@ using UnityEngine;
 /// </summary>
 public class PlayerRangedWeapon : PlayerWeaponBase
 {
-    [Tooltip("탄이 생기는 위치. 비워두면 무기 본체에서 나간다.")]
+    [Tooltip("탄이 생기는 위치. 비워두면 자식 중 'Muzzle'을 찾고, 그것도 없으면 무기 본체에서 나간다.")]
     [SerializeField] private Transform _muzzle;
+
+    /// <summary>프리팹 안에서 이름으로 찾을 총구. 드래그 한 번을 아낀다.</summary>
+    private const string MuzzleName = "Muzzle";
 
 
 
@@ -51,6 +54,8 @@ public class PlayerRangedWeapon : PlayerWeaponBase
     {
         base.Initialize(owner, slot, stack);
 
+        ResolveMuzzle();
+
         InventoryController inventoryController = null;
         if (owner != null)
         {
@@ -59,6 +64,27 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         }
 
         Ammo = new WeaponAmmoController(this, inventoryController);
+    }
+
+    /// <summary>
+    /// 총구를 지정하지 않았으면 이름으로 찾는다. 무기 프리팹마다 드래그하는 일을 없앤다.
+    /// 끝내 못 찾으면 무기 본체에서 나가는데, 그건 보통 틀린 위치라 경고를 남긴다.
+    /// </summary>
+    private void ResolveMuzzle()
+    {
+        if (_muzzle != null) return;
+
+        Transform[] children = GetComponentsInChildren<Transform>(true);
+
+        for (int i = 0; i < children.Length; i++)
+        {
+            if (children[i].name != MuzzleName) continue;
+
+            _muzzle = children[i];
+            return;
+        }
+
+        Debug.LogWarning($"[Weapon] {name}에 '{MuzzleName}'이 없습니다. 탄이 무기 중심에서 나갑니다.", this);
     }
 
     public override void OnUnequipped()
@@ -71,7 +97,6 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
         base.OnUnequipped();
 
-        Ammo?.CancelReload();
     }
 
     #region Input
@@ -115,9 +140,6 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         TryFire(ratio);
     }
 
-    public override void OnReloadRequested() => Ammo.BeginReload();
-
-    public override void OnAmmoCycleRequested(int direction) => Ammo.CycleAmmoType(direction);
 
     #endregion
 
@@ -130,8 +152,6 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
         if (_cooldown > 0f)
             _cooldown -= deltaTime;
-
-        Ammo.Tick(deltaTime);
 
         if (_isCharging)
             _chargeElapsed += deltaTime;
@@ -196,14 +216,10 @@ public class PlayerRangedWeapon : PlayerWeaponBase
             return false;
         }
 
+        // 적재함이 비었다. 재장전이 없으므로 보급 전까지는 이 무기가 끝난 것이다.
         if (!Ammo.CanFire)
         {
             OnDryFireEvent?.Invoke();
-
-            // 빈 방아쇠를 당기면 알아서 재장전한다. 매번 R을 누르게 하면 손이 바쁘다.
-            if (!Ammo.IsReloading)
-                Ammo.BeginReload();
-
             _triggerHeld = false;
             return false;
         }

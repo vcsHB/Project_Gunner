@@ -217,6 +217,57 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
         IReadOnlyList<MechaLoadoutSO.Entry> entries = loadout.Entries;
         for (int i = 0; i < entries.Count; i++)
             Equip(entries[i], loadout);
+
+        LoadCargo(loadout);
+    }
+
+    /// <summary>
+    /// 적재함을 채운다. 장착보다 <b>나중</b>이어야 한다 —
+    /// 적재 칸 수가 파츠 스탯(InventorySize)을 따라가므로, 먼저 실으면 칸이 모자란다.
+    /// </summary>
+    private void LoadCargo(MechaLoadoutSO loadout)
+    {
+        IReadOnlyList<MechaLoadoutSO.Cargo> cargo = loadout.CargoItems;
+        if (cargo.Count == 0) return;
+
+        InventoryController controller = _owner.GetCompo<InventoryController>();
+        if (controller == null || controller.Inventory == null)
+        {
+            Debug.LogWarning("[Loadout] 적재할 인벤토리가 없습니다.", this);
+            return;
+        }
+
+        for (int i = 0; i < cargo.Count; i++)
+        {
+            if (!cargo[i].IsValid) continue;
+
+            Load(controller.Inventory, cargo[i], loadout);
+        }
+    }
+
+    private void Load(Inventory inventory, MechaLoadoutSO.Cargo cargo, MechaLoadoutSO loadout)
+    {
+        // 개체 상태가 있는 아이템은 겹쳐지지 않으므로 한 칸에 하나씩 넣는다.
+        if (cargo.item.RequiresInstance)
+        {
+            for (int i = 0; i < cargo.count; i++)
+            {
+                ItemStack stack = ItemInstanceRegistry.CreateStack(cargo.item);
+
+                if (stack.IsEmpty || !inventory.AddStack(stack))
+                {
+                    Debug.LogWarning($"[Loadout] {cargo.item.DisplayName}을 다 싣지 못했습니다.", loadout);
+                    return;
+                }
+            }
+
+            return;
+        }
+
+        int left = inventory.Add(cargo.item.Id, cargo.count);
+
+        if (left > 0)
+            Debug.LogWarning($"[Loadout] 적재 칸이 모자라 {cargo.item.DisplayName} {left}개를 못 실었습니다.", loadout);
     }
 
     private void Equip(MechaLoadoutSO.Entry entry, MechaLoadoutSO loadout)

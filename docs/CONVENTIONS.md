@@ -73,9 +73,9 @@ SO에 런타임 상태를 두지 마세요. 에셋이라 **플레이 모드를 �
 - `Tools > Asset Highlight Settings` — 에셋 색칠 팔레트. 프로젝트 창에서 `Ctrl+/`
 - `Tools > Item Database > Rebuild` — 프로젝트 스캔 & Id 부여. 인스펙터 버튼과 같은 일을 메뉴로도 부를 수 있게 한 것
 - `Tools > Cleanup > Remove Missing Scripts` — 스크립트를 지운 뒤 남는 끊어진 컴포넌트 정리. 비활성 오브젝트까지 훑는다
+- `Tools > Mecha > Part Forge` — 파츠 생성 → 설정 → 로드아웃 → Play를 한 창에서. 씬을 더럽히지 않는다
 - `Agent` 인스펙터 지도 — 무엇이 어디에 붙어 있는지, 의존이 빠지지 않았는지
 - 하이어라키 장식 (`HierarchyRowDecorator`, `HierarchyActiveToggle`) — 계층선, 휠클릭 활성 토글, 컴포넌트 아이콘
-- `Tools > Part Forge` — **예정.** 스프라이트에서 파츠 SO + 프리팹 생성, 소켓·Pivot 조정 ([PIVOT.md](PIVOT.md#part-forge-에디터-툴))
 
 `Assets/01.Scripts/Core/EditorTools/Editor/`의 것들은 데이터가 아니라 **작업 편의**를 위한 것이라 게임 코드에 아무것도 남기지 않습니다. 저장이 필요하면 EditorPrefs를 씁니다 — 에셋으로 두면 개인 취향이 git diff로 올라옵니다.
 

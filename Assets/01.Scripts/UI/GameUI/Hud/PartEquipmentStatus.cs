@@ -51,15 +51,18 @@ public class PartEquipmentStatus : WeaponPanelBase
     // 탄종 이름이 언어를 탄다. 잔탄 숫자는 안 타지만 같이 다시 그려도 비용이 없다.
     protected override void RefreshLocalization() => RefreshAmmoText();
 
+    /// <summary>
+    /// 탄창이 없으므로 "X/Y"가 아니라 <b>적재함 재고 하나</b>를 보여준다.
+    /// 분모를 억지로 만들면(최대 적재량 등) 플레이어가 재장전을 기대하게 된다.
+    /// </summary>
     private void RefreshAmmoText()
     {
         WeaponAmmoController ammo = Ammo;
 
         SetText(_textCurrentAmmo, ammo != null && ammo.UsesAmmo
-            ? $"{ammo.Loaded}/{ammo.MagazineSize}"
+            ? ammo.Loaded.ToString()
             : _noAmmoText);
 
-        // 탄창이 비면 탄종도 없다. 빈 탄창에 탄종만 남아 있으면 UI가 거짓말을 한다.
         AmmoDataSO loaded = ammo != null ? ammo.LoadedAmmo : null;
         SetText(_textAmmoType, loaded != null ? loaded.DisplayName : string.Empty);
     }

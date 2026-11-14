@@ -18,6 +18,15 @@ using UnityEngine;
 /// </summary>
 public abstract class HandActionBase : MonoBehaviour
 {
+    [Header("리소스")]
+    [Tooltip("리소스가 그려진 정면. 유닛 리소스는 Up이 표준이고, 뒤집어 그렸으면 Down. " +
+             "회전 보정은 기체 루트가 하므로 여기서는 앞뒤 반전만 한다.")]
+    [SerializeField] private FacingType _spriteFacing = FacingType.Up;
+
+    [Tooltip("이 리소스를 어느 팔 기준으로 그렸는가. 반대쪽 팔에 달리면 좌우를 뒤집는다. " +
+             "팔 하나만 그려두고 양쪽에 쓸 수 있다.")]
+    [SerializeField] private EquipSlotType _authoredArm = EquipSlotType.ArmLeft;
+
     /// <summary>이것을 달고 있는 주체.</summary>
     public Agent Owner { get; private set; }
 
@@ -29,13 +38,57 @@ public abstract class HandActionBase : MonoBehaviour
 
     public bool IsEquipped { get; private set; }
 
+    /// <summary>반대쪽 팔에 달려서 뒤집힌 상태인지. 총구 오프셋을 읽는 쪽이 참고한다.</summary>
+    public bool IsArmMirrored { get; private set; }
+
     /// <summary>스폰 직후 한 번. 오버라이드할 때 반드시 base를 먼저 호출할 것.</summary>
     public virtual void Initialize(Agent owner, EquipSlotType slot, ItemStack stack)
     {
         Owner = owner;
         Slot = slot;
         Stack = stack;
+
+        ApplyFacing();
     }
+
+    /// <summary>
+    /// 리소스와 코드의 규칙 차이를 <b>한 곳에서 한 번만</b> 흡수한다. 축이 둘이고 이유가 다르다.
+    ///
+    /// <b>팔에 달리는 것은 아트 공간에서 산다 — +Y가 앞, ±X가 좌우다.</b>
+    /// 논리 정면은 +X지만, 그 차이는 기체 루트가 이미 돌려놨다(<see cref="MechaRotationController"/>).
+    /// 여기서 또 +X를 앞으로 치면 보정이 두 번 걸린다.
+    ///
+    /// | 축 | 왜 |
+    /// |---|---|
+    /// | X | 그려둔 팔과 반대쪽에 달렸는가 |
+    /// | Y | 리소스가 앞뒤 어느 쪽을 보고 그려졌는가 |
+    ///
+    /// 스케일을 곱하지 않고 부호만 덮어쓰므로 여러 번 불려도 결과가 같다.
+    /// 총구·모듈 장착점이 자식이라 스프라이트와 같이 따라온다.
+    /// </summary>
+    protected void ApplyFacing()
+    {
+        IsArmMirrored = _authoredArm != Slot && IsArm(Slot) && IsArm(_authoredArm);
+
+        float x = IsArmMirrored ? -1f : 1f;
+        float y = _spriteFacing == FacingType.Down ? -1f : 1f;
+
+        Vector3 scale = transform.localScale;
+
+        transform.localScale = new Vector3(
+            Mathf.Abs(scale.x) * x,
+            Mathf.Abs(scale.y) * y,
+            scale.z);
+    }
+
+    private static bool IsArm(EquipSlotType slot)
+        => slot == EquipSlotType.ArmLeft || slot == EquipSlotType.ArmRight;
+
+#if UNITY_EDITOR
+    // 에디터에서도 프리팹이 실제로 나갈 모습으로 보이게 한다.
+    // 팔 미러링은 달아봐야 정해지므로 여기서는 리소스 방향만 반영된다.
+    private void OnValidate() => ApplyFacing();
+#endif
 
     /// <summary>팔에 달렸을 때.</summary>
     public virtual void OnEquipped() => IsEquipped = true;
@@ -53,10 +106,4 @@ public abstract class HandActionBase : MonoBehaviour
 
     public virtual void OnUsePressed() { }
     public virtual void OnUseReleased() { }
-
-    /// <summary>재장전 입력. 쓰지 않는 것은 무시한다. (과열로 교체되면 사라진다)</summary>
-    public virtual void OnReloadRequested() { }
-
-    /// <summary>재장전 입력을 길게 눌렀을 때. (과열로 교체되면 사라진다)</summary>
-    public virtual void OnAmmoCycleRequested(int direction) { }
 }

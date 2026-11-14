@@ -171,12 +171,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 851365a50a407d142907a38d0e5f40d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerRangedWeapon
+  _spriteFacing: 1
+  _authoredArm: 1
   _mountPoints:
   - slot: 3
     point: {fileID: 8833570209858675572}
   - slot: 1
     point: {fileID: 925710422556106114}
-  _spriteFacing: 1
   _muzzle: {fileID: 8833570209858675572}
 --- !u!1 &3157772682295814113
 GameObject:

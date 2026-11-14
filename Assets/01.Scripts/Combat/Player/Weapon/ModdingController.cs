@@ -115,7 +115,7 @@ public class ModdingController
         foreach (KeyValuePair<ModuleSlotType, ModuleDataSO> pair in _instance.Modules)
             ApplyModule(pair.Key, pair.Value);
 
-        HandleAmmoChanged(_instance.LoadedAmmo, _instance.AmmoInMagazine);
+        HandleAmmoChanged(_instance.LoadedAmmo);
 
         _weapon.ValidateFireMode();
     }
@@ -144,9 +144,9 @@ public class ModdingController
     }
 
     /// <summary>
-    /// 잔탄만 줄어든 경우는 스탯이 그대로다. 탄종이 실제로 바뀌었을 때만 modifier를 갈아끼운다.
+    /// 탄종이 실제로 바뀌었을 때만 modifier를 갈아끼운다.
     /// </summary>
-    private void HandleAmmoChanged(AmmoDataSO ammo, int count)
+    private void HandleAmmoChanged(AmmoDataSO ammo)
     {
         if (_appliedAmmo == ammo) return;
 

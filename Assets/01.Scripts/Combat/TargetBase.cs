@@ -78,14 +78,41 @@ public class TargetBase : MonoBehaviour, IAgentComponent
         if (_health == null)
             _health = GetComponentInChildren<Health>(true);
 
-        if (_colliders == null || _colliders.Length == 0)
-            _colliders = GetComponentsInChildren<Collider2D>(true);
+        if (HasNoCollider())
+            RefreshColliders();
 
         if (_health != null)
             _health.OnDeadEvent += HandleDead;
 
         CurrentTargetType = _defaultTargetType;
         ApplyLayer(CurrentTargetType);
+    }
+
+    /// <summary>
+    /// 히트박스를 다시 모은다. <b>몸이 갈아끼워지면 불러야 한다.</b>
+    ///
+    /// 파츠가 프리팹에서 생성되므로 콜라이더도 같이 생겼다 없어진다. 초기화 때 한 번만 모으면
+    /// 그 뒤에 붙은 몸은 피격 판정이 통째로 빠지고, <b>아무 에러도 나지 않는다.</b>
+    /// 레이어도 다시 입혀야 한다 — 새로 생긴 콜라이더는 프리팹의 레이어를 달고 온다.
+    /// </summary>
+    public void RefreshColliders()
+    {
+        _colliders = GetComponentsInChildren<Collider2D>(true);
+
+        ApplyLayer(CurrentTargetType);
+    }
+
+    private bool HasNoCollider()
+    {
+        if (_colliders == null || _colliders.Length == 0) return true;
+
+        for (int i = 0; i < _colliders.Length; i++)
+        {
+            if (_colliders[i] != null) return false;
+        }
+
+        // 길이는 있는데 전부 비어 있는 경우. 몸이 갈리고 난 뒤의 모습이다.
+        return true;
     }
 
     /// <summary>

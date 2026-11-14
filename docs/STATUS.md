@@ -58,12 +58,14 @@
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
 | 포복(Crawl) | 🟡 | 입력만 받고 이동에 반영 안 됨 |
-| 재장전 | ❌ | **과열**이 대체. 탄은 적재함에서 자동 급탄 |
+| 재장전 | ❌ | 제거됨. R 키도 사라졌다 |
 | 상호작용(Interact/Use) | 🟡 | 입력만 있고 대상 탐색 없음 |
 | 장비 → 스탯 연결 | ✅ | `MechaPartController`. 슬롯별 origin, 교체 시 먼저 걷어냄 |
 | 기체 회전 | ✅ | `MechaRotationController`. 상체가 먼저, 하체가 뒤따라옴 |
-| 출격 로드아웃 | ✅ | `MechaLoadoutSO` + `MechaPartController`. 새 판 리셋도 여기서 |
-| 기체 조립 (소켓·프리팹) | ⬜ | `PartView` / `MechaAssembler` / Part Forge |
+| 출격 로드아웃 | ✅ | `MechaLoadoutSO`(장착 + 적재) + `MechaPartController`. 새 판 리셋도 여기서 |
+| Part Forge 창 | ✅ | `Tools > Mecha > Part Forge`. 생성·설정·로드아웃·Play 한 흐름 |
+| 기체 조립 (소켓·프리팹) | ✅ | `MechaSocket` / `MechaPartView` / `MechaAssembler` + Part Forge |
+| 발사 애니메이션 | ✅ | `WeaponFireAnimator`. Animator.Play 직접 호출 |
 
 ## 아이템 / 인벤토리
 
@@ -107,7 +109,7 @@
 | 모듈 (`ModuleDataSO`) | ✅ | 스탯만 바꾸면 프리팹 불필요 |
 | 발사 모드 | ✅ | Single / Burst / Auto / Charge 전부 동작 |
 | 실제 발사 로직 | ✅ | `PlayerRangedWeapon`. 쿨타임, 산탄, 반동 이벤트 |
-| 탄약 / 재장전 | 🔄 | `WeaponAmmoController`가 탄창에서 **급탄기**가 됨 |
+| 탄약 급탄 | ✅ | `WeaponAmmoController`. 적재함에서 바로 당겨 쓴다 |
 | 과열 | ⬜ | 재장전을 대신하는 제재한. `WeaponHeatController` |
 | 근접 무기 | ⬜ | `PlayerWeaponBase`를 상속해 캐스터를 직접 Cast하면 됩니다 |
 | 도구 (블럭 파괴) | ⬜ | 팔 슬롯을 무기와 공유하되 **판정은 분리** |
@@ -118,8 +120,8 @@
 |---|---|---|
 | 구경 (`AmmoCaliberType`) | ✅ | 무기 ↔ 탄약 호환 판정의 유일한 키 |
 | 탄종 (`AmmoDataSO`) | ✅ | `WeaponStatDelta`로 성능 차이. 모듈과 같은 방식 |
-| 탄창 상태 | 🔄 | **장전 탄종만 남고 잔탄은 사라짐.** 적재함 재고가 곧 잔탄 |
-| 재장전 | ❌ | 적재함에서 자동 급탄. 다 떨어지면 그 무기는 끝 |
+| 장전 탄종 | ✅ | `WeaponItemInstance`가 들고 간다. 잔탄은 적재함 재고 |
+| 자동 급탄 | ✅ | 다 떨어지면 그 무기는 끝. 보급 전까지 못 쏜다 |
 | 탄종별 투사체 | ✅ | `AmmoDataSO.ProjectilePool`. 비우면 무기 기본 투사체 |
 | 탄약 HUD | 🔄 | `PartEquipmentStatus`를 좌/우 2개로. `PopupReload`는 폐기 |
 | 탄종 전환 UI | 🔄 | 안전지대 로드아웃에서 지정 (`CollectAvailableAmmo` 재사용) |
