@@ -21,6 +21,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
     private Agent _owner;
     private AgentStatus _status;
+    private ShieldStatus _shield;
     private bool _initialized;
 
     private void Awake()
@@ -55,6 +56,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
         // Agent가 없으면 스탯도 없다. 이 경우 인스펙터의 _maxHealth를 그대로 쓴다.
         _status = _owner != null ? _owner.GetCompo<AgentStatus>() : null;
+        _shield = _owner != null ? _owner.GetCompo<ShieldStatus>() : null;
 
         if (_status != null)
         {
@@ -69,6 +71,14 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
     {
         if (IsDead || IsInvincible || damageData.damage <= 0f)
             return DamageResponse.Miss;
+
+        // 실드가 먼저 받는다. 남아 있었으면 그 타격은 거기서 끝난다 — 방어력도 타지 않는다.
+        // 피격 이벤트는 그대로 쏜다. 맞았다는 사실(흔들림·피격 표시)은 실드에 막혀도 같다.
+        if (_shield != null && _shield.TryAbsorb(damageData.damage))
+        {
+            OnDamagedEvent?.Invoke(damageData);
+            return DamageResponse.Hit();
+        }
 
         float defense = _status != null ? _status.Defense.TotalValue : 0f;
         float resistance = _status != null ? _status.DamageResistance.TotalValue : 0f;
@@ -85,7 +95,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
     /// <summary>
     /// 방어력·저항을 무시하는 피해. 굶주림·탈수처럼 전투가 아닌 원인에 쓴다.
-    /// 갑옷을 입었다고 덜 굶지는 않는다.
+    /// 갑옷을 입었다고 덜 굶지는 않는다. 실드도 거치지 않는다 — 연료 고갈은 안에서 생기는 손상이다.
     /// </summary>
     public void ApplyDirectDamage(float amount)
     {
@@ -104,12 +114,15 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         SetHealth(_currentHealth + amount);
     }
 
-    /// <summary>풀에서 재사용하거나 리스폰할 때 호출.</summary>
+    /// <summary>풀에서 재사용하거나 리스폰할 때 호출. 실드도 같이 채운다.</summary>
     public void ResetHealth()
     {
         IsDead = false;
         IsInvincible = false;
         SetHealth(_maxHealth);
+
+        if (_shield != null)
+            _shield.ResetShield();
     }
 
     private void SetHealth(float value)

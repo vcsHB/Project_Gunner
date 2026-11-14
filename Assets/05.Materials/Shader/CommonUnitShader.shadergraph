@@ -1016,7 +1016,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "7ac745b7fd4b464db346c0dc54a04e98",
     "m_Id": 0,
-    "m_DisplayName": "HitBlink",
+    "m_DisplayName": "HitBlinkLevel",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
@@ -1524,7 +1524,7 @@
     "m_PerRendererData": false,
     "m_customAttributes": [],
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"fileID\":2800000,\"guid\":\"c9a94a537d4ce404d8c051262e775774\",\"type\":3}}",
+        "m_SerializedTexture": "{\"texture\":{\"fileID\":2800000,\"guid\":\"701bdf2292304274994900e48a5708da\",\"type\":3}}",
         "m_Guid": ""
     },
     "isMainTexture": false,

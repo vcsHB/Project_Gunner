@@ -22,7 +22,11 @@ grep -c "내파일.cs" Assembly-CSharp.csproj   # 0 이면 이 경우
 
 유니티를 껐다 켜면 풀릴 수도 있지만, 이름을 바꾸는 쪽이 빠르고 확실합니다.
 
-## MCP로 메뉴 아이템을 못 부른다
+## ~~MCP로 메뉴 아이템을 못 부른다~~ (mcp-unity 시절)
+
+> **2026-11-15에 MCP 서버를 바꿨습니다.** 아래는 `CoderGamester/mcp-unity`에서 겪은 일입니다.
+> `CoplayDev/unity-mcp`는 `execute_code`로 파일을 만들지 않고 코드를 돌리므로 이 경로 자체가 없어졌습니다.
+> 다만 **메뉴 경로를 ASCII로 짓는 습관은 유지하세요** — 자동화에서 한글 경로는 여전히 위험합니다.
 
 **증상** — `execute_menu_item`이 `ExecuteMenuItem failed because there is no menu named '...'`로 실패합니다. 메뉴는 분명히 에디터에 떠 있습니다.
 
@@ -258,7 +262,11 @@ batch_execute(operations: [{tool:"set_play_mode_status", params:{action:"step"}}
 
 ---
 
-## MCP의 컴포넌트 속성 덤프에서 참조형이 null로 나올 수 있다
+## ~~컴포넌트 속성 덤프에서 참조형이 null로 나온다~~ (mcp-unity 시절)
+
+> **2026-11-15에 MCP 서버를 바꿨습니다.** 이건 `CoderGamester/mcp-unity`의 리플렉션 덤프 문제로 보입니다.
+> `CoplayDev/unity-mcp`는 컴포넌트 단위 리소스로 읽으므로 같은 함정이 생길 구조가 아닙니다.
+> 그래도 **교훈은 남습니다** — 도구가 돌려준 값과 실제 런타임 상태가 다를 수 있습니다.
 
 **증상** — `get_gameobject`로 읽은 컴포넌트 속성에서 `Status`, `Ammo`, `Instance`, `Inventory`, `Core` 같은 **참조형 프로퍼티가 전부 null**로 나왔습니다. 그런데 바로 뒤에 설정되는 값(`CurrentFireMode`)은 제대로 들어 있고, 다시 읽으면 null이 아닌 때도 있었습니다.
 

@@ -5,6 +5,9 @@ public class PartPlayerStatus : MonoBehaviour
     [Header("Default Status Displays")]
     [SerializeField] private SimpleGauge _healthGauge;
 
+    [Tooltip("체력 게이지와 같은 자리에 겹친다. 실드가 남아 있으면 이것만, 없으면 체력만 보인다. 비워두면 자식 중 이름이 GaugeShield인 게이지를 찾는다.")]
+    [SerializeField] private SimpleGauge _shieldGauge;
+
     [UnityEngine.Serialization.FormerlySerializedAs("_staminaGauge")]
     [SerializeField] private SimpleGauge _powerGauge;
     [UnityEngine.Serialization.FormerlySerializedAs("_hungerGauge")]
@@ -15,6 +18,22 @@ public class PartPlayerStatus : MonoBehaviour
 
     private Health _health;
     private VitalStatus _vitals;
+    private ShieldStatus _shield;
+
+    private const string ShieldGaugeName = "GaugeShield";
+
+    private void Awake()
+    {
+        if (_shieldGauge != null) return;
+
+        foreach (SimpleGauge gauge in GetComponentsInChildren<SimpleGauge>(true))
+        {
+            if (gauge.name != ShieldGaugeName) continue;
+
+            _shieldGauge = gauge;
+            break;
+        }
+    }
 
     public void Bind(Player player)
     {
@@ -27,6 +46,17 @@ public class PartPlayerStatus : MonoBehaviour
         {
             _health.OnHealthChangedEvent += HandleHealthChanged;
             HandleHealthChanged(_health.CurrentHealth, _health.MaxHealth);
+        }
+
+        _shield = player.GetCompo<ShieldStatus>();
+        if (_shield != null)
+        {
+            _shield.OnShieldChangedEvent += HandleShieldChanged;
+            HandleShieldChanged(_shield.Current, _shield.Max);
+        }
+        else
+        {
+            HandleShieldChanged(0f, 0f);
         }
 
         _vitals = player.GetCompo<VitalStatus>();
@@ -57,6 +87,12 @@ public class PartPlayerStatus : MonoBehaviour
             _vitals = null;
         }
 
+        if (_shield != null)
+        {
+            _shield.OnShieldChangedEvent -= HandleShieldChanged;
+            _shield = null;
+        }
+
         if (_conditionDisplayGroup != null)
             _conditionDisplayGroup.Unbind();
     }
@@ -81,6 +117,33 @@ public class PartPlayerStatus : MonoBehaviour
     }
 
     private void OnDestroy() => Unbind();
+
+    /// <summary>
+    /// 실드와 체력 게이지는 같은 자리에 겹쳐 있다. <b>실드가 남아 있으면 실드만, 없으면 체력만</b> 보인다.
+    /// 실드가 깨진 순간(0) 체력 게이지로 바뀌고, 다시 차기 시작하면 실드 게이지로 돌아온다.
+    /// 숨겨진 쪽도 값은 계속 갱신된다 — 켜지는 순간 옛 값이 보이면 안 된다.
+    /// </summary>
+    private void HandleShieldChanged(float current, float max)
+    {
+        bool showShield = _shieldGauge != null && max > 0f && current > 0f;
+
+        if (_shieldGauge != null)
+        {
+            SetGaugeVisible(_shieldGauge, showShield);
+
+            if (max > 0f)
+                _shieldGauge.UpdateProgress(Mathf.CeilToInt(current), Mathf.CeilToInt(max));
+        }
+
+        if (_healthGauge != null)
+            SetGaugeVisible(_healthGauge, !showShield);
+    }
+
+    private static void SetGaugeVisible(SimpleGauge gauge, bool visible)
+    {
+        if (gauge.gameObject.activeSelf != visible)
+            gauge.gameObject.SetActive(visible);
+    }
 
     private void HandleHealthChanged(float current, float max)
     {

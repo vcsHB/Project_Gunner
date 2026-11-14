@@ -15,6 +15,11 @@ public enum StatusType
     // 기체 자원의 최대값. 현재값은 VitalStatus가 들고 간다.
     MaxPower,
     MaxFuel,
+
+    // 실드. 현재값은 ShieldStatus가 들고 간다. 코어가 Deltas로 준다.
+    MaxShield,
+    ShieldRegenDelay,
+    ShieldRegenRate,
 }
 
 public class AgentStatus : MonoBehaviour, IAgentComponent
@@ -36,6 +41,14 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     [UnityEngine.Serialization.FormerlySerializedAs("maxHunger")]
     [SerializeField] private Status<float> maxFuel = new(100f);
 
+    [Header("실드")]
+    [Tooltip("0이면 실드가 없다. 메카가 아닌 유닛의 기본값.")]
+    [SerializeField] private Status<float> maxShield = new(0f);
+    [Tooltip("마지막으로 맞은 뒤 회복이 시작되기까지(초).")]
+    [SerializeField] private Status<float> shieldRegenDelay = new(20f);
+    [Tooltip("회복 중 초당 차는 양.")]
+    [SerializeField] private Status<float> shieldRegenRate = new(10f);
+
     public Status<float> Damage => damage;
     public Status<float> Health => health;
     public Status<float> Defense => defense;
@@ -46,6 +59,9 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
     public Status<int> InventorySize => inventorySize;
     public Status<float> MaxPower => maxPower;
     public Status<float> MaxFuel => maxFuel;
+    public Status<float> MaxShield => maxShield;
+    public Status<float> ShieldRegenDelay => shieldRegenDelay;
+    public Status<float> ShieldRegenRate => shieldRegenRate;
 
     /// <summary>VitalStatus가 종류로 최대값을 찾을 때 쓴다.</summary>
     public Status<float> GetMaxVital(VitalType type)
@@ -79,6 +95,9 @@ public class AgentStatus : MonoBehaviour, IAgentComponent
             { StatusType.InventorySize, inventorySize },
             { StatusType.MaxPower, maxPower },
             { StatusType.MaxFuel, maxFuel },
+            { StatusType.MaxShield, maxShield },
+            { StatusType.ShieldRegenDelay, shieldRegenDelay },
+            { StatusType.ShieldRegenRate, shieldRegenRate },
         };
     }
 

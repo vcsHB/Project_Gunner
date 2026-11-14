@@ -63,6 +63,7 @@
 | 핫바 (인벤토리 앞 7칸) | ❌ | 무장은 장비 슬롯이 정한다 |
 | 무기 들기 | ✅ | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
+| 실드 | 🟡 | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. **적 프리팹에는 아직 없음** |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
 | 포복(Crawl) | ❌ | 폐기. 액션이 `Glide`로 이름이 바뀌었다 |
 | 재장전 | ❌ | 제거됨. R 키도 사라졌다 |
@@ -148,7 +149,7 @@
 | 아이템 선택 | ✅ | `ItemSelectionController`, 어느 칸이든 클릭 |
 | 버리기 영역 | 🟡 | `ItemDropArea` — 이벤트만 쏨. 월드 픽업 필요 |
 | PartItemDetail / ItemPreview | ⬜ | 모듈 슬롯 배치 방식 미정 |
-| PartPlayerStatus | ✅ | 체력 + 전력 / 연료 게이지 |
+| PartPlayerStatus | ✅ | 체력·실드(겹침, 실드 남으면 실드만 / 0이면 체력만) + 전력 / 연료 게이지 |
 | PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
 | PartEquipmentStatus | ✅ | 팔마다 하나. 잔탄 + 열 게이지(잠기면 남은 시간). **위치·크기는 임시** |

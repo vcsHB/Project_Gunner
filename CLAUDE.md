@@ -67,20 +67,43 @@ dotnet build Assembly-CSharp-Editor.csproj -v:q -nologo -clp:ErrorsOnly   # 에�
 
 | 막힌 것 | 대신 |
 |---|---|
-| `*.unity`, `*.prefab` | 내용은 MCP `get_gameobject`. GUID 참조 찾기는 Bash `grep -rl <guid> Assets --include=*.unity --include=*.prefab` |
+| `*.unity`, `*.prefab` | 내용은 MCP (`manage_prefabs action=get_hierarchy`, 컴포넌트 리소스). GUID 참조 찾기는 Bash `grep -rl <guid> Assets --include=*.unity --include=*.prefab` |
 | `*.csproj` | 새 파일이 빌드에 들어갔는지는 Bash `grep -c <파일명> Assembly-CSharp.csproj` |
 | `Library/`, `Temp/`, `Logs/`, `Assets/11.Fonts/` | 읽을 일 없음 |
 
 SO `.asset`은 막지 않았습니다. 데이터 값을 볼 때는 읽어도 됩니다.
 
-### MCP(mcp-unity) 사용 규칙
+### MCP(MCP for Unity) 사용 규칙
 
-- `get_scenes_hierarchy`(씬 전체 트리)는 쓰지 않는다. 오브젝트 이름·경로를 지정해서 `get_gameobject`로 조회한다. 경로를 모를 때만 예외로 쓴다.
-- `get_gameobject`는 기본값이 무겁다(자식 2단계 + 모든 직렬화 값). 구조만 볼 때는 `includeComponentProperties: false`, 자식이 필요 없으면 `maxDepth: 0`.
-- `get_console_logs`는 `logType: "error"`, `includeStackTrace: false`, `limit: 10` 정도로. 스택트레이스는 원인 추적이 필요할 때만 켠다.
-- 여러 오브젝트를 수정할 때는 `batch_execute`로 한 번에 보낸다.
-- 컴파일 확인: 에디터가 열려 있으면 `recompile_scripts` + 에러 로그, 닫혀 있으면 위 `dotnet build ... -clp:ErrorsOnly`.
-- 원인을 모르는 버그를 추적할 때는 좁은 조회를 여러 번 하는 것보다 한 번 넓게 보는 게 쌀 수 있다. 그때는 넓게 봐도 된다.
+> 2026-11-15에 `CoderGamester/mcp-unity` → `CoplayDev/unity-mcp`로 바꿨습니다.
+> 바꾼 이유: 프리팹·SO를 못 고치고, 오브젝트 참조를 못 넣고, 컴포넌트 하나만 읽을 수 없어서
+> 매번 일회성 에디터 스크립트를 만들어야 했습니다. ([INCIDENTS.md](docs/INCIDENTS.md))
+
+**읽기는 좁게.** 컴포넌트 하나는 `mcpforunity://scene/gameobject/{id}/component/{name}` 리소스로 읽습니다.
+GameObject 전체 덤프는 한 번에 수천 토큰이라 구조만 볼 때도 쓰지 않습니다.
+
+**참조를 넣을 수 있습니다.** `{"guid": "..."}` / `{"path": "Assets/..."}` / `{"instanceID": 123}`.
+스프라이트 서브에셋은 `{"guid": "...", "spriteName": "..."}`. **이제 배선 때문에 에디터 스크립트를 쓰지 마세요.**
+
+| 하려는 일 | 도구 |
+|---|---|
+| 프리팹 수정 (에디터에 안 열고) | `manage_prefabs` `action=modify_contents` + `component_properties` |
+| 씬 오브젝트의 컴포넌트 | `manage_components` (`add` / `remove` / `set_property`) |
+| SO 에셋 값 | `manage_scriptable_object` — **YAML 직접 편집 금지** |
+| 한 번만 돌릴 에디터 코드 | `execute_code` — 파일을 만들지 않는다 |
+| 콘솔 | `read_console` (`error`, 스택트레이스는 필요할 때만) |
+| 플레이 모드 | `manage_editor` |
+| 여러 수정 | `batch_execute` |
+
+**일회성 에디터 스크립트를 만들지 마세요.** `execute_code`가 메모리에서 컴파일합니다 —
+파일 생성 → Refresh → 재컴파일 2회 → 실행 → 삭제의 왕복이 전부 없어집니다.
+
+**플레이 모드 검증** — 에디터가 비활성이면 플레이 모드가 멈춥니다. 값이 두 번 연속 똑같으면
+로직을 의심하기 전에 시간이 흐르는지 확인하세요. ([INCIDENTS.md](docs/INCIDENTS.md))
+
+**컴파일 확인** — 에디터가 열려 있으면 MCP로, 닫혀 있으면 위 `dotnet build ... -clp:ErrorsOnly`.
+
+원인을 모르는 버그를 추적할 때는 좁은 조회를 여러 번 하는 것보다 한 번 넓게 보는 게 쌀 수 있습니다.
 
 ## 폴더
 

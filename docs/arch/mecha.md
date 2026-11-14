@@ -61,3 +61,26 @@ MechaPartController  ← PartDataSO.Deltas 를 AgentStatus modifier 로
 
 연료가 0이면 **이동속도 페널티와 지속 손상이 둘 다** 들어갑니다. 페널티는 modifier라 켜고 끄는 순간에만 손대고, 손상은 `Health.ApplyDirectDamage`로 방어력을 무시합니다 — 장갑을 둘렀다고 연료가 덜 떨어지지는 않습니다. 제너레이터도 연료를 먹으므로 전력 회복도 같이 느려집니다.
 
+
+## 실드
+
+`ShieldStatus`가 현재값을, `AgentStatus`가 최대값·회복 대기·회복 속도(`MaxShield` / `ShieldRegenDelay` / `ShieldRegenRate`)를 듭니다. 전력·연료와 같은 구조입니다. **코어가 `Deltas`로 실드를 줍니다** — 기본 `MaxShield`가 0이라 코어가 없거나 컴포넌트가 없으면 실드 없는 유닛입니다.
+
+```
+Health.ApplyDamage
+  └─ ShieldStatus.TryAbsorb(원래 피해)   ← 방어력 계산 전
+        실드 > 0 → 실드만 깎고 끝 (넘친 피해는 버린다)
+        실드 = 0 → 타이머만 초기화, 체력으로 진행
+```
+
+- **실드가 조금이라도 남아 있으면 그 타격은 거기서 끝납니다.** 넘친 피해가 체력으로 넘어가지 않습니다 (2026-11-15 결정).
+- **실드는 방어력·저항을 타지 않습니다.** 장갑은 기체 껍데기 수치입니다.
+- **피격 이벤트(`OnDamagedEvent`)는 실드에 막혀도 쏩니다.** 맞았다는 사실(흔들림·피격 표시)은 같습니다. 체력 변화(`OnHealthChangedEvent`)는 안 옵니다.
+- `ApplyDirectDamage`(연료 고갈)는 실드를 거치지 않습니다.
+- 맞을 때마다(실드가 0이어도) 대기 타이머가 처음부터. 대기가 끝나면 **전력을 쓰며** 찹니다(`_powerPerShield`). 전력이 모자라거나 잠기면 회복만 멈추고 타이머는 그대로 둡니다.
+- 최대값이 바뀌면 비율을 유지합니다. 최대 0 → 양수(출격 시 코어 장착)는 가득 채웁니다.
+- `Health.ResetHealth()`가 실드도 채웁니다. 풀 재사용·리스폰이 따로 부를 필요 없습니다.
+
+**전력 회복과 엮입니다.** `VitalStatus`는 전력을 쓴 뒤 `_powerRegenDelay`(1초) 동안 안 찹니다. 실드가 차는 동안은 전력이 계속 줄기만 하므로, 실드 총량 × `_powerPerShield`가 최대 전력보다 크면 회복 도중 전력이 잠겨 딸꾹질합니다.
+
+HUD는 `PartPlayerStatus._shieldGauge`(비우면 자식 `GaugeShield`를 찾음)입니다. **체력 게이지와 같은 자리에 겹쳐 있어서, 실드가 남아 있으면 실드만, 0이면(깨짐·실드 없는 기체) 체력만 보입니다.** 숨겨진 쪽도 값은 계속 갱신합니다.
