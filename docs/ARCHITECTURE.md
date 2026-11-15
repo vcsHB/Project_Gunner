@@ -15,6 +15,7 @@
 | [arch/projectile.md](arch/projectile.md) | 발사와 투사체(+X 규칙, 리소스 방향, CastPower, 발사 모드, 프리팹 구조) | 발사·투사체, 스프라이트 방향 |
 | [arch/enemy.md](arch/enemy.md) | 적(머리/다리, 상태 클래스, 선딜, 적도 메카다, AI 방아쇠, 구경 표) | 적 AI, 적 로드아웃 |
 | [arch/input.md](arch/input.md) | 조준 · 카메라 · 팔에 달린 것이 입력을 해석한다 · 입력 차단 · 입력 · 이동(착륙/활공) | 입력, 조준점, 카메라 흔들림 |
+| [arch/feedback.md](arch/feedback.md) | 진입점(`EffectPlayer`·`SoundManager`) · 핸들 · `ParticleEffect` · `SoundPlayer` 풀과 거르기 · 귀(`AudioListenerFollow`) · 피드백 컴포넌트 위치 | 이펙트·소리 재생, 새 이펙트 등록 |
 
 ## 파일 사이의 연결
 

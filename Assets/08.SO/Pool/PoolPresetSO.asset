@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: PoolPresetSO
   m_EditorClassIdentifier: Assembly-CSharp::PoolPresetSO
   _description: 
-  _types: 0100000002000000
+  _types: 01000000020000000300000004000000

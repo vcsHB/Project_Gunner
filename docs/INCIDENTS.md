@@ -228,11 +228,9 @@ assets.Sort((a, b) => {
 
 **원인** — 유니티 에디터는 포커스를 잃으면 기본적으로 플레이 모드를 멈춥니다(Run In Background 꺼짐). MCP 요청은 백그라운드에서 오므로 **첫 프레임만 돌고 멈춘 상태**를 계속 읽게 됩니다.
 
-**대응** — `set_play_mode_status`의 `step`으로 프레임을 하나씩 넘깁니다. `batch_execute`에 `step`을 100개까지 넣을 수 있어서, 한 번에 100프레임(약 1.6초)을 진행시킬 수 있습니다.
+**대응** — 플레이 모드에 들어간 뒤 `execute_code`로 `Application.runInBackground = true;`를 한 번 실행합니다. 그 뒤로는 포커스가 없어도 시간이 흐릅니다(플레이 모드를 나가면 원래대로). (2026-11-15, CoplayDev MCP에서 확인)
 
-```
-batch_execute(operations: [{tool:"set_play_mode_status", params:{action:"step"}} × 100])
-```
+옛 MCP(`mcp-unity`)에서는 `set_play_mode_status`의 `step`을 `batch_execute`로 100개씩 넣어 프레임을 넘겼습니다.
 
 **교훈** — 값이 두 번 연속 완전히 같으면 **로직을 의심하기 전에 시간이 흐르고 있는지**를 확인하세요. 멈춘 것과 안 움직이는 것은 구별되지 않습니다. 스텝으로 넘겨서 값이 바뀌면 로직은 멀쩡한 것입니다.
 

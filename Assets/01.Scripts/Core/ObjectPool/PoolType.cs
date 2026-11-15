@@ -12,4 +12,10 @@ public enum PoolType
     // Unnamed
     Bullet_0 = 1,
     WorldItem = 2,
+
+    // Sound
+    SoundPlayer = 3,
+
+    // Effect
+    FX_Test_Burst = 4,
 }

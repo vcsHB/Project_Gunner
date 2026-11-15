@@ -187,7 +187,7 @@
 ## 기타
 
 - `CameraFollowEffector` — 비어 있음
-- `SoundPlayer` — 비어 있음
+- 오디오 믹서 에셋 없음 — 볼륨을 나눠 조절할 수 없다 (M3 완료 조건 4). BGM 재생기도 없음
 - `EnemyManager`, 적 AI — 비어 있음
 - `MapGenerator` / 블럭 파괴·설치 — 미착수
 - 숙련도 / 테크트리 — 미착수

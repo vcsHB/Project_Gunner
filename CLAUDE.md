@@ -90,7 +90,7 @@ GameObject 전체 덤프는 한 번에 수천 토큰이라 구조만 볼 때도 
 | 프리팹 수정 (에디터에 안 열고) | `manage_prefabs` `action=modify_contents` + `component_properties` |
 | 씬 오브젝트의 컴포넌트 | `manage_components` (`add` / `remove` / `set_property`) |
 | SO 에셋 값 | `manage_scriptable_object` — **YAML 직접 편집 금지** |
-| 한 번만 돌릴 에디터 코드 | `execute_code` — 파일을 만들지 않는다 |
+| 한 번만 돌릴 에디터 코드 | `execute_code` — 파일을 만들지 않는다. **C# 6(CodeDom)** 이라 로컬 함수 대신 `System.Action` 람다, `Object` 대신 `UnityEngine.Object` |
 | 콘솔 | `read_console` (`error`, 스택트레이스는 필요할 때만) |
 | 플레이 모드 | `manage_editor` |
 | 여러 수정 | `batch_execute` |

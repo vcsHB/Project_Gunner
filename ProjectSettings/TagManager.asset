@@ -44,13 +44,16 @@ TagManager:
   - name: Background
     uniqueID: 1558458393
     locked: 0
+  - name: Effect_Back
+    uniqueID: 20938059
+    locked: 0
   - name: Object
     uniqueID: 2430268619
     locked: 0
   - name: Unit
     uniqueID: 4244954157
     locked: 0
-  - name: Effect
+  - name: Effect_Front
     uniqueID: 592633531
     locked: 0
   - name: UI

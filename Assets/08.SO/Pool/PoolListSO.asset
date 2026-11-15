@@ -25,3 +25,17 @@ MonoBehaviour:
       _objectName: 
       _prefab: {fileID: 7406001809311160977, guid: 6b7d8a82661283a4fb2f19eb2515a22f, type: 3}
       _prewarmCount: 64
+  - _name: Sound
+    _items:
+    - _id: 3
+      _enumName: SoundPlayer
+      _objectName: 
+      _prefab: {fileID: 8929388921220073470, guid: e4351d4a614725a45bf62627434d5e20, type: 3}
+      _prewarmCount: 16
+  - _name: Effect
+    _items:
+    - _id: 4
+      _enumName: FX_Test_Burst
+      _objectName: 
+      _prefab: {fileID: 433344442465831670, guid: 90bbbcef29694424a8ba1c5f9f2a9e49, type: 3}
+      _prewarmCount: 4

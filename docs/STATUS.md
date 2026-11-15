@@ -177,7 +177,8 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 | 발사 / 피격 / 착륙 화면 흔들림 | ✅ (`WeaponFireCameraShake`, `DamageCameraShake`, `SkidCameraShake`) |
 | CameraShakeEffector | ✅ (`CameraRig` 아래 `MainCamera`를 흔든다) |
 | Map / MapGenerator | ⬜ |
-| SoundPlayer | ⬜ |
+| 이펙트 / 사운드 재생 | ✅ 구조 (`EffectPlayer`, `SoundManager`+`SoundPlayer` 풀, `AudioListenerFollow`). 붙은 이벤트 없음 — M3 2단계부터 ([arch/feedback](arch/feedback.md)) |
+| 오디오 믹서 | ⬜ (`Master / BGM / SFX / UI`. `SoundManager._defaultGroup`에 SFX를 넣으면 된다) |
 | 블럭 파괴·설치 | ⬜ |
 | 숙련도 / 테크트리 | ⬜ |
 | 멀티플레이 | ⬜ |
