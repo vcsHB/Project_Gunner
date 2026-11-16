@@ -214,6 +214,10 @@ public abstract class HandController : MonoBehaviour, IAgentComponent
         _itemIds[index] = stack.itemId;
         _instanceIds[index] = stack.instanceId;
 
+        // 팔에도 히트박스가 있다(부위파괴). 조립기가 콜라이더를 모은 뒤에 생기므로 다시 모으게 해야 한다 —
+        // 안 그러면 팔 콜라이더가 프리팹 레이어를 단 채로 남아 아무것도 안 맞는다.
+        Owner.GetCompo<TargetBase>()?.RefreshColliders();
+
         OnHandChangedEvent?.Invoke(_mounts[index].slot, hand);
     }
 

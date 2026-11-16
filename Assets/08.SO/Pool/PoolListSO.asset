@@ -34,8 +34,23 @@ MonoBehaviour:
       _prewarmCount: 16
   - _name: Effect
     _items:
-    - _id: 4
-      _enumName: FX_Test_Burst
+    - _id: 5
+      _enumName: FX_DefaultHit
       _objectName: 
-      _prefab: {fileID: 433344442465831670, guid: 90bbbcef29694424a8ba1c5f9f2a9e49, type: 3}
-      _prewarmCount: 4
+      _prefab: {fileID: 6262271479318424383, guid: ba7f5469df17c5d44b4e2ab71337ccbc, type: 3}
+      _prewarmCount: 16
+    - _id: 6
+      _enumName: FX_ShieldHit
+      _objectName: 
+      _prefab: {fileID: 8168173154193441387, guid: d7841896a2bae28479ce747e8aae08ba, type: 3}
+      _prewarmCount: 8
+    - _id: 7
+      _enumName: FX_GunFire_1
+      _objectName: 
+      _prefab: {fileID: 7287384492872189829, guid: 368b1b11f1719d445945a43320fe0d33, type: 3}
+      _prewarmCount: 16
+    - _id: 8
+      _enumName: FX_GroundScratch
+      _objectName: 
+      _prefab: {fileID: 3766824325509519986, guid: db6d93b65a46f9d48b2f6bb54387d469, type: 3}
+      _prewarmCount: 2

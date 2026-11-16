@@ -22,6 +22,16 @@ public class ProjectileCaster : CasterBase
 
     private Vector2 _previousPosition;
 
+    // 이번 프레임에 훑은 구간. 맞은 지점·방향을 여기서 구한다.
+    // 캐스터 위치(이동이 끝난 뒤)를 기준으로 하면 탄이 이미 대상 중심을 지나쳐 방향이 뒤집힌다.
+    private Vector2 _sweepStart;
+    private Vector2 _sweepDirection = Vector2.right;
+
+    public override Vector2 HitOrigin => _sweepStart;
+
+    /// <summary>투사체는 비행 방향이 곧 피격 방향이다.</summary>
+    public override Vector2 GetHitDirection(in CastHit hit) => _sweepDirection;
+
     public float Radius
     {
         get => _radius;
@@ -35,6 +45,8 @@ public class ProjectileCaster : CasterBase
     public void ResetTrail()
     {
         _previousPosition = transform.position;
+        _sweepStart = _previousPosition;
+        _sweepDirection = transform.right;
         _hitTargets.Clear();
         Power = null;
     }
@@ -45,11 +57,14 @@ public class ProjectileCaster : CasterBase
         Vector2 delta = current - _previousPosition;
         float distance = delta.magnitude;
 
+        _sweepStart = _previousPosition;
         _previousPosition = current;
 
         // 아직 움직이지 않았으면(발사 첫 프레임) 제자리 원형 질의로 대신한다.
         if (distance <= Mathf.Epsilon)
             return Physics2D.OverlapCircle(current, _radius, filter, buffer);
+
+        _sweepDirection = delta / distance;
 
         int count = Physics2D.CircleCast(
             current - delta, _radius, delta / distance, filter, _sweepBuffer, distance);

@@ -77,6 +77,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Repair",
+                    "type": "Button",
+                    "id": "7c3e2a51-9b4d-4f6e-8a21-3d5c7e9f1b02",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -330,6 +339,17 @@
                     "processors": "",
                     "groups": "XR",
                     "action": "Glide",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4a8d6f13-2c7b-4e95-b0a6-8f1e3c5d7a24",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Repair",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

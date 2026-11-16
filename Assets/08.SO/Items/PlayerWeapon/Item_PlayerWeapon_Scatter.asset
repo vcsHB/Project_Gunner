@@ -24,6 +24,7 @@ MonoBehaviour:
   _description: "\uB2E8\uBC1C\uD615 "
   _localizationKey: Item_Weapon_Scatter
   _allowedSlots: 0100000002000000
+  _partHealth: 150
   playerWeaponPrefab: {fileID: 2678460667007415043, guid: be7a14945f27a2442b4dd4bb5a118bc0, type: 3}
   _category: 3
   _moduleSlots: 040000000100000003000000

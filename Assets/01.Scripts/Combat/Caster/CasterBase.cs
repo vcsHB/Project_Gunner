@@ -94,6 +94,19 @@ public abstract class CasterBase : MonoBehaviour
     protected virtual bool CanAffect(TargetBase target) => true;
 
     /// <summary>
+    /// 공격이 시작된 자리. 맞은 지점(대상 표면에서 이 자리에 가장 가까운 점)을 구하는 기준이다.
+    /// 근접·폭발은 캐스터 중심, 투사체는 이번 프레임에 훑기 시작한 자리.
+    /// </summary>
+    public virtual Vector2 HitOrigin => transform.position;
+
+    /// <summary>공격이 나아가던 방향(공격자 → 대상). 피격 연출의 방향과 넉백에 쓴다.</summary>
+    public virtual Vector2 GetHitDirection(in CastHit hit)
+    {
+        Vector2 delta = hit.Position - HitOrigin;
+        return delta.sqrMagnitude > Mathf.Epsilon ? delta.normalized : (Vector2)transform.right;
+    }
+
+    /// <summary>
     /// 효과가 다 들어간 뒤. 무엇을 맞혔는지 기록해야 하는 쪽(관통 카운트)이 여기서 처리한다.
     /// </summary>
     protected virtual void AfterCast(IReadOnlyList<CastHit> hits) { }

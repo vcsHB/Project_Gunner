@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2837456031949488257}
   - component: {fileID: 5605692553755637323}
+  - component: {fileID: 7654243042117898200}
+  - component: {fileID: 389285014251668019}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -80,7 +82,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -50013139
-  m_SortingLayer: 3
+  m_SortingLayer: 4
   m_SortingOrder: 2
   m_MaskInteraction: 0
   m_Sprite: {fileID: -7846986129049372994, guid: 6b20b914aa1e8cc4589280e68ee7e8a1, type: 3}
@@ -93,6 +95,66 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!61 &7654243042117898200
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594726856096381151}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 2, y: 0.3125}
+    newSize: {x: 8, y: 8}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 2, y: 0.3125}
+  m_EdgeRadius: 0
+--- !u!114 &389285014251668019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 594726856096381151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 239b559d8dbfeae46af6d367790327fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitBox
+  _target: {fileID: 0}
+  _damageMultiplier: 1
 --- !u!1 &857799841882335098
 GameObject:
   m_ObjectHideFlags: 0
@@ -103,6 +165,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5690469464989021128}
   - component: {fileID: 1014361397215951198}
+  - component: {fileID: 592185948031542989}
   m_Layer: 0
   m_Name: PlayerWeapon_IronSpear
   m_TagString: Untagged
@@ -146,6 +209,21 @@ MonoBehaviour:
   - slot: 1
     point: {fileID: 8619234796119753361}
   _muzzle: {fileID: 56937349241318411}
+--- !u!114 &592185948031542989
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 857799841882335098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e6dbd24ebc705d4093fd9a2bd7207ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponFeedback
+  _fireEffect: 7
+  _fireSound: {fileID: 0}
+  _dryFireSound: {fileID: 0}
 --- !u!1 &5238664240873267008
 GameObject:
   m_ObjectHideFlags: 0

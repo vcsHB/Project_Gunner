@@ -43,6 +43,7 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent, IAimDirection
     private Camera _camera;
     private PlayerHandController _weapons;
     private MechaPartController _parts;
+    private PlayerMoveController _move;
 
     private Vector2 _recoilOffset;
 
@@ -87,6 +88,7 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent, IAimDirection
         _camera = CameraManager.HasInstance ? CameraManager.Instance.MainCamera : Camera.main;
         _weapons = _player.GetCompo<PlayerHandController>();
         _parts = _player.GetCompo<MechaPartController>();
+        _move = _player.GetCompo<PlayerMoveController>();
 
         if (_weapons != null)
         {
@@ -133,7 +135,8 @@ public class PlayerAimController : MonoBehaviour, IAgentComponent, IAimDirection
             PointerPosition = _camera.ScreenToWorldPoint(screen);
         }
 
-        Vector2 origin = transform.position;
+        // 활공 중에는 몸체(총구)가 떠 있다. 그림자 자리에서 재면 탄이 커서보다 고도만큼 위로 지나간다.
+        Vector2 origin = (Vector2)transform.position + Vector2.up * (_move != null ? _move.Altitude : 0f);
 
         // 무기 사거리로는 자르지 않는다. 사거리 밖이라고 조준점을 안쪽에 붙들면
         // 커서와 조준점이 갈라져서 조작이 어긋난 것처럼 보인다.

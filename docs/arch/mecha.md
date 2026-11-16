@@ -84,3 +84,55 @@ Health.ApplyDamage
 **전력 회복과 엮입니다.** `VitalStatus`는 전력을 쓴 뒤 `_powerRegenDelay`(1초) 동안 안 찹니다. 실드가 차는 동안은 전력이 계속 줄기만 하므로, 실드 총량 × `_powerPerShield`가 최대 전력보다 크면 회복 도중 전력이 잠겨 딸꾹질합니다.
 
 HUD는 `PartPlayerStatus._shieldGauge`(비우면 자식 `GaugeShield`를 찾음)입니다. **체력 게이지와 같은 자리에 겹쳐 있어서, 실드가 남아 있으면 실드만, 0이면(깨짐·실드 없는 기체) 체력만 보입니다.** 숨겨진 쪽도 값은 계속 갱신합니다.
+
+**실드 원이 판정입니다** (2026-11-17). 플레이어의 `Shied`에 `CircleCollider2D`(트리거) + `HitBox` + `ShieldHitArea`. 실드가 남아 있는 동안만 콜라이더가 켜져서, 실드가 있으면 원(반지름 2)에 먼저 맞고 깨지면 안쪽 파츠 히트박스가 드러납니다. 트리거인 이유 — 캐스터는 트리거도 찾지만(`useTriggers`), 밀어내는 몸이 되면 안 됩니다. 실드가 있는 동안은 **맞는 범위가 커집니다** — 의도된 것입니다.
+
+## 부위파괴
+
+**코어 체력은 `Health` 그대로입니다.** 코어가 0이면 죽습니다(코어 파괴 = 사망). 팔·추진체만 `MechaPartHealth`가 따로 듭니다.
+
+```
+Health.ApplyDamage
+  ├─ ShieldStatus.TryAbsorb          실드 > 0 → 끝
+  ├─ 방어력·저항 계산
+  ├─ MechaPartHealth.TryAbsorb(hitPart, 최종 피해)
+  │     팔·추진체이고 살아 있으면 → 그 부위만 깎고 끝 (넘친 피해는 버린다)
+  └─ 본체(코어) 체력
+```
+
+### 맞은 부위는 붙은 자리가 정한다
+
+`DamageData.hitPart`는 `HitBox.Part`에서 옵니다. **`HitBox.Part`는 가장 가까운 상위 `MechaSocket`의 슬롯**입니다 — 같은 무기 프리팹이 왼팔에도 오른팔에도 붙기 때문에 프리팹에 적을 수 없습니다. 소켓 아래가 아니면(코어 자체, 실드 원, 메카가 아닌 유닛) `Core`입니다.
+
+- 한 번의 훑기에 여러 부위가 걸리면 **먼저 만난 것**이 남습니다(`CasterBase.ResolveHits` — 배율이 같으면 앞의 것). 투사체의 `CircleCast` 결과는 거리순이라 앞에 있는 부위가 맞습니다
+- **팔 히트박스는 팔이 만들어진 뒤에 생깁니다.** 조립기(`MechaAssembler`)가 콜라이더를 모은 다음이라, `HandController.Create`가 `TargetBase.RefreshColliders()`를 다시 부릅니다. 안 부르면 팔 콜라이더가 프리팹 레이어(Default)를 단 채로 남아 **아무것도 안 맞고 에러도 안 납니다**
+- 무기 프리팹의 히트박스는 `Visual`의 `BoxCollider2D` + `HitBox`입니다 (`Part_Weapon_Scatter`, `PlayerWeapon_Scatter`, `PlayerWeapon_IronSpear`)
+
+### 부서지면
+
+| 부위 | 효과 |
+|---|---|
+| 팔 | 그 부위의 히트박스가 꺼진다(뒤의 코어가 대신 맞는다). 무기는 `HandActionBase.SetDisabled(true)` — 쏘지 않고, 빈 격발 소리도 없고, 차지·점사는 **쏘지 않고** 버린다(`Interrupt`) |
+| 추진체 | 내려앉고(빠르면 미끄러진다), 활공·부스터 불가, 이동속도 -40%(`PlayerMoveController._brokenBoosterSpeed`). 이동은 `OnPartDestroyedEvent`를 듣는다 |
+| 코어 | 사망 (`Health.OnDeadEvent`) |
+
+막는 곳은 **쓰는 쪽**(`PlayerRangedWeapon.TryFire`)입니다. 누르는 쪽은 입력과 AI 둘이라, 거기서 막으면 한쪽을 빠뜨립니다.
+
+### 부위 체력의 출처
+
+`EquipableItemDataSO._partHealth`. 무기는 지금 전부 150입니다. **0이면 부서지지 않는 부위**라 맞은 피해가 코어로 갑니다. 코어는 이 값을 쓰지 않습니다(`AgentStatus.Health`).
+
+**부위 체력은 아이템 내구도(`ItemInstance`)와 별개입니다.** 판마다, 그리고 장착이 바뀔 때마다 가득 찬 채로 시작합니다 — 같은 값이면 판이 끝나도 손상이 남아 매 판이 수리부터 시작합니다.
+
+> 추진체는 아직 맞지 않습니다. 추진체 SO·비주얼 프리팹이 없어서 히트박스가 없습니다. 로직은 리플렉션으로 확인했습니다.
+
+## 필드 수리 (R)
+
+`MechaRepair` + `RepairKitDataSO`. R을 누르면 적재함 앞칸부터 키트를 하나 찾아 **쓰고**, `Duration`(4초)에 걸쳐 코어와 **각** 부위를 `Amount`(60)만큼 채웁니다.
+
+- **맞으면 끊깁니다.** 실드에 막혀도 끊깁니다. 키트는 이미 썼으므로 돌아오지 않습니다 — 전투 중에 쓰는 물건이 아닙니다
+- 부서진 부위는 최대치의 `_restoreRatio`(30%)까지 차면 되살아납니다(히트박스·무기 복구, 추진체 감속 해제)
+- 고칠 것이 없거나 키트가 없으면 시작하지 않고 `OnRepairRejectedEvent`(이유 포함)를 쏩니다. 안내음·UI용
+- 게이지는 목표값만 받습니다. 차오르는 것은 로직이고 UI는 끊긴 줄 모릅니다
+- Id 대역 10000~10999 (`RepairKitDataSO`). 폐기된 소모품 대역 4000은 재사용하지 않습니다
+- 테스트 로드아웃(`Loadout_Test`)에 3개 실었습니다

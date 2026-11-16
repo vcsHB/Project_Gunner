@@ -108,6 +108,25 @@ public abstract class HandActionBase : MonoBehaviour
     public virtual void OnUseReleased() { }
 
     /// <summary>
+    /// 쓸 수 없는 상태(팔이 부서짐). 누르는 쪽(입력·AI)은 그대로 두고 <b>쓰는 쪽에서</b> 막는다 —
+    /// 누르는 경로가 둘이라 양쪽에서 막으면 한쪽을 빠뜨린다.
+    /// </summary>
+    public bool IsDisabled { get; private set; }
+
+    public void SetDisabled(bool value)
+    {
+        if (IsDisabled == value) return;
+
+        IsDisabled = value;
+
+        if (value)
+            Interrupt();
+    }
+
+    /// <summary>쓰던 것을 <b>결과 없이</b> 끊는다. 차지 무기가 떼는 순간 쏘면 안 되므로 파생이 덮어쓴다.</summary>
+    protected virtual void Interrupt() => OnUseReleased();
+
+    /// <summary>
     /// 방아쇠를 <b>잡고 있어야</b> 계속 쓰이는가. 연사 무기가 그렇다.
     ///
     /// AI는 손가락이 없어서 이걸 물어봐야 한다. 잡고 있으면 되는 것을 눌렀다 떼면 발사가 끊기고,

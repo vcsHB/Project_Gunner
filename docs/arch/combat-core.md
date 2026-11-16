@@ -89,6 +89,21 @@ final = max(damage - defense, floor) * (1 - clamp01(resistance))
 
 치명타는 `DamageHandler.CalculateDamage`에서 굴립니다. `criticalRate`가 1을 넘으면 치명타 확정 + 초과분이 극대화 확률.
 
+### 피격 정보 — 어디서, 어느 방향으로
+
+`DamageData`는 연출이 쓸 정보도 실어 나릅니다. 채우는 곳은 `DamageCastEffector` 하나입니다.
+
+| 필드 | 뜻 | 누가 정하나 |
+|---|---|---|
+| `direction` | 공격이 나아가던 방향(공격자 → 대상) | `CasterBase.GetHitDirection`. 투사체는 **비행 방향**, 근접·폭발은 캐스터 중심 → 대상 |
+| `hitPoint` / `hasHitPoint` | 대상 콜라이더 표면에서 공격이 온 쪽의 점 | `Collider.ClosestPoint(CasterBase.HitOrigin)`. 투사체의 기준점은 **이번 프레임에 훑기 시작한 자리** |
+| `blockedByShield` | 실드가 받아냈다 | `Health`가 피격 이벤트 직전에 |
+| `hitPart` | 맞은 부위(팔·추진체·코어) | `HitBox.Part` — 히트박스가 붙은 소켓의 슬롯. 히트박스가 없으면 `Core` ([mecha](mecha.md#부위파괴)) |
+
+투사체의 기준점을 캐스터의 현재 위치로 잡으면 안 됩니다 — 이동이 끝난 뒤라 탄이 이미 대상 중심을 지나쳐 있어서 방향이 뒤집힙니다.
+
+지속 피해(`DamageOverTimeCondition`)는 `hasHitPoint`가 false입니다. 피격 연출은 이걸 보고 건너뜁니다.
+
 `AgentStatus.IsResist`(bool)는 **상태이상 면역**이고, 피해 감소는 `DamageResistance`(float)입니다. 이름이 비슷하니 헷갈리지 마세요.
 
 ## 상태이상
@@ -106,6 +121,8 @@ final = max(damage - defense, floor) * (1 - clamp01(resistance))
 `PoolItem.Id`가 생성된 `PoolType` enum 값과 1:1이고 재사용되지 않으므로, 이름을 바꾸거나 순서를 바꿔도 저장된 참조가 안 깨집니다. `PoolManager`는 시작할 때 `(PoolType)Id`가 실제 enum에 있는지 이름까지 대조합니다.
 
 **`PoolType.cs`는 자동 생성 파일입니다.** 직접 고치지 말고 `Tools > Pool Manager`의 Generate Enum을 쓰세요.
+
+`Get<T>()`는 그 타입이 풀 하나에만 있을 때만 됩니다. 이펙트(`ParticleEffect`)처럼 여러 풀이 같은 컴포넌트를 쓰면 `Get(PoolType)`으로 꺼냅니다 — 등록 때는 조용하고, `Get<T>()`를 실제로 부르면 에러가 납니다.
 
 `IPoolable`만으로는 `SelfObject`를 구현할 수 없어(인터페이스에 필드가 없음) `PoolableMono` 추상 클래스가 짝으로 있습니다. 풀 대상은 `PoolableMono`를 상속하세요.
 

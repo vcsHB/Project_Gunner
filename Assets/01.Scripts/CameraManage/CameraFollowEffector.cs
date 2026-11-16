@@ -36,8 +36,13 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
     [Tooltip("줌이 바뀌는 속도.")]
     [SerializeField] private float _zoomSpeed = 6f;
 
+    [Header("활공 줌")]
+    [Tooltip("완전히 떴을 때 orthographicSize에 곱하는 값. 1보다 크면 멀리 보인다. 빨라진 만큼 앞을 더 보여준다.")]
+    [SerializeField, Range(1f, 1.6f)] private float _glideZoomScale = 1.15f;
+
     private Camera _camera;
     private PlayerAimController _aim;
+    private PlayerMoveController _move;
 
     private Vector3 _velocity;
     private float _baseSize;
@@ -80,6 +85,7 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
             _target = player.transform;
 
         _aim = player.GetCompo<PlayerAimController>();
+        _move = player.GetCompo<PlayerMoveController>();
 
         if (_aim != null)
         {
@@ -93,6 +99,8 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
 
     public void Unbind()
     {
+        _move = null;
+
         if (_aim == null) return;
 
         _aim.OnAimingChangedEvent -= HandleAimingChanged;
@@ -154,6 +162,10 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
         if (_camera == null || !_camera.orthographic) return;
 
         float target = _isAiming ? _baseSize * _aimZoomScale : _baseSize;
+
+        // 고도는 이동이 가진 값을 읽기만 한다. 이동이 카메라를 부르지 않는다.
+        if (_move != null)
+            target *= Mathf.Lerp(1f, _glideZoomScale, _move.Altitude01);
 
         _camera.orthographicSize = Mathf.Lerp(
             _camera.orthographicSize, target, 1f - Mathf.Exp(-_zoomSpeed * deltaTime));

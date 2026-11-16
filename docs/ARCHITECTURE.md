@@ -10,7 +10,7 @@
 |---|---|---|
 | [arch/combat-core.md](arch/combat-core.md) | Agent 컴포지션 · 타게팅과 전투 판정 · 스탯 · 데미지 · 상태이상 · 오브젝트 풀 · 편 가르기 | 컴포넌트 추가, 피격·데미지, 레이어, 풀링 |
 | [arch/items.md](arch/items.md) | 아이템 데이터(Id 대역, 이름 세 겹, 로컬라이제이션, 아이콘, 개체 상태) · 내구도와 아이템 사용 | 아이템 SO, Id, 표시명, 인벤토리 |
-| [arch/mecha.md](arch/mecha.md) | 기체 파츠(장착→스탯, 진입 시 채우기) · 기체 자원(전력·연료) · 실드 | 파츠 장착, 로드아웃, 생존 수치, 피해 경로 |
+| [arch/mecha.md](arch/mecha.md) | 기체 파츠(장착→스탯, 진입 시 채우기) · 기체 자원(전력·연료) · 실드(원 판정) · 부위파괴 · 필드 수리 | 파츠 장착, 로드아웃, 생존 수치, 피해 경로, 히트박스 |
 | [arch/weapon.md](arch/weapon.md) | 무기 모딩(개량 vs 모듈) · 탄약(StatDelta, 잔탄) · 과열 | 무기 수치, 모듈, 탄, 열 |
 | [arch/projectile.md](arch/projectile.md) | 발사와 투사체(+X 규칙, 리소스 방향, CastPower, 발사 모드, 프리팹 구조) | 발사·투사체, 스프라이트 방향 |
 | [arch/enemy.md](arch/enemy.md) | 적(머리/다리, 상태 클래스, 선딜, 적도 메카다, AI 방아쇠, 구경 표) | 적 AI, 적 로드아웃 |

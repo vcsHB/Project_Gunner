@@ -26,6 +26,7 @@ MonoBehaviour:
 '
   _localizationKey: Item_Weapon_Burster
   _allowedSlots: 0100000002000000
+  _partHealth: 150
   playerWeaponPrefab: {fileID: 1014361397215951198, guid: 835e3b106ccc51643881cb33d0c8da5d, type: 3}
   _category: 2
   _moduleSlots: 040000000100000003000000
@@ -40,12 +41,12 @@ MonoBehaviour:
     aimRange: 17
     maxTargetCount: 1
     criticalRate: 0
-    magazineSize: 12
-    reloadTime: 1.5
     heatPerShot: 11
     heatCapacity: 100
     heatCooling: 30
     overheatLockTime: 2
+    magazineSize: 12
+    reloadTime: 1.5
     recoil: 0.4
     spread: 0.8
     burstCount: 3

@@ -21,10 +21,19 @@ public class DamageCastEffector : MonoBehaviour, ICastEffector
         if (damageable == null) return;
 
         Agent owner = _caster != null ? _caster.Owner : null;
-        Vector2 direction = (hit.Position - (Vector2)transform.position).normalized;
 
-        DamageData damageData = BuildDamageData(owner, direction);
+        Vector2 origin = _caster != null ? _caster.HitOrigin : (Vector2)transform.position;
+        Vector2 direction = _caster != null
+            ? _caster.GetHitDirection(hit)
+            : (hit.Position - origin).normalized;
+
+        // 대상 표면에서 공격이 온 쪽의 점. 피격 이펙트가 여기서 터진다.
+        // 출발점이 콜라이더 안이면(밀착 사격) ClosestPoint가 출발점을 그대로 준다 — 그래도 대상 위다.
+        Vector2 point = hit.Collider != null ? hit.Collider.ClosestPoint(origin) : hit.Position;
+
+        DamageData damageData = BuildDamageData(owner, direction).WithHitPoint(point);
         damageData.damage *= _damageMultiplier * hit.DamageMultiplier;
+        damageData.hitPart = hit.HitBox != null ? hit.HitBox.Part : EquipSlotType.Core;
 
         damageable.ApplyDamage(damageData);
     }

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d4d034e7114e65479d7161494ec6976, type: 3}
+  m_Name: Item_RepairKit_Basic
+  m_EditorClassIdentifier: Assembly-CSharp::RepairKitDataSO
+  _id: 10000
+  <ItemGrade>k__BackingField: 0
+  <ItemCategory>k__BackingField: 2
+  <IconSprite>k__BackingField: {fileID: 0}
+  _worldSprite: {fileID: 0}
+  _maxStackCount: 10
+  _maxDurability: 0
+  _editorName: RepairKit_Basic
+  _displayName: "\uC218\uB9AC \uD0A4\uD2B8"
+  _description: 
+  _localizationKey: item.repairkit.basic
+  _amount: 60
+  _duration: 4

@@ -17,5 +17,8 @@ public enum PoolType
     SoundPlayer = 3,
 
     // Effect
-    FX_Test_Burst = 4,
+    FX_DefaultHit = 5,
+    FX_ShieldHit = 6,
+    FX_GunFire_1 = 7,
+    FX_GroundScratch = 8,
 }

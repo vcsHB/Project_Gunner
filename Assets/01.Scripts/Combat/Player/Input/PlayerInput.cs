@@ -27,12 +27,8 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public event Action OnGlideToggleEvent;
     public event Action OnInteractEvent;
 
-    /// <summary>
-    /// <b>듣는 쪽이 없다.</b> 재장전은 자동 급탄으로 대체되어 사라졌다.
-    /// 액션 자체를 지우면 <c>IPlayerActions</c> 구현이 깨지므로(INCIDENTS) 콜백만 남겨둔다.
-    /// 다른 용도로 R을 쓰게 되면 여기에 새 이벤트를 붙이고 이 주석을 지울 것.
-    /// </summary>
-    public event Action<bool> OnReloadEvent;
+    /// <summary>R. 필드 수리를 시작한다 (<see cref="MechaRepair"/>). 누른 순간 한 번.</summary>
+    public event Action OnRepairEvent;
 
     public event Action OnInventoryToggleEvent;
 
@@ -48,7 +44,6 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     public bool IsPrimaryHeld { get; private set; }
     public bool IsSecondaryHeld { get; private set; }
     public bool IsSprinting { get; private set; }
-    public bool IsReloadHeld { get; private set; }
 
     /// <summary>
     /// 조준용 화면 좌표. 지금은 마우스 전용이다.
@@ -89,7 +84,6 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
         IsPrimaryHeld = false;
         IsSecondaryHeld = false;
         IsSprinting = false;
-        IsReloadHeld = false;
     }
 
     #region Controls.IPlayerActions
@@ -138,12 +132,10 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
             OnGlideToggleEvent?.Invoke();
     }
 
-    public void OnReload(InputAction.CallbackContext context)
+    public void OnRepair(InputAction.CallbackContext context)
     {
         if (context.performed)
-            SetReloadHeld(true);
-        else if (context.canceled)
-            SetReloadHeld(false);
+            OnRepairEvent?.Invoke();
     }
 
     public void OnInventory(InputAction.CallbackContext context)
@@ -195,11 +187,4 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
         OnSprintEvent?.Invoke(value);
     }
 
-    private void SetReloadHeld(bool value)
-    {
-        if (IsReloadHeld == value) return;
-
-        IsReloadHeld = value;
-        OnReloadEvent?.Invoke(value);
-    }
 }

@@ -19,6 +19,7 @@ public class PoolManager : Singleton<PoolManager>
 
     // Get<T>()용. 프리팹 컴포넌트 타입 -> PoolType
     private readonly Dictionary<Type, PoolType> _typeToPoolType = new();
+    private readonly HashSet<Type> _ambiguousTypes = new();
 
     protected override void Awake()
     {
@@ -65,13 +66,11 @@ public class PoolManager : Singleton<PoolManager>
             }
 
             // 같은 컴포넌트 타입이 여러 PoolType에 물리면 Get<T>()로는 구분할 수 없다.
+            // 이펙트처럼 원래 Get(PoolType)으로만 꺼내는 타입이 흔하므로 등록 때는 조용히 두고,
+            // 실제로 Get<T>()를 부를 때 에러를 낸다.
             Type prefabType = item.Prefab.GetType();
             if (!_typeToPoolType.TryAdd(prefabType, type))
-            {
-                Debug.LogWarning(
-                    $"[PoolManager] {prefabType.Name}이 이미 {_typeToPoolType[prefabType]}에 등록되어 있어 " +
-                    $"{type}은 Get<{prefabType.Name}>()로 꺼낼 수 없습니다. Get(PoolType)을 쓰세요.", _poolList);
-            }
+                _ambiguousTypes.Add(prefabType);
         }
     }
 
@@ -136,6 +135,14 @@ public class PoolManager : Singleton<PoolManager>
             return null;
         }
 
+        if (_ambiguousTypes.Contains(typeof(T)))
+        {
+            Debug.LogError(
+                $"[PoolManager] {typeof(T).Name}은 여러 PoolType에 등록되어 있어 Get<{typeof(T).Name}>()로는 고를 수 없습니다. " +
+                "Get(PoolType)을 쓰세요.");
+            return null;
+        }
+
         return Get(type) as T;
     }
 
@@ -161,6 +168,7 @@ public class PoolManager : Singleton<PoolManager>
         _pools.Clear();
         _catalog.Clear();
         _typeToPoolType.Clear();
+        _ambiguousTypes.Clear();
 
         base.OnDestroy();
     }

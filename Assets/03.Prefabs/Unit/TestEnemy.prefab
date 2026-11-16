@@ -80,7 +80,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -50013139
-  m_SortingLayer: 3
+  m_SortingLayer: 4
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2529093334089074773, guid: ba8b0427153c0714ebfbf8077f0d3763, type: 3}
@@ -223,7 +223,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: -50013139
-  m_SortingLayer: 3
+  m_SortingLayer: 4
   m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2529093334089074773, guid: ba8b0427153c0714ebfbf8077f0d3763, type: 3}
@@ -366,6 +366,7 @@ GameObject:
   - component: {fileID: 652787206302399511}
   - component: {fileID: 4692163926058261925}
   - component: {fileID: 8660885068136156224}
+  - component: {fileID: 2599351197248423581}
   m_Layer: 9
   m_Name: TestEnemy
   m_TagString: Untagged
@@ -460,12 +461,16 @@ MonoBehaviour:
     _defaultValue: 5
   inventorySize:
     _defaultValue: 30
-  maxStamina:
+  maxPower:
     _defaultValue: 100
-  maxHunger:
+  maxFuel:
     _defaultValue: 100
-  maxThirst:
-    _defaultValue: 100
+  maxShield:
+    _defaultValue: 0
+  shieldRegenDelay:
+    _defaultValue: 20
+  shieldRegenRate:
+    _defaultValue: 10
 --- !u!114 &4692163926058261925
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -479,6 +484,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetBase
   _defaultTargetType: 1
+  _faction: 4
   _aimPoint: {fileID: 223630784134593708}
   _health: {fileID: 8660885068136156224}
   _colliders:
@@ -498,6 +504,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Health
   _currentHealth: 100
   _maxHealth: 100
+--- !u!114 &2599351197248423581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6772078797291221747}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4ef83a418c2eb542bbbb39c7738b449, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFeedback
+  _hitEffect: 5
+  _hitSound: {fileID: 0}
+  _shieldHitEffect: 6
+  _shieldHitSound: {fileID: 0}
+  _shieldCenter: {fileID: 0}
+  _shieldRadius: 0
 --- !u!1001 &8508185609329996602
 PrefabInstance:
   m_ObjectHideFlags: 0

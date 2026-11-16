@@ -22,6 +22,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
     private Agent _owner;
     private AgentStatus _status;
     private ShieldStatus _shield;
+    private MechaPartHealth _parts;
     private bool _initialized;
 
     private void Awake()
@@ -57,6 +58,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         // Agent가 없으면 스탯도 없다. 이 경우 인스펙터의 _maxHealth를 그대로 쓴다.
         _status = _owner != null ? _owner.GetCompo<AgentStatus>() : null;
         _shield = _owner != null ? _owner.GetCompo<ShieldStatus>() : null;
+        _parts = _owner != null ? _owner.GetCompo<MechaPartHealth>() : null;
 
         if (_status != null)
         {
@@ -76,6 +78,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         // 피격 이벤트는 그대로 쏜다. 맞았다는 사실(흔들림·피격 표시)은 실드에 막혀도 같다.
         if (_shield != null && _shield.TryAbsorb(damageData.damage))
         {
+            damageData.blockedByShield = true;
             OnDamagedEvent?.Invoke(damageData);
             return DamageResponse.Hit();
         }
@@ -83,6 +86,13 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         float defense = _status != null ? _status.Defense.TotalValue : 0f;
         float resistance = _status != null ? _status.DamageResistance.TotalValue : 0f;
         float finalDamage = DamageHandler.CalculateFinalDamage(damageData.damage, defense, resistance);
+
+        // 팔·추진체에 맞았으면 그 부위가 받는다. 부위가 없거나 이미 부서졌으면 본체(코어)로 온다.
+        if (_parts != null && _parts.TryAbsorb(damageData.hitPart, finalDamage))
+        {
+            OnDamagedEvent?.Invoke(damageData);
+            return DamageResponse.Hit();
+        }
 
         SetHealth(_currentHealth - finalDamage);
         OnDamagedEvent?.Invoke(damageData);
@@ -123,6 +133,9 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
         if (_shield != null)
             _shield.ResetShield();
+
+        if (_parts != null)
+            _parts.ResetAll();
     }
 
     private void SetHealth(float value)

@@ -63,6 +63,11 @@ MonoBehaviour:
     start: 9000
     end: 9999
     nextId: 9001
+  - typeName: RepairKitDataSO
+    label: "\uC218\uB9AC \uD0A4\uD2B8"
+    start: 10000
+    end: 10999
+    nextId: 10001
   _nextId: 1
   _items:
   - {fileID: 11400000, guid: aa993fe814cf6eb439e0ae645664510d, type: 2}
@@ -77,3 +82,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
   - {fileID: 11400000, guid: 8c41d7b60e59f2a4b93c05d8e7146af2, type: 2}
   - {fileID: 11400000, guid: f3268ea4ac4d9ac43a456b3763141702, type: 2}
+  - {fileID: 11400000, guid: 5f3fd1cba306bab4894b76dd51292614, type: 2}

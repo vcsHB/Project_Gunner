@@ -43,6 +43,9 @@ public class ItemDatabaseSO : ScriptableObject
         // 코어·추진체가 여기서 Id를 받는다. 파생 타입은 자기 설정이 없으면 이 대역을 물려받는다.
         new(nameof(PartDataSO), "기체 파츠", 6000, 6999),
 
+        // 필드 수리 키트. 폐기된 소모품 대역(4000)은 재사용하지 않는다.
+        new(nameof(RepairKitDataSO), "수리 키트", 10000, 10999),
+
         // 아직 타입이 없는 예약 대역. 클래스를 만들면 typeName만 채우면 된다.
         new(string.Empty, "(폐기) 소모품", 4000, 4999),
         new(string.Empty, "도구", 5000, 5999),

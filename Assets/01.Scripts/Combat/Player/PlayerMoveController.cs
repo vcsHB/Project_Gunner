@@ -43,6 +43,12 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     [Tooltip("착륙 직후 다시 활공할 수 없는 시간(초).")]
     [SerializeField, Min(0f)] private float _glideLockAfterLanding = 1f;
 
+    [Tooltip("활공 고도(월드 유닛). 몸체가 화면 위로 이만큼 뜬다. 판정·총구도 같이 뜨므로 크게 잡으면 그림자(실제 위치)와 멀어진다.")]
+    [SerializeField, Min(0f)] private float _glideHeight = 0.6f;
+
+    [Tooltip("떠오르거나 내려앉는 데 걸리는 시간(초).")]
+    [SerializeField, Min(0.01f)] private float _liftDuration = 0.3f;
+
     [Header("미끄러짐 (고속 착륙)")]
     [Tooltip("착륙 순간 속도가 착륙 상태 최고 속도의 이 배수를 넘으면 미끄러진다.")]
     [SerializeField, Min(1f)] private float _skidSpeedRatio = 1.05f;
@@ -56,12 +62,17 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     [Tooltip("속도가 착륙 상태 최고 속도의 이 비율까지 떨어지면 미끄러짐이 끝난다.")]
     [SerializeField, Range(0f, 1f)] private float _skidEndRatio = 0.6f;
 
+    [Header("추진체 파괴")]
+    [Tooltip("추진체가 부서지면 이동속도에 더해지는 비율. -0.4면 40% 느려진다. 활공·부스터도 막힌다.")]
+    [SerializeField, Range(-0.9f, 0f)] private float _brokenBoosterSpeed = -0.4f;
+
     private Rigidbody2D _rigidbody;
     private Player _player;
     private AgentStatus _status;
     private AgentConditionEffector _conditions;
     private VitalStatus _vitals;
     private TargetBase _target;
+    private MechaPartHealth _parts;
 
     private Vector2 _moveInput;
 
@@ -73,9 +84,13 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     // modifier origin은 참조 동일성으로 비교된다. 부스터(this)와 활공을 따로 걷어내야 해서 분리한다.
     private readonly object _glideOrigin = new();
 
+    // 추진체 파괴 감속. 부스터·활공과 따로 걷어내야 한다.
+    private readonly object _brokenBoosterOrigin = new();
+
     private MechaMoveMode _mode = MechaMoveMode.Landed;
     private bool _skidding;
     private float _glideLockTimer;
+    private float _liftProgress;
 
     public bool IsSprinting => _sprintActive;
     public MechaMoveMode Mode => _mode;
@@ -83,9 +98,24 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     public bool IsSkidding => _skidding;
 
     /// <summary>지금 Space를 누르면 뜰 수 있는지. UI가 잠금을 보여줄 때 쓴다.</summary>
-    public bool CanStartGlide => !IsGliding && _glideLockTimer <= 0f && CanMove && HasFuel;
+    public bool CanStartGlide => !IsGliding && _glideLockTimer <= 0f && CanMove && HasFuel && !IsBoosterBroken;
+
+    /// <summary>추진체가 부서졌다. 활공·부스터가 막히고 느려진다.</summary>
+    public bool IsBoosterBroken => _parts != null && _parts.IsDestroyed(EquipSlotType.Booster);
 
     public Vector2 Velocity => _rigidbody.linearVelocity;
+
+    /// <summary>
+    /// 지금 고도(월드 유닛). 활공하면 0 → <see cref="_glideHeight"/>로 부드럽게 오르고, 착륙하면 내려온다.
+    ///
+    /// <b>로직이 가진 값이다.</b> 몸체(비주얼·히트박스·총구·실드 원)가 이만큼 화면 위로 뜨고,
+    /// 조준 원점도 같이 뜬다. 연출(<see cref="GlideFeedback"/>)과 조준이 <b>같은 값</b>을 읽어야 보이는 총구와 탄이 어긋나지 않는다.
+    /// 실제 위치(이동·벽·줍기)는 그림자 쪽, 즉 이 오브젝트의 위치 그대로다.
+    /// </summary>
+    public float Altitude => Mathf.SmoothStep(0f, 1f, _liftProgress) * _glideHeight;
+
+    /// <summary>0(착륙) ~ 1(완전히 뜸). 연출의 크기·그림자·카메라가 쓴다.</summary>
+    public float Altitude01 => Mathf.SmoothStep(0f, 1f, _liftProgress);
     public bool CanMove => !_player.IsDead && !IsStunned;
 
     private bool IsStunned => _conditions != null && _conditions.HasCondition(ConditionType.Stun);
@@ -107,6 +137,13 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
         _conditions = _player.GetCompo<AgentConditionEffector>();
         _vitals = _player.GetCompo<VitalStatus>();
         _target = _player.GetCompo<TargetBase>();
+        _parts = _player.GetCompo<MechaPartHealth>();
+
+        if (_parts != null)
+        {
+            _parts.OnPartDestroyedEvent += HandlePartDestroyed;
+            _parts.OnPartRestoredEvent += HandlePartRestored;
+        }
 
         if (_player.Input == null) return;
 
@@ -124,12 +161,48 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
             _player.Input.OnGlideToggleEvent -= HandleGlideToggle;
         }
 
-        // 부스터·활공 modifier를 걸어둔 채로 사라지면 안 된다.
+        if (_parts != null)
+        {
+            _parts.OnPartDestroyedEvent -= HandlePartDestroyed;
+            _parts.OnPartRestoredEvent -= HandlePartRestored;
+        }
+
+        // 부스터·활공·파괴 감속 modifier를 걸어둔 채로 사라지면 안 된다.
         if (_status != null)
         {
             _status.MoveSpeed.RemoveModifier(this);
             _status.MoveSpeed.RemoveModifier(_glideOrigin);
+            _status.MoveSpeed.RemoveModifier(_brokenBoosterOrigin);
         }
+    }
+
+    /// <summary>추진체가 부서지면 내려앉고 느려진다. 빠른 채였으면 그대로 미끄러진다.</summary>
+    private void HandlePartDestroyed(EquipSlotType slot)
+    {
+        if (slot != EquipSlotType.Booster) return;
+
+        if (IsGliding) Land();
+        SetSprintActive(false);
+
+        if (_status != null)
+        {
+            _status.MoveSpeed.RemoveModifier(_brokenBoosterOrigin);
+            _status.MoveSpeed.AddModifier(_brokenBoosterOrigin, _brokenBoosterSpeed, ModifierMode.Percent);
+        }
+    }
+
+    private void HandlePartRestored(EquipSlotType slot)
+    {
+        if (slot != EquipSlotType.Booster) return;
+
+        _status?.MoveSpeed.RemoveModifier(_brokenBoosterOrigin);
+    }
+
+    // 고도는 보이는 값이라 렌더 프레임마다 움직인다. FixedUpdate에서 올리면 몸체가 계단처럼 뜬다.
+    private void Update()
+    {
+        float target = IsGliding ? 1f : 0f;
+        _liftProgress = Mathf.MoveTowards(_liftProgress, target, Time.deltaTime / _liftDuration);
     }
 
     private void FixedUpdate()
@@ -177,7 +250,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     /// </summary>
     private void UpdateSprint(float deltaTime)
     {
-        bool wanted = _sprintHeld && CanMove && !_skidding && _moveInput.sqrMagnitude > 0.01f;
+        bool wanted = _sprintHeld && CanMove && !_skidding && !IsBoosterBroken && _moveInput.sqrMagnitude > 0.01f;
 
         if (wanted && _vitals != null)
             wanted = _vitals.TryConsume(VitalType.Fuel, _boostFuelPerSecond * deltaTime);
@@ -243,7 +316,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     {
         if (!IsGliding) return;
 
-        bool keep = !_player.IsDead;
+        bool keep = !_player.IsDead && !IsBoosterBroken;
 
         if (keep && _vitals != null)
             keep = _vitals.TryConsume(VitalType.Fuel, _glideFuelPerSecond * deltaTime);

@@ -24,6 +24,7 @@ MonoBehaviour:
   _description: "\uAC15\uB825\uD55C \uC800\uACA9 \uC18C\uCD1D"
   _localizationKey: Item_Weapon_IronSpear
   _allowedSlots: 0100000002000000
+  _partHealth: 150
   playerWeaponPrefab: {fileID: 1014361397215951198, guid: 835e3b106ccc51643881cb33d0c8da5d, type: 3}
   _category: 4
   _moduleSlots: 0200000001000000030000000500000006000000
@@ -38,12 +39,12 @@ MonoBehaviour:
     aimRange: 21
     maxTargetCount: 1
     criticalRate: 0
-    magazineSize: 1
-    reloadTime: 1.8
     heatPerShot: 0
     heatCapacity: 100
     heatCooling: 0
     overheatLockTime: 0
+    magazineSize: 1
+    reloadTime: 1.8
     recoil: 2
     spread: 0
     burstCount: 3

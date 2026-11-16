@@ -194,6 +194,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6772078797291221747, guid: 22e660d3a1509be4182ab647d7b0d8df, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5589209445453561521}
+    - targetCorrespondingSourceObject: {fileID: 6772078797291221747, guid: 22e660d3a1509be4182ab647d7b0d8df, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5634656012334010200}
+    - targetCorrespondingSourceObject: {fileID: 6772078797291221747, guid: 22e660d3a1509be4182ab647d7b0d8df, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6311305632176801289}
   m_SourcePrefab: {fileID: 100100000, guid: 22e660d3a1509be4182ab647d7b0d8df, type: 3}
 --- !u!4 &690746450218609567 stripped
 Transform:
@@ -331,3 +337,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShieldStatus
   _powerPerShield: 0.5
+--- !u!114 &5634656012334010200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9219351393936960037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4ef83a418c2eb542bbbb39c7738b449, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFeedback
+  _hitEffect: 5
+  _hitSound: {fileID: 0}
+  _shieldHitEffect: 6
+  _shieldHitSound: {fileID: 0}
+  _shieldCenter: {fileID: 0}
+  _shieldRadius: 0
+--- !u!114 &6311305632176801289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9219351393936960037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17f645cb87f2f964e9253e3da212575c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MechaPartHealth
+  _restoreRatio: 0.3

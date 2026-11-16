@@ -47,6 +47,15 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
     public bool IsCharging => _isCharging;
 
+    /// <summary>탄이 생기는 자리. 총구가 없으면 무기 본체. 총구 화염도 여기서 터진다.</summary>
+    public Transform Muzzle => _muzzle != null ? _muzzle : transform;
+
+    /// <summary>
+    /// 탄이 나가는 방향(퍼짐 적용 전). 겨누는 쪽이 없으면 무기가 보고 있는 쪽이다.
+    /// 팔에 달린 것은 아트 공간에 살아서 +Y가 앞이다(HandActionBase) — right를 쓰면 90도 틀어진다.
+    /// </summary>
+    public Vector2 FireDirection => _aim != null ? _aim.AimDirection : (Vector2)transform.up;
+
     /// <summary>0~1. 차지 무기 UI가 그대로 쓴다.</summary>
     public float ChargeRatio01 => _isCharging ? ChargeRatio() : 0f;
 
@@ -141,6 +150,15 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         }
     }
 
+    /// <summary>팔이 부서졌다. 차지·점사를 쏘지 않고 버린다.</summary>
+    protected override void Interrupt()
+    {
+        _triggerHeld = false;
+        _isCharging = false;
+        _chargeElapsed = 0f;
+        _burstLeft = 0;
+    }
+
     public override void OnUseReleased()
     {
         _triggerHeld = false;
@@ -232,6 +250,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
             return false;
         }
 
+        // 팔이 부서졌다. 빈 격발 소리도 내지 않는다 — 탄이 없는 게 아니라 팔이 없다.
+        if (IsDisabled) return false;
+
         // 과열로 잠겨 있으면 트리거를 당겨도 나가지 않는다. 기다리면 풀리므로
         // 트리거를 놓게 하지 않는다 — 식자마자 연사가 이어지는 쪽이 자연스럽다.
         if (Heat != null && Heat.IsLocked) return false;
@@ -276,10 +297,8 @@ public class PlayerRangedWeapon : PlayerWeaponBase
             return;
         }
 
-        Vector2 origin = _muzzle != null ? _muzzle.position : transform.position;
-        // 겨누는 쪽이 없으면 무기가 보고 있는 쪽으로 나간다. 팔에 달린 것은 아트 공간에 살아서
-        // +Y가 앞이다(HandActionBase) — right를 쓰면 90도 틀어진다.
-        Vector2 aim = _aim != null ? _aim.AimDirection : (Vector2)transform.up;
+        Vector2 origin = Muzzle.position;
+        Vector2 aim = FireDirection;
 
         int count = Mathf.Max(1, Mathf.RoundToInt(Status.Value(WeaponStatType.ProjectileCount)));
 

@@ -54,19 +54,21 @@
 |---|---|---|
 | PlayerInput | ✅ | 입력 리더 SO. `PlayerInput.asset` 존재 |
 | 이동 | ✅ | Rigidbody2D, 질주는 Percent modifier, 기절 시 정지. **착륙 / 활공 두 모드** |
-| 활공 / 착륙 (Space) | 🟡 | `PlayerMoveController`. 활공 = `TargetType.Air` + 속도↑ + 연료 상시 소모. 고속 착륙 미끄러짐 + `SkidCameraShake`, 착륙 후 1초 잠금. **수치 미조정** |
+| 활공 / 착륙 (Space) | 🟡 | `PlayerMoveController`. 활공 = `TargetType.Air` + 속도↑ + 연료 상시 소모 + **몸체가 0.6 뜬다**(`Altitude`, `GlideFeedback`, 카메라 줌아웃). 고속 착륙 미끄러짐 + `SkidCameraShake`, 착륙 후 1초 잠금. **수치 미조정** |
 | 조준 | ✅ | 마우스 절대 조준 + `AimRange` 제한 + 반동 오프셋 |
 | 주/보조 입력 | ✅ | 좌=Primary, 우=Secondary. **좌=좌무기 / 우=우무기로 고정 배분됨** |
 | 정조준(총 + 우클릭) | ❌ | 기능 폐기. `SetAiming`과 카메라 줌 기계장치는 남김 |
-| 소모품 사용(우클릭) | ❌ | 안전지대 수리만 남음 |
+| 소모품 사용(우클릭) | ❌ | 폐기. 수리는 R(필드 수리)로 |
 | 투척무기 | ❌ | 한 버튼 구조와 충돌. 되살리려면 눌러-떼기로 재작성 |
 | 핫바 (인벤토리 앞 7칸) | ❌ | 무장은 장비 슬롯이 정한다 |
 | 무기 들기 | ✅ | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
-| 실드 | 🟡 | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. **적 프리팹에는 아직 없음** |
+| 실드 | ✅ | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. 실드 원(`ShieldHitArea`)이 판정 — 실드가 있는 동안만 켜짐. 적은 `Enemy_Test`에 컴포넌트만(원 판정·그림 없음) |
+| 부위파괴 | 🟡 | `MechaPartHealth`. 팔·추진체 체력(`EquipableItemDataSO._partHealth`), 코어 = `Health`. 맞은 부위는 히트박스가 붙은 소켓으로. 팔 파괴 = 무기 정지, 추진체 파괴 = 활공·부스터 불가 + 40% 감속. **추진체 프리팹·히트박스가 없어 추진체는 아직 안 맞는다. HUD 없음** |
+| 필드 수리 (R) | ✅ | `MechaRepair` + `RepairKitDataSO`(Id 10000~). 키트 1개 → 4초간 코어·부위 각 60. 맞으면 끊김(키트는 소모). 부서진 부위는 30%까지 차면 복구 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
 | 포복(Crawl) | ❌ | 폐기. 액션이 `Glide`로 이름이 바뀌었다 |
-| 재장전 | ❌ | 제거됨. R 키도 사라졌다 |
+| 재장전 | ❌ | 제거됨. R 키는 필드 수리로 쓴다 |
 | 상호작용(Interact/Use) | 🟡 | 입력만 있고 대상 탐색 없음 |
 | 장비 → 스탯 연결 | ✅ | `MechaPartController`. 슬롯별 origin, 교체 시 먼저 걷어냄 |
 | 기체 회전 | ✅ | `MechaRotationController`. 상체가 먼저, 하체가 뒤따라옴 |
@@ -177,7 +179,7 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 | 발사 / 피격 / 착륙 화면 흔들림 | ✅ (`WeaponFireCameraShake`, `DamageCameraShake`, `SkidCameraShake`) |
 | CameraShakeEffector | ✅ (`CameraRig` 아래 `MainCamera`를 흔든다) |
 | Map / MapGenerator | ⬜ |
-| 이펙트 / 사운드 재생 | ✅ 구조 (`EffectPlayer`, `SoundManager`+`SoundPlayer` 풀, `AudioListenerFollow`). 붙은 이벤트 없음 — M3 2단계부터 ([arch/feedback](arch/feedback.md)) |
+| 이펙트 / 사운드 재생 | ✅ 구조 + 이펙트 4종 (`WeaponFeedback` 총구 화염, `HitFeedback` 몸체·실드 피격, `SkidFeedback` 긁힘). 소리 에셋 없음 ([arch/feedback](arch/feedback.md)) |
 | 오디오 믹서 | ⬜ (`Master / BGM / SFX / UI`. `SoundManager._defaultGroup`에 SFX를 넣으면 된다) |
 | 블럭 파괴·설치 | ⬜ |
 | 숙련도 / 테크트리 | ⬜ |
