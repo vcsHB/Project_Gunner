@@ -16,6 +16,9 @@ public class ShieldHitArea : MonoBehaviour
     [Tooltip("월드 반지름. 0이면 자식 SpriteRenderer 크기로 잰다.")]
     [SerializeField, Min(0f)] private float _radius;
 
+    [Tooltip("실드 그림. 실드가 0이면 콜라이더와 같이 꺼진다. 비우면 자식 'Visual'.")]
+    [SerializeField] private GameObject _visual;
+
     private CircleCollider2D _collider;
     private ShieldStatus _shield;
 
@@ -28,7 +31,9 @@ public class ShieldHitArea : MonoBehaviour
         if (radius <= 0f)
         {
             SpriteRenderer sprite = GetComponentInChildren<SpriteRenderer>(true);
-            if (sprite != null) radius = sprite.bounds.extents.x;
+            // 렌더러 bounds는 꺼진 오브젝트에서 0이다. 스프라이트 자체 크기에 스케일을 곱한다.
+            if (sprite != null && sprite.sprite != null)
+                radius = sprite.sprite.bounds.extents.x * Mathf.Abs(sprite.transform.lossyScale.x);
         }
 
         // 콜라이더 반지름은 로컬이다. 오브젝트가 스케일돼 있으면 나눠야 월드 반지름이 맞는다.
@@ -37,6 +42,15 @@ public class ShieldHitArea : MonoBehaviour
             _collider.radius = radius / scale;
 
         _collider.enabled = false;
+
+        if (_visual == null)
+        {
+            Transform visual = transform.Find("Visual");
+            if (visual != null) _visual = visual.gameObject;
+        }
+
+        // 실드가 없는 유닛(메카가 아닌 적, 코어에 실드가 없음)은 그림도 없어야 한다. Start에서 실제 값으로 맞춘다.
+        if (_visual != null) _visual.SetActive(false);
     }
 
     private void Start()
@@ -58,6 +72,11 @@ public class ShieldHitArea : MonoBehaviour
 
     private void HandleShieldChanged(float current, float max)
     {
-        _collider.enabled = max > 0f && current > 0f;
+        bool up = max > 0f && current > 0f;
+
+        _collider.enabled = up;
+
+        if (_visual != null && _visual.activeSelf != up)
+            _visual.SetActive(up);
     }
 }

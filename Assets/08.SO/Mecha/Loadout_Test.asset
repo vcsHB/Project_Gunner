@@ -19,6 +19,8 @@ MonoBehaviour:
     item: {fileID: 11400000, guid: 8769d5808fd97fe47a5db94bcebdfcb1, type: 2}
   - slot: 2
     item: {fileID: 11400000, guid: 8769d5808fd97fe47a5db94bcebdfcb1, type: 2}
+  - slot: 12
+    item: {fileID: 11400000, guid: fc3c327f3a6bc564f93bae6004cb9804, type: 2}
   _cargo:
   - item: {fileID: 11400000, guid: 2c0c8489d2692664ba54a98d05725978, type: 2}
     count: 120

@@ -63,8 +63,8 @@
 | 핫바 (인벤토리 앞 7칸) | ❌ | 무장은 장비 슬롯이 정한다 |
 | 무기 들기 | ✅ | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
-| 실드 | ✅ | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. 실드 원(`ShieldHitArea`)이 판정 — 실드가 있는 동안만 켜짐. 적은 `Enemy_Test`에 컴포넌트만(원 판정·그림 없음) |
-| 부위파괴 | 🟡 | `MechaPartHealth`. 팔·추진체 체력(`EquipableItemDataSO._partHealth`), 코어 = `Health`. 맞은 부위는 히트박스가 붙은 소켓으로. 팔 파괴 = 무기 정지, 추진체 파괴 = 활공·부스터 불가 + 40% 감속. **추진체 프리팹·히트박스가 없어 추진체는 아직 안 맞는다. HUD 없음** |
+| 실드 | ✅ | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. 실드 원(`ShieldHitArea`)이 판정 — 실드가 있는 동안만 켜짐. 실드 프리팹 `UnitShield`(플레이어·`Enemy_Test` 공용), 0이면 그림도 꺼짐. 플레이어 1000 / 적 400·700 |
+| 부위파괴 | 🟡 | `MechaPartHealth`. 팔·추진체 체력(`EquipableItemDataSO._partHealth`), 코어 = `Health`. 맞은 부위는 히트박스가 붙은 소켓으로. 부서지면 어두운 조각으로 떨어져 나가고(`PartBreakFeedback`) 화면 크게 흔들림. 팔 파괴 = 무기 정지, 추진체 파괴 = 활공·부스터 불가 + 40% 감속. 추진체 `Item_Booster_Booster1`(Unit_Booster_1_0, 체력 120) + 히트박스. HUD 실루엣 `MechaSilhouetteUI` |
 | 필드 수리 (R) | ✅ | `MechaRepair` + `RepairKitDataSO`(Id 10000~). 키트 1개 → 4초간 코어·부위 각 60. 맞으면 끊김(키트는 소모). 부서진 부위는 30%까지 차면 복구 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
 | 포복(Crawl) | ❌ | 폐기. 액션이 `Glide`로 이름이 바뀌었다 |
@@ -152,6 +152,7 @@
 | 버리기 영역 | 🟡 | `ItemDropArea` — 이벤트만 쏨. 월드 픽업 필요 |
 | PartItemDetail / ItemPreview | ⬜ | 모듈 슬롯 배치 방식 미정 |
 | PartPlayerStatus | ✅ | 체력·실드(겹침, 실드 남으면 실드만 / 0이면 체력만) + 전력 / 연료 게이지 |
+| MechaSilhouetteUI | 🟡 | 기체 실루엣. 조립된 코어·팔·추진체 스프라이트를 그대로 Image로 옮기고 단색 셰이더(`UI/SilhouetteSolid`, 안쪽 외곽선) + 부위 체력 색(부서지면 어둡게). `PartHud/MechaSilhouette`. **위치·크기(`_pixelsPerUnit`) 미조정** |
 | PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
 | PartEquipmentStatus | ✅ | 팔마다 하나. 잔탄 + 열 게이지(잠기면 남은 시간). **위치·크기는 임시** |

@@ -39,8 +39,9 @@ public class HitFeedback : MonoBehaviour
         if (_shieldRadius <= 0f)
         {
             SpriteRenderer sprite = _shieldCenter.GetComponentInChildren<SpriteRenderer>(true);
-            if (sprite != null && _shieldCenter != transform)
-                _shieldRadius = sprite.bounds.extents.x;
+            // 렌더러 bounds는 꺼진 오브젝트에서 0이다(실드가 깨진 채 시작). 스프라이트 자체 크기에 스케일을 곱한다.
+            if (sprite != null && sprite.sprite != null && _shieldCenter != transform)
+                _shieldRadius = sprite.sprite.bounds.extents.x * Mathf.Abs(sprite.transform.lossyScale.x);
         }
     }
 

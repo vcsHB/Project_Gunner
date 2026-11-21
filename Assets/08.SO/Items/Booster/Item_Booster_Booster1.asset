@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1cc75ccdfe7e0ee438210294c0453598, type: 3}
+  m_Name: Item_Booster_Booster1
+  m_EditorClassIdentifier: Assembly-CSharp::BoosterDataSO
+  _id: 6001
+  <ItemGrade>k__BackingField: 0
+  <ItemCategory>k__BackingField: 6
+  <IconSprite>k__BackingField: {fileID: -2546996724597251944, guid: d1ccf41d5d6ec754a9d209535dd8ec7e, type: 3}
+  _worldSprite: {fileID: 0}
+  _maxStackCount: 1
+  _maxDurability: 0
+  _editorName: Booster1
+  _displayName: Booster1
+  _description: 
+  _localizationKey: item.booster.booster1
+  _allowedSlots: 0c000000
+  _partHealth: 120
+  _deltas: []
+  _viewPrefab: {fileID: 4219316179201598320, guid: 82fa8a326885c9e4d8eb3e744819def9, type: 3}
+  _boostMultiplier: 1.6
+  _fuelPerSecond: 5

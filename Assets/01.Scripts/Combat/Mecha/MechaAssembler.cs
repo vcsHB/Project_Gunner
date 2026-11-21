@@ -161,7 +161,10 @@ public class MechaAssembler : MonoBehaviour, IAgentComponent
 
         if (parent == null)
         {
-            Debug.LogWarning($"[Assembler] {slot}을 붙일 소켓이 코어에 없습니다.", this);
+            // 코어 자체가 없으면(해제·정리 중) 붙일 곳이 없는 게 정상이다. 코어는 있는데 소켓이 없을 때만 알린다.
+            if (Core != null)
+                Debug.LogWarning($"[Assembler] {slot}을 붙일 소켓이 코어에 없습니다.", this);
+
             return true;
         }
 

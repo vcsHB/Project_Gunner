@@ -24,13 +24,17 @@ MonoBehaviour:
   _description: 
   _localizationKey: item.core.testcore
   _allowedSlots: 06000000
+  _partHealth: 0
   _deltas:
   - type: 1
     mode: 0
     value: 50
   - type: 10
     mode: 0
-    value: 60
+    value: 1000
+  - type: 12
+    mode: 0
+    value: 90
   _viewPrefab: {fileID: 3046632986548956840, guid: b366564413b7f7c4888b072cb3fb5c3e, type: 3}
   _aimPoint: 51
   _aimRange: 15

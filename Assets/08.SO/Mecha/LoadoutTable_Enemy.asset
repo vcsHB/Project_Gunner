@@ -16,7 +16,8 @@ MonoBehaviour:
   - slot: 6
     chance: 1
     candidates:
-    - {fileID: 11400000, guid: 8c41d7b60e59f2a4b93c05d8e7146af2, type: 2}
+    - {fileID: 11400000, guid: bafc68e4590d637429227e5d5b836329, type: 2}
+    - {fileID: 11400000, guid: ca9b3a0fdaf54e14ea1b0a75f3adf7b5, type: 2}
   - slot: 1
     chance: 1
     candidates:

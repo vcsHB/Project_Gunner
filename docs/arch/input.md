@@ -174,4 +174,4 @@ Shift 부스터는 두 모드 모두에서 따로 얹힙니다. modifier origin�
 
 연출은 `GlideFeedback`(플레이어 루트)이 같은 값을 읽어서 그립니다 — 띄우기, 몸체 1.1배, 미세한 상하 흔들림(±0.04, 판정에도 걸리지만 무시할 크기), 그림자 축소·흐림, 활공 중 정렬 올리기(몸체 루트의 `SortingGroup`을 **뜬 동안만** 켬 → 지상 유닛 위에 그려진다). 카메라 줌아웃(×1.15)은 `CameraFollowEffector`가 `Altitude01`을 읽습니다. 이동은 연출을 모릅니다.
 
-**띄우는 대상의 부모는 돌지 않아야 합니다.** 지금은 `Player/Root/VisualGroup/Root`(몸체)와 `Player/Shied`(실드). 코어 아래를 띄우면 "위"가 기체 회전을 따라 돕니다.
+**띄우는 대상의 부모는 돌지 않아야 합니다.** 지금은 `Player/Root/VisualGroup/Root`(몸체)와 `Player/Shield`(UnitShield 프리팹)(실드). 코어 아래를 띄우면 "위"가 기체 회전을 따라 돕니다.

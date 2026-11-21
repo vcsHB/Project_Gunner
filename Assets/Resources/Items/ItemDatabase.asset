@@ -47,7 +47,7 @@ MonoBehaviour:
     label: "\uAE30\uCCB4 \uD30C\uCE20"
     start: 6000
     end: 6999
-    nextId: 6001
+    nextId: 6004
   - typeName: 
     label: "\uC790\uC6D0"
     start: 7000
@@ -81,5 +81,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: c831b0fae6b13444ba27e742aa2e5d16, type: 2}
   - {fileID: 11400000, guid: a53bb012a80ca794aabb3a15c9fe05f8, type: 2}
   - {fileID: 11400000, guid: 8c41d7b60e59f2a4b93c05d8e7146af2, type: 2}
+  - {fileID: 11400000, guid: fc3c327f3a6bc564f93bae6004cb9804, type: 2}
+  - {fileID: 11400000, guid: ca9b3a0fdaf54e14ea1b0a75f3adf7b5, type: 2}
+  - {fileID: 11400000, guid: bafc68e4590d637429227e5d5b836329, type: 2}
   - {fileID: 11400000, guid: f3268ea4ac4d9ac43a456b3763141702, type: 2}
   - {fileID: 11400000, guid: 5f3fd1cba306bab4894b76dd51292614, type: 2}

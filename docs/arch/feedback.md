@@ -99,10 +99,11 @@ SoundManager.Play(SoundDataSO, position, follow)                   → SoundHand
 | `HitFeedback` | 유닛 루트(`Health`와 같은 오브젝트) | `Health.OnDamagedEvent` | 몸체/실드 피격 이펙트·소리 |
 | `SkidFeedback` | 플레이어 루트(`PlayerMoveController`와 같은 오브젝트) | `OnSkidStartedEvent` + 매 프레임 `IsSkidding` | 바닥 긁힘. 한 번 켜서 발밑을 따라가고, 끝나면 `Stop` |
 | `GlideFeedback` | 플레이어 루트 | `OnMoveModeChangedEvent` + 매 프레임 `Altitude` | 몸체 띄우기·그림자·정렬, 이륙·착륙·활공 루프 이펙트·소리(에셋 칸은 비어 있음). [input](input.md#고도--몸체를-띄운다) |
+| `PartBreakFeedback` | 유닛 루트(`MechaPartHealth`와 같은 오브젝트) | `OnPartDestroyedEvent` / `OnPartRestoredEvent` | 부서진 부위의 스프라이트를 어둡게 복제해 날려 보내고(`PartDebris`, 풀링 안 함) 원본은 숨긴다. 복구되면 다시 켠다. 화면 흔들림은 카메라 쪽 `PartBreakCameraShake`(플레이어만) |
 
 **피격은 맞는 쪽에서 냅니다.** 투사체 쪽(`ProjectileFeedback`)이 아닌 이유 — 실드에 맞았는지 몸체에 맞았는지는 맞는 쪽만 압니다. 근접·폭발도 같은 이벤트로 옵니다. 투사체 자체의 연출(사거리 끝 소멸, 폭발)은 나중에 `ProjectileFeedback`으로.
 
-**실드 피격 위치** — 판정은 몸체 콜라이더 그대로입니다. 맞은 지점에서 공격이 온 쪽으로 되짚어 **실드 원과 만나는 점**으로 옮겨서 터뜨립니다. 반지름은 `HitFeedback._shieldRadius`, 0이면 `_shieldCenter`(플레이어의 `Shied`) 아래 SpriteRenderer 크기로 잽니다. 실드 그림이 없는 유닛(`Enemy_Test`)은 맞은 지점에서 그대로 터집니다.
+**실드 피격 위치** — 판정은 몸체 콜라이더 그대로입니다. 맞은 지점에서 공격이 온 쪽으로 되짚어 **실드 원과 만나는 점**으로 옮겨서 터뜨립니다. 반지름은 `HitFeedback._shieldRadius`, 0이면 `_shieldCenter`(플레이어의 `Shield`) 아래 SpriteRenderer 크기로 잽니다. 실드 그림이 없는 유닛(`Enemy_Test`)은 맞은 지점에서 그대로 터집니다.
 
 > **실드 원이 판정입니다** (2026-11-17, [mecha](mecha.md#실드)). 실드가 있으면 원에 먼저 맞으므로 맞은 지점이 이미 외곽 근처입니다. 위 되짚기는 원이 없는 경로(근접 캐스터가 안쪽에서 걸린 경우 등)의 보정으로 남습니다.
 
