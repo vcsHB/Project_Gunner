@@ -63,7 +63,7 @@
 | 핫바 (인벤토리 앞 7칸) | ❌ | 무장은 장비 슬롯이 정한다 |
 | 무기 들기 | ✅ | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
-| 실드 | ✅ | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. 실드 원(`ShieldHitArea`)이 판정 — 실드가 있는 동안만 켜짐. 실드 프리팹 `UnitShield`(플레이어·`Enemy_Test` 공용), 0이면 그림도 꺼짐. 플레이어 1000 / 적 400·700 |
+| 실드 | ✅ | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. 실드 원(`ShieldHitArea`)이 판정 — 실드가 있는 동안만 켜짐. 실드 프리팹 `UnitShield`(플레이어·`Enemy_Test` 공용), 0이면 그림도 꺼짐. 플레이어 1000 / 적 400·700. 깨짐·복귀 연출 `ShieldFeedback`(프리팹) + `ShieldBreakCameraShake` |
 | 부위파괴 | 🟡 | `MechaPartHealth`. 팔·추진체 체력(`EquipableItemDataSO._partHealth`), 코어 = `Health`. 맞은 부위는 히트박스가 붙은 소켓으로. 부서지면 어두운 조각으로 떨어져 나가고(`PartBreakFeedback`) 화면 크게 흔들림. 팔 파괴 = 무기 정지, 추진체 파괴 = 활공·부스터 불가 + 40% 감속. 추진체 `Item_Booster_Booster1`(Unit_Booster_1_0, 체력 120) + 히트박스. HUD 실루엣 `MechaSilhouetteUI` |
 | 필드 수리 (R) | ✅ | `MechaRepair` + `RepairKitDataSO`(Id 10000~). 키트 1개 → 4초간 코어·부위 각 60. 맞으면 끊김(키트는 소모). 부서진 부위는 30%까지 차면 복구 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
@@ -178,9 +178,9 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 | 시스템 | 상태 |
 |---|---|
-| 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → 3초 뒤 새 판. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`DeathScreenUI`) ([arch/run](arch/run.md)) |
+| 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → 3초 뒤 새 판. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`DeathScreenUI` — 제목·잃은 것·"N초 뒤 주둔지로" 세 줄) ([arch/run](arch/run.md)) |
 | 안전 슬롯 | 🟡 `InventoryController.SafeSlot`(1칸). UI `CellSafeSlot` — **배치 임시, 드래그는 눈으로 확인 전** |
-| 착지 불가 지역 | 🟡 `NoLandingZone`(콜라이더 모양 판정). 위에서 Space 착륙 막힘, 강제 착륙 = 추락 즉사. 테스트 영역 하나. 배치는 맵 작업 |
+| 착지 불가 지역 | 🟡 `NoLandingZone`(콜라이더 모양 판정). 위에서 Space 착륙 막힘, 강제 착륙 = 추락 즉사. 지상: 걸어서는 가장자리에서 멈춤(적도), 미끄러져 들어가면 연료 있으면 자동 활공·없으면 추락. 테스트 영역 하나. 배치는 맵 작업 |
 | CameraManager | ✅ |
 | CameraFollowEffector | ✅ (플레이어↔조준점 중간, 정조준 줌) |
 | 발사 / 피격 / 착륙 화면 흔들림 | ✅ (`WeaponFireCameraShake`, `DamageCameraShake`, `SkidCameraShake`) |

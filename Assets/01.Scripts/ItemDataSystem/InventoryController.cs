@@ -96,7 +96,7 @@ public class InventoryController : MonoBehaviour, IAgentComponent
 
     /// <summary>
     /// 죽었다. 적재함을 비운다 — 기체를 버리고 탈출했으니 실린 것은 전부 잃는다. 안전 슬롯은 건드리지 않는다.
-    /// 떨구지 않는다(그냥 사라진다). 잃은 것을 그 자리에서 다시 줍게 할지는 탈출 루프(M4)에서 정한다.
+    /// 떨구지 않는다(그냥 사라진다). 잃은 것을 그 자리에서 다시 줍게 할지는 탈출 루프(M5)에서 정한다.
     /// </summary>
     public void LoseCargo()
     {

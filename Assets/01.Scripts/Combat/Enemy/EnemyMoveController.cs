@@ -17,6 +17,9 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
     [Tooltip("방향이 바뀔 때 속도가 따라붙는 속도. 클수록 즉각적이다.")]
     [SerializeField, Min(1f)] private float _acceleration = 25f;
 
+    [Tooltip("걸을 때 착지 불가 지역 가장자리에서 이만큼 앞에서 멈춘다(유닛). 공중 유닛은 안 걸린다.")]
+    [SerializeField, Min(0f)] private float _edgeMargin = 0.3f;
+
     [Header("바라보기")]
     [Tooltip("진행 방향으로 돌릴 오브젝트. 비우면 돌리지 않는다.")]
     [SerializeField] private Transform _visualRoot;
@@ -31,6 +34,7 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
     private Agent _owner;
     private AgentStatus _status;
     private AgentConditionEffector _conditions;
+    private TargetBase _target;
 
     private Vector2 _moveDirection;
 
@@ -61,7 +65,11 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
     {
         _status = _owner.GetCompo<AgentStatus>();
         _conditions = _owner.GetCompo<AgentConditionEffector>();
+        _target = _owner.GetCompo<TargetBase>();
     }
+
+    // 지상 유닛만 구렁 가장자리에서 멈춘다. 길찾기가 없어서, 쫓다가 가장자리에 서서 기다린다.
+    private bool WalksOnGround => _target == null || (_target.CurrentTargetType & TargetType.Ground) != 0;
 
     public void Dispose() { }
 
@@ -91,8 +99,12 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
 
         Vector2 target = CanMove ? _moveDirection * CurrentSpeed : Vector2.zero;
 
-        _rigidbody.linearVelocity = Vector2.MoveTowards(
-            _rigidbody.linearVelocity, target, _acceleration * deltaTime);
+        Vector2 velocity = Vector2.MoveTowards(_rigidbody.linearVelocity, target, _acceleration * deltaTime);
+
+        if (WalksOnGround)
+            velocity = NoLandingZone.ClampWalk(_rigidbody.position, velocity, deltaTime, _edgeMargin);
+
+        _rigidbody.linearVelocity = velocity;
 
         UpdateFacing(deltaTime);
     }

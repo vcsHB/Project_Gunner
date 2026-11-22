@@ -10,7 +10,7 @@ using UnityEngine;
 ///
 /// <b>풀링하지 않는다.</b> <see cref="Agent"/>와 <see cref="PoolableMono"/>가 둘 다
 /// MonoBehaviour 직계라 <see cref="Enemy"/>가 양쪽을 상속할 수 없다. 스폰이 잦아지는
-/// 시점(M4)에 다시 본다. (docs/MILESTONE.md)
+/// 시점(M6)에 다시 본다. (docs/MILESTONE.md)
 /// </summary>
 public class EnemyManager : MonoBehaviour
 {

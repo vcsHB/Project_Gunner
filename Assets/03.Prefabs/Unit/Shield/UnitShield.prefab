@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: 29037636204260063}
   - component: {fileID: 1748617060097487407}
   - component: {fileID: 2512722049949903218}
+  - component: {fileID: 4372329649193987660}
   m_Layer: 9
   m_Name: UnitShield
   m_TagString: Untagged
@@ -190,3 +191,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShieldHitArea
   _radius: 0
   _visual: {fileID: 0}
+--- !u!114 &4372329649193987660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7303907755087702369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c79bfd6d437b8d478425869a3c3f826, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShieldFeedback
+  _visual: {fileID: 0}
+  _breakDuration: 0.35
+  _breakScale: 1.45
+  _breakFlash: {r: 1, g: 1, b: 1, a: 1}
+  _breakEffect: 0
+  _breakSound: {fileID: 0}
+  _restoreDuration: 0.3
+  _restoreFromScale: 0.4
+  _restoreOvershoot: 1.6
+  _restoreEffect: 0
+  _restoreSound: {fileID: 0}

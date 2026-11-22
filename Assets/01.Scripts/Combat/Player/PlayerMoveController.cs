@@ -26,8 +26,11 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     /// <summary>착지 불가 지역 위에서 Space로 착륙하려 했다. 막혔다.</summary>
     public event Action OnLandingRejectedEvent;
 
-    /// <summary>착지 불가 지역 위에서 강제로 내려앉아 추락했다. 바로 뒤에 사망 이벤트가 온다.</summary>
+    /// <summary>착지 불가 지역에 떨어졌다(강제 착륙, 또는 지상에서 미끄러져 들어감). 바로 뒤에 사망 이벤트가 온다.</summary>
     public event Action OnFellEvent;
+
+    /// <summary>지상에서 착지 불가 지역에 미끄러져 들어가, 연료가 있어 자동으로 떴다. 착륙 잠금을 무시한다.</summary>
+    public event Action OnAutoGlideEvent;
 
     [Header("부스터 (Shift)")]
     [Tooltip("부스터 가동 시 이동속도 배율. 0.4면 +40%.")]
@@ -67,6 +70,10 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
     [Tooltip("속도가 착륙 상태 최고 속도의 이 비율까지 떨어지면 미끄러짐이 끝난다.")]
     [SerializeField, Range(0f, 1f)] private float _skidEndRatio = 0.6f;
+
+    [Header("착지 불가 지역")]
+    [Tooltip("걸을 때 가장자리에서 이만큼 앞에서 멈춘다(유닛). 몸 반지름 정도. 미끄러짐에는 안 걸린다.")]
+    [SerializeField, Min(0f)] private float _edgeMargin = 0.3f;
 
     [Header("추진체 파괴")]
     [Tooltip("추진체가 부서지면 이동속도에 더해지는 비율. -0.4면 40% 느려진다. 활공·부스터도 막힌다.")]
@@ -232,6 +239,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
         UpdateGlideFuel(deltaTime);
         UpdateSprint(deltaTime);
+        CheckGroundInNoLandingZone();
 
         if (_skidding)
         {
@@ -241,8 +249,32 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
         Vector2 target = CanMove ? _moveInput.normalized * CurrentSpeed : Vector2.zero;
 
-        _rigidbody.linearVelocity = Vector2.MoveTowards(
-            _rigidbody.linearVelocity, target, _acceleration * deltaTime);
+        Vector2 velocity = Vector2.MoveTowards(_rigidbody.linearVelocity, target, _acceleration * deltaTime);
+
+        // 걸어서는 착지 불가 지역에 못 들어간다. 감속 중인 속도까지 막아야 가장자리에서 멈춘다.
+        if (!IsGliding)
+            velocity = NoLandingZone.ClampWalk(_rigidbody.position, velocity, deltaTime, _edgeMargin);
+
+        _rigidbody.linearVelocity = velocity;
+    }
+
+    /// <summary>
+    /// 지상 상태로 착지 불가 지역 안에 있다 — 미끄러져 들어왔거나 밀려 들어왔다.
+    /// 뜰 수 있으면(연료·추진체·행동 가능) <b>착륙 잠금을 무시하고</b> 자동으로 뜬다. 못 뜨면 추락한다.
+    /// </summary>
+    private void CheckGroundInNoLandingZone()
+    {
+        if (IsGliding || _player.IsDead) return;
+        if (!NoLandingZone.Contains(_rigidbody.position)) return;
+
+        if (CanMove && HasFuel && !IsBoosterBroken)
+        {
+            StartGlide();
+            OnAutoGlideEvent?.Invoke();
+            return;
+        }
+
+        Fall();
     }
 
     private float CurrentSpeed => _status != null ? _status.MoveSpeed.TotalValue : 0f;
@@ -347,8 +379,14 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
         Land();
 
-        if (!overNoLanding || _player.IsDead) return;
+        if (overNoLanding) Fall();
+    }
 
+    private void Fall()
+    {
+        if (_player.IsDead) return;
+
+        _skidding = false;
         OnFellEvent?.Invoke();
         _player.AgentHealth?.Kill();
     }

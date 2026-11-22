@@ -6,7 +6,7 @@
 
 본문 전체는 아래에 걸릴 때만 읽습니다.
 
-- **남은 단계** — 8 모딩 일반화(`ModdableItemInstance`), 10 안전지대 잠금(`LoadoutLocked`, M4). 나머지는 완료. [작업 순서](#작업-순서)
+- **남은 단계** — 8 모딩 일반화(`ModdableItemInstance`), 10 안전지대 잠금(`LoadoutLocked`, M5). 나머지는 완료. [작업 순서](#작업-순서)
 - **폐기 대상을 건드리면** [제거 목록](#제거-목록)을 보세요 — 핫바, 소모품 사용, `ThrowableHand`, 재장전·탄종순환, 정조준 입력, `GunAim_*`/`Scrope_*`, 허기·갈증, `LargeHeavyMagazine`.
 - **새로 생길 것을 만들면** [신설 목록](#신설-목록)을 보세요 — 특히 `ToolDataSO`/`PlayerToolBase`(도구는 무기와 판정 분리), `ModdableItemInstance`, `AgentStatDelta`.
 - **아직 결정되지 않은 것** — [아직 안 정한 것](#아직-안-정한-것). 여기 걸리는 작업은 진행 전에 사용자에게 물어볼 것.
@@ -258,8 +258,8 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 | ~~6~~ | ~~전력 / 연료~~ | **완료 (2026-10-27).** ARCHITECTURE로 옮김 |
 | ~~7~~ | ~~조립 + Part Forge~~ | **완료 (2026-11-14).** 구조는 ARCHITECTURE로 옮길 것 |
 | 8 | 모딩 일반화 (`ModdableItemInstance`) | 코어 하위 모듈이 실제로 필요해질 때 |
-| ~~9~~ | ~~UI 재배선~~ | **완료 (2026-11-14).** 무장 HUD 좌/우 2개 + 열 게이지, 장비 칸 4개. 격납고는 M4 |
-| 10 | 안전지대 잠금 (`LoadoutLocked`) | 안전지대 개념이 생길 때 켜면 됨 (M4) |
+| ~~9~~ | ~~UI 재배선~~ | **완료 (2026-11-14).** 무장 HUD 좌/우 2개 + 열 게이지, 장비 칸 4개. 격납고는 M5 |
+| 10 | 안전지대 잠금 (`LoadoutLocked`) | 안전지대 개념이 생길 때 켜면 됨 (M5) |
 
 `EquipmentController.CanAccept`가 이미 `out string reason`을 반환하고 드래그 UI가 그걸 쓰므로, 10단계는 플래그 하나 + 문구 한 줄입니다.
 
@@ -269,7 +269,7 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 
 끝난 것 (9단계) — 무장 HUD가 `ArmStatus_Left` / `ArmStatus_Right` 두 개로 나뉘고 각자 열 게이지를 갖습니다. 생존 게이지는 전력·연료 둘로 줄었고(`GaugeThirsty` 삭제), 장비 칸은 코어·좌팔·우팔·추진체 넷만 남았습니다. 카메라는 `CameraRig`(따라가기)와 `MainCamera`(흔들림)로 나뉘었습니다.
 
-남은 것 — **격납고 패널**(M4, 안전지대와 함께). HUD 두 칸의 **위치·크기는 임시**입니다. `PartItemPreview` 아래 쓰이지 않는 `CellEquipmentSlot` 하나가 폐기된 값을 들고 남아 있습니다 — 코드가 참조하지 않아 동작에는 영향이 없습니다.
+남은 것 — **격납고 패널**(M5, 로비와 함께). HUD 두 칸의 **위치·크기는 임시**입니다. `PartItemPreview` 아래 쓰이지 않는 `CellEquipmentSlot` 하나가 폐기된 값을 들고 남아 있습니다 — 코드가 참조하지 않아 동작에는 영향이 없습니다.
 
 ## 아직 안 정한 것
 
