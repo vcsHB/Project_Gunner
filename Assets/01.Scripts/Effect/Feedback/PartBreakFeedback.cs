@@ -21,12 +21,20 @@ public class PartBreakFeedback : MonoBehaviour
     [SerializeField] private Vector2 _spinRange = new(180f, 540f);
     [SerializeField, Min(0.1f)] private float _lifetime = 1.4f;
 
+    [Header("Wreck (사망)")]
+    [Tooltip("기체가 부서지면(코어 0) 몸 전체가 이 색의 잔해로 남는다. 조종사는 비상탈출했다.")]
+    [SerializeField] private Color _wreckTint = new(0.22f, 0.22f, 0.25f, 1f);
+    [SerializeField, Min(0.1f)] private float _wreckLifetime = 3.5f;
+
     [Header("Effect / Sound")]
     [SerializeField] private PoolType _breakEffect = PoolType.None;
     [SerializeField] private SoundDataSO _breakSound;
+    [SerializeField] private PoolType _wreckEffect = PoolType.None;
+    [SerializeField] private SoundDataSO _wreckSound;
 
     private MechaPartHealth _parts;
     private MechaAssembler _assembler;
+    private Health _health;
 
     private readonly Dictionary<EquipSlotType, List<SpriteRenderer>> _hidden = new();
 
@@ -37,6 +45,10 @@ public class PartBreakFeedback : MonoBehaviour
 
         _parts = owner.GetCompo<MechaPartHealth>();
         _assembler = owner.GetCompo<MechaAssembler>();
+        _health = owner.GetCompo<Health>();
+
+        if (_health != null)
+            _health.OnDeadEvent += HandleDead;
 
         if (_parts == null) return;
 
@@ -46,6 +58,9 @@ public class PartBreakFeedback : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_health != null)
+            _health.OnDeadEvent -= HandleDead;
+
         if (_parts == null) return;
 
         _parts.OnPartDestroyedEvent -= HandleDestroyed;
@@ -84,7 +99,7 @@ public class PartBreakFeedback : MonoBehaviour
         {
             if (source.sprite == null || !source.enabled) continue;
 
-            CopyInto(debris.transform, source);
+            CopyInto(debris.transform, source, _debrisTint);
 
             source.enabled = false;
             hidden.Add(source);
@@ -94,6 +109,36 @@ public class PartBreakFeedback : MonoBehaviour
 
         EffectPlayer.Play(_breakEffect, partCenter, outward);
         SoundManager.Play(_breakSound, partCenter);
+    }
+
+    /// <summary>
+    /// 기체 파괴. 몸 전체(코어와 거기 붙은 모든 부위)를 어두운 잔해로 바꿔 그 자리에 남긴다 — 거의 안 움직이고 천천히 돈다.
+    /// 원본은 숨긴다. 새 판에서 장비가 갈리며 원본은 어차피 새로 만들어진다.
+    /// </summary>
+    private void HandleDead()
+    {
+        MechaPartView core = _assembler != null ? _assembler.Core : null;
+        if (core == null) return;
+
+        Transform root = core.transform;
+
+        GameObject wreck = new("Wreck");
+        wreck.transform.SetPositionAndRotation(root.position, root.rotation);
+
+        foreach (SpriteRenderer source in root.GetComponentsInChildren<SpriteRenderer>(false))
+        {
+            if (source.sprite == null || !source.enabled) continue;
+
+            CopyInto(wreck.transform, source, _wreckTint);
+            source.enabled = false;
+        }
+
+        Vector2 drift = Random.insideUnitCircle * 0.6f;
+        float spin = Random.Range(-40f, 40f);
+        wreck.AddComponent<PartDebris>().Launch(drift, spin, _wreckLifetime);
+
+        EffectPlayer.Play(_wreckEffect, root.position, Vector2.up);
+        SoundManager.Play(_wreckSound, root.position);
     }
 
     private void HandleRestored(EquipSlotType slot)
@@ -109,7 +154,7 @@ public class PartBreakFeedback : MonoBehaviour
         hidden.Clear();
     }
 
-    private void CopyInto(Transform parent, SpriteRenderer source)
+    private static void CopyInto(Transform parent, SpriteRenderer source, Color tint)
     {
         GameObject piece = new(source.name);
         piece.transform.SetParent(parent, false);
@@ -123,7 +168,7 @@ public class PartBreakFeedback : MonoBehaviour
         copy.sharedMaterial = source.sharedMaterial;
         copy.sortingLayerID = source.sortingLayerID;
         copy.sortingOrder = source.sortingOrder;
-        copy.color = source.color * _debrisTint;
+        copy.color = source.color * tint;
     }
 
     private static Vector3 Divide(Vector3 a, Vector3 b)

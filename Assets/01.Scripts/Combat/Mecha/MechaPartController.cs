@@ -337,14 +337,25 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
     }
 
     /// <summary>
+    /// 새 판(리스폰). 월드 상태를 지우고 진입 구성을 다시 입힌다. <see cref="RunController"/>가 부른다.
+    /// <paramref name="keepInstances"/>는 살아남는 아이템(안전 슬롯)의 인스턴스 — 레지스트리에서 지우면 개량·내구도가 날아간다.
+    /// 장비·적재함을 비우는 건 부르는 쪽이 먼저 한다.
+    /// </summary>
+    public void StartNewRun(IReadOnlyCollection<uint> keepInstances)
+    {
+        ResetWorldState(keepInstances);
+        ApplyLoadout(ResolveStartLoadout());
+    }
+
+    /// <summary>
     /// 이전 판의 흔적을 지운다. ItemInstanceRegistry는 정적이라
     /// 플레이 모드를 나가도 살아남는다.
     ///
-    /// <b>여기가 "새 판 시작" 지점이다.</b> 죽음·리스폰 흐름이 생기면 그쪽으로 옮길 것.
+    /// 첫 출격(<see cref="Start"/>)과 새 판(<see cref="StartNewRun"/>) 두 곳에서만 불린다.
     /// </summary>
-    private void ResetWorldState()
+    private void ResetWorldState(IReadOnlyCollection<uint> keepInstances = null)
     {
-        ItemInstanceRegistry.Clear();
+        ItemInstanceRegistry.ClearExcept(keepInstances);
         GameRandom.Reseed(_loadout.useFixedSeed ? _loadout.seed : Environment.TickCount);
     }
 

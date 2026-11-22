@@ -40,9 +40,17 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
     [Tooltip("완전히 떴을 때 orthographicSize에 곱하는 값. 1보다 크면 멀리 보인다. 빨라진 만큼 앞을 더 보여준다.")]
     [SerializeField, Range(1f, 1.6f)] private float _glideZoomScale = 1.15f;
 
+    [Header("사망 줌")]
+    [Tooltip("죽어 있는 동안 orthographicSize에 곱하는 값. 카메라가 뒤로 빠진다.")]
+    [SerializeField, Range(1f, 2.5f)] private float _deathZoomScale = 1.5f;
+
+    [Tooltip("사망 줌으로 빠지는 속도. 평소 줌보다 느리게 — 천천히 물러나는 느낌.")]
+    [SerializeField, Min(0.1f)] private float _deathZoomSpeed = 1.5f;
+
     private Camera _camera;
     private PlayerAimController _aim;
     private PlayerMoveController _move;
+    private Player _player;
 
     private Vector3 _velocity;
     private float _baseSize;
@@ -86,6 +94,7 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
 
         _aim = player.GetCompo<PlayerAimController>();
         _move = player.GetCompo<PlayerMoveController>();
+        _player = player;
 
         if (_aim != null)
         {
@@ -100,6 +109,7 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
     public void Unbind()
     {
         _move = null;
+        _player = null;
 
         if (_aim == null) return;
 
@@ -167,11 +177,17 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
         if (_move != null)
             target *= Mathf.Lerp(1f, _glideZoomScale, _move.Altitude01);
 
+        // 사망은 상태를 읽기만 한다. 죽음이 카메라를 부르지 않는다.
+        bool dead = _player != null && _player.IsDead;
+        if (dead)
+            target = _baseSize * _deathZoomScale;
+
         _camera.orthographicSize = Mathf.Lerp(
-            _camera.orthographicSize, target, 1f - Mathf.Exp(-_zoomSpeed * deltaTime));
+            _camera.orthographicSize, target, 1f - Mathf.Exp(-(dead ? _deathZoomSpeed : _zoomSpeed) * deltaTime));
     }
 
-    private void SnapToTarget()
+    /// <summary>지금 목표 지점으로 바로 옮긴다. 붙을 때와 리스폰(순간이동) 때.</summary>
+    public void SnapToTarget()
     {
         if (_target == null) return;
 

@@ -39,6 +39,14 @@ public class InventoryController : MonoBehaviour, IAgentComponent
     [SerializeField] private PickupSettings _pickup = new();
 
     public Inventory Inventory { get; private set; }
+
+    /// <summary>
+    /// 안전 슬롯. <b>죽어도 남는 한 칸.</b> 아무 아이템이나 한 칸 분량(최대 스택)까지 넣을 수 있다.
+    /// 적재함(<see cref="Inventory"/>)과 같은 <see cref="global::Inventory"/>라 드래그·스왑이 그대로 된다. 칸 수는 적재 스탯과 무관하게 고정이다.
+    /// </summary>
+    public Inventory SafeSlot { get; private set; }
+
+    public const int SafeSlotCount = 1;
     public Agent Owner { get; private set; }
 
     private AgentStatus _status;
@@ -68,6 +76,7 @@ public class InventoryController : MonoBehaviour, IAgentComponent
         int capacity = _status != null ? _status.InventorySize.TotalValue : _fallbackCapacity;
 
         Inventory = new Inventory(ClampCapacity(capacity));
+        SafeSlot = new Inventory(SafeSlotCount);
 
         if (_status != null)
             _status.InventorySize.OnChangedEvent += HandleCapacityChanged;
@@ -84,6 +93,15 @@ public class InventoryController : MonoBehaviour, IAgentComponent
     /// 적재 모듈을 떼어도 최소 한 칸은 남긴다.
     /// </summary>
     private static int ClampCapacity(int capacity) => Mathf.Max(1, capacity);
+
+    /// <summary>
+    /// 죽었다. 적재함을 비운다 — 기체를 버리고 탈출했으니 실린 것은 전부 잃는다. 안전 슬롯은 건드리지 않는다.
+    /// 떨구지 않는다(그냥 사라진다). 잃은 것을 그 자리에서 다시 줍게 할지는 탈출 루프(M4)에서 정한다.
+    /// </summary>
+    public void LoseCargo()
+    {
+        Inventory?.Clear();
+    }
 
     private void HandleCapacityChanged(int newCapacity)
     {

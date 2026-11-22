@@ -28,7 +28,7 @@
 
 **modifier를 걸었으면 `Dispose`에서 걷어냅니다.** origin 기반이라 `RemoveModifier(this)` 한 줄입니다.
 
-**`ItemInstanceRegistry.Clear()`를 새 게임/월드 로드에서 호출합니다.** 정적이라 플레이 모드를 나가도 이전 판의 인스턴스가 남습니다.
+**`ItemInstanceRegistry`는 새 판에서만 비웁니다** — 첫 출격(`MechaPartController.Start`)과 새 판(`RunController` → `MechaPartController.StartNewRun`) 두 곳. 안전 슬롯 아이템은 `ClearExcept`로 남깁니다. 정적이라 플레이 모드를 나가도 이전 판의 인스턴스가 남습니다.
 
 ## 멀티플레이 대비
 

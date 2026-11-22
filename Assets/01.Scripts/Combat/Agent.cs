@@ -22,7 +22,10 @@ public class Agent : MonoBehaviour
         AgentStatus = GetCompo<AgentStatus>();
 
         if (AgentHealth != null)
+        {
             AgentHealth.OnDeadEvent += HandleDead;
+            AgentHealth.OnRevivedEvent += HandleRevived;
+        }
     }
 
     protected virtual void Start()
@@ -33,7 +36,10 @@ public class Agent : MonoBehaviour
     protected virtual void OnDestroy()
     {
         if (AgentHealth != null)
+        {
             AgentHealth.OnDeadEvent -= HandleDead;
+            AgentHealth.OnRevivedEvent -= HandleRevived;
+        }
 
         _components.Values.ToList().ForEach(compo => compo.Dispose());
     }
@@ -41,6 +47,12 @@ public class Agent : MonoBehaviour
     protected virtual void HandleDead()
     {
         IsDead = true;
+    }
+
+    /// <summary>새 판·리스폰으로 되살아났다. <see cref="Health.ResetHealth"/>가 알린다.</summary>
+    protected virtual void HandleRevived()
+    {
+        IsDead = false;
     }
 
     private void AddComponentToDictionary()

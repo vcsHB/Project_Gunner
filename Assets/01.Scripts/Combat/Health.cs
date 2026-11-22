@@ -10,6 +10,9 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
     public event Action<float, float> OnHealthChangedEvent; // (current, max)
     public event Action OnDeadEvent;
 
+    /// <summary>죽어 있다가 되살아났다(새 판·리스폰). 사망 연출을 되돌릴 쪽이 듣는다.</summary>
+    public event Action OnRevivedEvent;
+
     public bool IsDead { get; private set; }
 
     /// <summary>대시/스폰 무적 등에서 외부가 켜고 끈다.</summary>
@@ -127,6 +130,8 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
     /// <summary>풀에서 재사용하거나 리스폰할 때 호출. 실드도 같이 채운다.</summary>
     public void ResetHealth()
     {
+        bool wasDead = IsDead;
+
         IsDead = false;
         IsInvincible = false;
         SetHealth(_maxHealth);
@@ -136,6 +141,20 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
         if (_parts != null)
             _parts.ResetAll();
+
+        if (wasDead)
+            OnRevivedEvent?.Invoke();
+    }
+
+    /// <summary>
+    /// 즉사. 실드·방어력·무적을 전부 무시한다. 착지 불가 지역으로의 추락처럼 "맞아서"가 아닌 죽음에 쓴다.
+    /// </summary>
+    public void Kill()
+    {
+        if (IsDead) return;
+
+        SetHealth(0f);
+        Die();
     }
 
     private void SetHealth(float value)

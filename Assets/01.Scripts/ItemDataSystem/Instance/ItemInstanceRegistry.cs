@@ -23,6 +23,35 @@ public static class ItemInstanceRegistry
     }
 
     /// <summary>
+    /// 새 판. <paramref name="keep"/>에 든 인스턴스(안전 슬롯의 아이템)만 남기고 지운다.
+    /// 다음 번호는 남긴 것 뒤에서 시작한다 — 1로 되돌리면 남긴 인스턴스와 번호가 겹친다.
+    /// </summary>
+    public static void ClearExcept(IReadOnlyCollection<uint> keep)
+    {
+        if (keep == null || keep.Count == 0)
+        {
+            Clear();
+            return;
+        }
+
+        List<ItemInstance> kept = new();
+        foreach (uint id in keep)
+        {
+            if (id != 0 && Instances.TryGetValue(id, out ItemInstance instance))
+                kept.Add(instance);
+        }
+
+        Instances.Clear();
+        s_nextId = 1;
+
+        for (int i = 0; i < kept.Count; i++)
+        {
+            Instances[kept[i].InstanceId] = kept[i];
+            s_nextId = (uint)Mathf.Max((int)s_nextId, (int)kept[i].InstanceId + 1);
+        }
+    }
+
+    /// <summary>
     /// 아이템 하나를 인벤토리에 넣을 수 있는 형태로 만든다.
     /// 인스턴스가 필요한 아이템이면 함께 만들어 붙인다.
     /// </summary>

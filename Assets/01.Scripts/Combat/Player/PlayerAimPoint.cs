@@ -72,6 +72,7 @@ public class PlayerAimPoint : MonoBehaviour
 
     private PlayerAimController _aimController;
     private EquipmentController _equipment;
+    private Health _health;
 
     private void Awake()
     {
@@ -110,6 +111,13 @@ public class PlayerAimPoint : MonoBehaviour
             ApplyCore(_equipment.Get<CoreDataSO>(EquipSlotType.Core));
         }
 
+        _health = player.GetCompo<Health>();
+        if (_health != null)
+        {
+            _health.OnDeadEvent += RefreshEnable;
+            _health.OnRevivedEvent += RefreshEnable;
+        }
+
         UIInputBlocker.OnBlockedChangedEvent += HandleInputBlocked;
         HandleInputBlocked(UIInputBlocker.IsBlocked);
     }
@@ -122,12 +130,23 @@ public class PlayerAimPoint : MonoBehaviour
             _equipment = null;
         }
 
+        if (_health != null)
+        {
+            _health.OnDeadEvent -= RefreshEnable;
+            _health.OnRevivedEvent -= RefreshEnable;
+            _health = null;
+        }
+
         UIInputBlocker.OnBlockedChangedEvent -= HandleInputBlocked;
         _aimController = null;
     }
 
     // 인벤토리를 열면 조준선을 숨긴다. 마우스로 UI를 다루는 중에 조준선이 따라다니면 방해가 된다.
-    private void HandleInputBlocked(bool blocked) => SetAimPointEnable(!blocked);
+    // 죽어 있어도 숨긴다(사망 연출). 둘 중 하나라도 걸리면 꺼진다.
+    private void HandleInputBlocked(bool blocked) => RefreshEnable();
+
+    private void RefreshEnable()
+        => SetAimPointEnable(!UIInputBlocker.IsBlocked && (_health == null || !_health.IsDead));
 
     private void OnDestroy() => Unbind();
 

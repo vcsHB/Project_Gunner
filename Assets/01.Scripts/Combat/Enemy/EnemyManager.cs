@@ -139,6 +139,19 @@ public class EnemyManager : MonoBehaviour
     /// 죽은 적을 목록에서 뺀다. <see cref="Enemy"/>는 죽으면 Destroy되므로
     /// 유니티 null이 된다 — 일반 null 비교로는 안 걸리고, 여기서는 == null이 맞다.
     /// </summary>
+    /// <summary>새 판. 살아 있는 적을 전부 없애고 시작 지연부터 다시 센다.</summary>
+    public void ClearAll()
+    {
+        for (int i = 0; i < _alive.Count; i++)
+        {
+            if (_alive[i] != null)
+                Destroy(_alive[i].gameObject);
+        }
+
+        _alive.Clear();
+        _timer = _startDelay;
+    }
+
     private void Prune()
     {
         for (int i = _alive.Count - 1; i >= 0; i--)

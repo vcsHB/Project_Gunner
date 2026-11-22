@@ -23,6 +23,12 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     /// <summary>빠르게 착륙해 미끄러지기 시작했다. 인자는 착륙 순간 속도 ÷ 착륙 상태 최고 속도(1 초과).</summary>
     public event Action<float> OnSkidStartedEvent;
 
+    /// <summary>착지 불가 지역 위에서 Space로 착륙하려 했다. 막혔다.</summary>
+    public event Action OnLandingRejectedEvent;
+
+    /// <summary>착지 불가 지역 위에서 강제로 내려앉아 추락했다. 바로 뒤에 사망 이벤트가 온다.</summary>
+    public event Action OnFellEvent;
+
     [Header("부스터 (Shift)")]
     [Tooltip("부스터 가동 시 이동속도 배율. 0.4면 +40%.")]
     [SerializeField] private float _sprintBonus = 0.4f;
@@ -99,6 +105,18 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
     /// <summary>지금 Space를 누르면 뜰 수 있는지. UI가 잠금을 보여줄 때 쓴다.</summary>
     public bool CanStartGlide => !IsGliding && _glideLockTimer <= 0f && CanMove && HasFuel && !IsBoosterBroken;
+
+    /// <summary>착륙 직후 다시 뜰 수 없는 남은 시간(초). HUD가 잠금을 보여줄 때 쓴다.</summary>
+    public float GlideLockRemaining => Mathf.Max(0f, _glideLockTimer);
+
+    /// <summary>잠금 전체 길이. 남은 시간을 비율로 그릴 때 쓴다.</summary>
+    public float GlideLockDuration => _glideLockAfterLanding;
+
+    /// <summary>연료가 바닥났는가. 활공·부스터가 막힌다.</summary>
+    public bool IsOutOfFuel => !HasFuel;
+
+    /// <summary>지금 실제 위치(그림자)가 착지 불가 지역 위인가. 활공 중에만 의미가 있다.</summary>
+    public bool IsOverNoLandingZone => NoLandingZone.Contains(transform.position);
 
     /// <summary>추진체가 부서졌다. 활공·부스터가 막히고 느려진다.</summary>
     public bool IsBoosterBroken => _parts != null && _parts.IsDestroyed(EquipSlotType.Booster);
@@ -181,7 +199,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     {
         if (slot != EquipSlotType.Booster) return;
 
-        if (IsGliding) Land();
+        if (IsGliding) ForceLand();
         SetSprintActive(false);
 
         if (_status != null)
@@ -237,7 +255,16 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     private void HandleGlideToggle()
     {
         if (IsGliding)
+        {
+            // 착지 불가 지역 위에서는 내려앉지 않는다. 눌렀다는 사실만 알린다(UI·경고음).
+            if (IsOverNoLandingZone)
+            {
+                OnLandingRejectedEvent?.Invoke();
+                return;
+            }
+
             Land();
+        }
         else if (CanStartGlide)
             StartGlide();
     }
@@ -311,6 +338,44 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
         }
     }
 
+    /// <summary>
+    /// 원해서가 아니라 <b>어쩔 수 없이</b> 내려앉는다(연료 고갈·추진체 파괴). 착지 불가 지역 위였으면 <b>추락해 죽는다.</b>
+    /// </summary>
+    private void ForceLand()
+    {
+        bool overNoLanding = IsOverNoLandingZone;
+
+        Land();
+
+        if (!overNoLanding || _player.IsDead) return;
+
+        OnFellEvent?.Invoke();
+        _player.AgentHealth?.Kill();
+    }
+
+    /// <summary>
+    /// 새 판·리스폰. 착륙 상태로, 멈춘 채로, 고도 0으로. 활공·부스터·파괴 감속 modifier를 걷고 판정 분류도 되돌린다.
+    /// 미끄러짐·착지 이벤트는 쏘지 않는다 — 되살아난 것이지 내려앉은 게 아니다.
+    /// </summary>
+    public void ResetMotion()
+    {
+        _skidding = false;
+        _glideLockTimer = 0f;
+        _liftProgress = 0f;
+        _rigidbody.linearVelocity = Vector2.zero;
+
+        SetSprintActive(false);
+
+        if (_status != null)
+        {
+            _status.MoveSpeed.RemoveModifier(_glideOrigin);
+            _status.MoveSpeed.RemoveModifier(_brokenBoosterOrigin);
+        }
+
+        SetMode(MechaMoveMode.Landed);
+        _target?.ResetTargetType();
+    }
+
     /// <summary>연료가 바닥나면 강제로 내려앉는다. 빠르면 그대로 미끄러진다.</summary>
     private void UpdateGlideFuel(float deltaTime)
     {
@@ -322,7 +387,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
             keep = _vitals.TryConsume(VitalType.Fuel, _glideFuelPerSecond * deltaTime);
 
         if (!keep)
-            Land();
+            ForceLand();
     }
 
     /// <summary>

@@ -121,7 +121,7 @@ Assets/
 │   │   ├── Projectile/      투사체
 │   │   └── Unit/
 │   ├── Core/                Singleton, ObjectPool, Attributes, Random
-│   ├── Effect/  ItemDataSystem/  Map/  Sound/
+│   ├── Effect/  GameFlow/(한 판: 죽음·새 판)  ItemDataSystem/  Map/  Sound/
 │   └── UI/                  CanvasCore/, Inventory/
 ├── 02.Sprites/  03.Prefabs/  04.Animations/  05.Materials/
 ├── 08.SO/                   Items/, Pool/

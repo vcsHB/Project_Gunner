@@ -30,6 +30,7 @@ public class ShieldStatus : MonoBehaviour, IAgentComponent
     private Agent _owner;
     private AgentStatus _status;
     private VitalStatus _vitals;
+    private Health _health;
 
     private float _current;
 
@@ -55,6 +56,11 @@ public class ShieldStatus : MonoBehaviour, IAgentComponent
     {
         _status = _owner.GetCompo<AgentStatus>();
         _vitals = _owner.GetCompo<VitalStatus>();
+        _health = _owner.GetCompo<Health>();
+
+        // 실드를 거치지 않는 죽음(추락 즉사)에서도 실드가 남아 잔해를 감싸면 안 된다.
+        if (_health != null)
+            _health.OnDeadEvent += HandleOwnerDead;
 
         if (_status != null)
         {
@@ -67,11 +73,16 @@ public class ShieldStatus : MonoBehaviour, IAgentComponent
 
     public void Dispose()
     {
+        if (_health != null)
+            _health.OnDeadEvent -= HandleOwnerDead;
+
         if (_status != null)
             _status.MaxShield.OnChangedEvent -= HandleMaxChanged;
     }
 
     private void OnDestroy() => Dispose();
+
+    private void HandleOwnerDead() => Set(0f);
 
     /// <summary>새 판·출격·풀 재사용. 가득 채우고 대기 타이머를 끝낸 상태로 둔다.</summary>
     public void ResetShield()

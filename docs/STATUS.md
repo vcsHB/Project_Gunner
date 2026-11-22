@@ -153,6 +153,9 @@
 | PartItemDetail / ItemPreview | ⬜ | 모듈 슬롯 배치 방식 미정 |
 | PartPlayerStatus | ✅ | 체력·실드(겹침, 실드 남으면 실드만 / 0이면 체력만) + 전력 / 연료 게이지 |
 | MechaSilhouetteUI | 🟡 | 기체 실루엣. 조립된 코어·팔·추진체 스프라이트를 그대로 Image로 옮기고 단색 셰이더(`UI/SilhouetteSolid`, 안쪽 외곽선) + 부위 체력 색(부서지면 어둡게). `PartHud/MechaSilhouette`. **위치·크기(`_pixelsPerUnit`) 미조정** |
+| SimpleGauge 서브게이지 | ✅ | `_increaseMode`(Instant / SubFirst) · `_decreaseMode`(Instant / BlinkThenDrain). 체력·실드 = SubFirst + Blink, 연료 = SubFirst + Instant, 나머지(전력·과열) Instant. 처음 값·다시 켜질 때는 연출 없이 맞춘다 |
+| RepairStatusUI | 🟡 | 실루엣 위. 키트 수 상시, 수리 중 진행 막대, 완료·중단·키트 없음 문구 후 흐려짐. **배치·스타일 임시** |
+| GlideStatusUI | 🟡 | 연료 게이지 옆. 준비 / 활공 중 / 착륙 잠금(남은 시간 막대) / 연료 없음 / 추진체 파손. **배치·스타일 임시** |
 | PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
 | PartEquipmentStatus | ✅ | 팔마다 하나. 잔탄 + 열 게이지(잠기면 남은 시간). **위치·크기는 임시** |
@@ -175,6 +178,9 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 | 시스템 | 상태 |
 |---|---|
+| 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → 3초 뒤 새 판. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`DeathScreenUI`) ([arch/run](arch/run.md)) |
+| 안전 슬롯 | 🟡 `InventoryController.SafeSlot`(1칸). UI `CellSafeSlot` — **배치 임시, 드래그는 눈으로 확인 전** |
+| 착지 불가 지역 | 🟡 `NoLandingZone`(콜라이더 모양 판정). 위에서 Space 착륙 막힘, 강제 착륙 = 추락 즉사. 테스트 영역 하나. 배치는 맵 작업 |
 | CameraManager | ✅ |
 | CameraFollowEffector | ✅ (플레이어↔조준점 중간, 정조준 줌) |
 | 발사 / 피격 / 착륙 화면 흔들림 | ✅ (`WeaponFireCameraShake`, `DamageCameraShake`, `SkidCameraShake`) |

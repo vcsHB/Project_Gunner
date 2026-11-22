@@ -253,6 +253,9 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         // 팔이 부서졌다. 빈 격발 소리도 내지 않는다 — 탄이 없는 게 아니라 팔이 없다.
         if (IsDisabled) return false;
 
+        // 죽은 기체는 쏘지 않는다. 방아쇠를 잡은 채로 죽으면 연사가 이어지므로 쓰는 쪽에서 막는다.
+        if (Owner != null && Owner.IsDead) return false;
+
         // 과열로 잠겨 있으면 트리거를 당겨도 나가지 않는다. 기다리면 풀리므로
         // 트리거를 놓게 하지 않는다 — 식자마자 연사가 이어지는 쪽이 자연스럽다.
         if (Heat != null && Heat.IsLocked) return false;

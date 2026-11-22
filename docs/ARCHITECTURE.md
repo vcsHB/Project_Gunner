@@ -16,6 +16,7 @@
 | [arch/enemy.md](arch/enemy.md) | 적(머리/다리, 상태 클래스, 선딜, 적도 메카다, AI 방아쇠, 구경 표) | 적 AI, 적 로드아웃 |
 | [arch/input.md](arch/input.md) | 조준 · 카메라 · 팔에 달린 것이 입력을 해석한다 · 입력 차단 · 입력 · 이동(착륙/활공) | 입력, 조준점, 카메라 흔들림 |
 | [arch/feedback.md](arch/feedback.md) | 진입점(`EffectPlayer`·`SoundManager`) · 핸들 · `ParticleEffect` · `SoundPlayer` 풀과 거르기 · 귀(`AudioListenerFollow`) · 피드백 컴포넌트 위치 | 이펙트·소리 재생, 새 이펙트 등록 |
+| [arch/run.md](arch/run.md) | 죽음 = 비상탈출 · 새 판(`RunController`) · 안전 슬롯 · 착지 불가 지역 | 사망·리스폰, 판 사이에 남는 것, 활공 착륙 규칙 |
 
 ## 파일 사이의 연결
 
