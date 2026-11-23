@@ -46,18 +46,8 @@ public class WeaponAmmoController
     /// <summary>탄약을 쓰지 않는 무기(근접, 에너지)면 false. 그런 무기는 탄 걱정이 없다.</summary>
     public bool UsesAmmo => Data != null && Data.UsesAmmo;
 
-    /// <summary>
-    /// 탄이 무한인가. 적재함이 없는 고정 무장(터렛·드론·보스)이 쓴다.
-    /// 탄종은 개체에 지정된 것(<see cref="WeaponItemInstance.LoadedAmmoId"/>)을 그대로 쓰고, 적재함을 보지 않는다.
-    /// </summary>
-    public bool IsInfinite { get; private set; }
-
-    public void SetInfinite(bool value) => IsInfinite = value;
-
     /// <summary>지금 쓰는 탄종. 지정이 없으면 적재함에서 맞는 것을 고른다.</summary>
-    public AmmoDataSO LoadedAmmo => IsInfinite
-        ? (Instance != null ? Instance.LoadedAmmo : null)
-        : AmmoDataSO.Find(ResolveAmmoId());
+    public AmmoDataSO LoadedAmmo => AmmoDataSO.Find(ResolveAmmoId());
 
     /// <summary>적재함에 남은 이 탄종의 수. 이게 곧 잔탄이다.</summary>
     public int Loaded
@@ -83,7 +73,7 @@ public class WeaponAmmoController
         }
     }
 
-    public bool CanFire => IsInfinite || !UsesAmmo || Loaded >= CostPerShot;
+    public bool CanFire => !UsesAmmo || Loaded >= CostPerShot;
 
     public void SetInventoryController(InventoryController controller) => _inventoryController = controller;
 
@@ -92,7 +82,7 @@ public class WeaponAmmoController
     /// </summary>
     public bool TryConsumeForShot()
     {
-        if (IsInfinite || !UsesAmmo) return true;
+        if (!UsesAmmo) return true;
 
         uint id = ResolveAmmoId();
         Inventory inventory = Inventory;

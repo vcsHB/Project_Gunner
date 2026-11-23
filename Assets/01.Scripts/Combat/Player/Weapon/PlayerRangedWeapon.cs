@@ -280,9 +280,7 @@ public class PlayerRangedWeapon : PlayerWeaponBase
         if (!Ammo.TryConsumeForShot()) return false;
 
         // 한 발이 실제로 나갔을 때만 닳는다. 빈 격발로 총이 망가지면 억울하다.
-        // 고정 무장(무한 탄)은 닳지 않는다 — 보급도 수리도 없는 몸에 달려 있어서, 닳으면 터렛이 조용히 멈춘다.
-        if (!Ammo.IsInfinite)
-            Instance?.ConsumeDurability();
+        Instance?.ConsumeDurability();
 
         FireProjectiles(powerRatio);
 
