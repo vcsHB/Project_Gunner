@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// <see cref="MechaRepair"/>의 이벤트만 듣는다 — 수리가 UI를 부르지 않는다.
 /// 진행도는 <see cref="MechaRepair.Remaining"/>에서 읽는다. 맞아서 끊기면 "중단"을 잠깐 보여주고 사라진다.
 /// </summary>
-public class RepairStatusUI : MonoBehaviour
+public class PartRepairStatus : MonoBehaviour
 {
     [Tooltip("진행 막대 + 문구 묶음. 수리 중·직후에만 보인다.")]
     [SerializeField] private CanvasGroup _progressGroup;

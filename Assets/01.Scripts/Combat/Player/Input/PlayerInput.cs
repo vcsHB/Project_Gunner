@@ -32,6 +32,12 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
 
     public event Action OnInventoryToggleEvent;
 
+    /// <summary>
+    /// ESC(패드 Start). 일시정지 — 또는 떠 있는 창을 닫는다(<see cref="UIPanelBase.TryCloseTop"/>). 누른 순간 한 번.
+    /// 게임플레이 입력이 막혀 있어도 온다 — 막힌 걸 풀어야 하는 키라서.
+    /// </summary>
+    public event Action OnPauseEvent;
+
     /// <summary>장비 슬롯 넘기기. -1 = 이전, +1 = 다음</summary>
     public event Action<int> OnSlotCycleEvent;
 
@@ -142,6 +148,12 @@ public class PlayerInput : ScriptableObject, Controls.IPlayerActions
     {
         if (context.performed)
             OnInventoryToggleEvent?.Invoke();
+    }
+
+    public void OnPause(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            OnPauseEvent?.Invoke();
     }
 
     public void OnInventoryScroll(InputAction.CallbackContext context)

@@ -14,7 +14,7 @@ using UnityEngine;
 ///
 /// 파생 클래스는 <see cref="OnWeaponAttached"/>/<see cref="OnWeaponDetached"/> 짝만 채우면 됩니다.
 /// </summary>
-public abstract class WeaponPanelBase : UIPanelBase
+public abstract class WeaponPartBase : UIPanelBase
 {
     [Tooltip("이 패널이 따라갈 팔. 좌우 무장이 동시에 활성이라 하나를 지정해야 한다.")]
     [SerializeField] private EquipSlotType _slot = EquipSlotType.ArmLeft;

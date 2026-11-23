@@ -7,7 +7,7 @@ using UnityEngine;
 /// 앞 7칸은 핫바가 따로 표시하므로, 보관 칸 뷰는 _startSlotIndex를 7로 둔다.
 /// 상자·제작대도 이 클래스를 그대로 재사용한다.
 /// </summary>
-public class UIInventory : MonoBehaviour
+public class SectionInventoryGrid : MonoBehaviour
 {
     [Header("Cells")]
     [Tooltip("모자란 칸을 찍어낼 프리팹.")]
@@ -86,7 +86,7 @@ public class UIInventory : MonoBehaviour
         if (!_builder.Ensure(needed))
         {
             Debug.LogError(
-                $"[UIInventory] 칸이 {needed}개 필요한데 {_builder.Count}개뿐입니다. " +
+                $"[SectionInventoryGrid] 칸이 {needed}개 필요한데 {_builder.Count}개뿐입니다. " +
                 "Cell Prefab을 지정하면 모자란 만큼 자동으로 만듭니다.", this);
         }
 

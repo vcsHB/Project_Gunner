@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 걸려 있는 상태이상을 셀로 나열한다. 셀은 만들어두고 재사용한다.
 /// </summary>
-public class ConditionDisplayGroup : MonoBehaviour
+public class PartConditionDisplay : MonoBehaviour
 {
     [SerializeField] private RectTransform _cellHolder;
     [SerializeField] private CellConditionDisplay _cellPrefab;

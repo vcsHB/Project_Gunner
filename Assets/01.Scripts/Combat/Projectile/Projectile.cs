@@ -52,7 +52,11 @@ public class Projectile : PoolableMono
             _caster.Owner = data.owner;
             _caster.Power = data.power;
             _caster.ResetTrail();
+            ApplyTargetTypes(_caster, data.targetTypes);
         }
+
+        if (_explosionCaster != null)
+            ApplyTargetTypes(_explosionCaster, data.targetTypes);
 
         _launched = true;
     }
@@ -110,6 +114,13 @@ public class Projectile : PoolableMono
         _explosionCaster.Owner = _data.owner;
         _explosionCaster.Power = _data.power;
         _explosionCaster.Cast();
+    }
+
+    // 지정이 없어도 되돌린다. 풀에서 나온 탄이 이전 무기(대공포)의 설정을 들고 있으면 안 된다.
+    private static void ApplyTargetTypes(CasterBase caster, TargetType? types)
+    {
+        if (types.HasValue) caster.OverrideTargetTypes(types.Value);
+        else caster.ResetTargetTypes();
     }
 
     /// <summary>

@@ -4,11 +4,11 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 팔 하나의 상태를 보여주는 HUD 조각. <b>좌우로 두 개가 뜬다.</b>
-/// 어느 팔을 볼지는 <see cref="WeaponPanelBase.Slot"/>이 정한다.
+/// 어느 팔을 볼지는 <see cref="WeaponPartBase.Slot"/>이 정한다.
 ///
 /// 원거리 무기를 달았을 때만 뜨고, 비었거나 근접이면 숨는다.
 /// </summary>
-public class PartEquipmentStatus : WeaponPanelBase
+public class PartEquipmentStatus : WeaponPartBase
 {
     [Header("무기")]
     [SerializeField] private Image _weaponPreview;

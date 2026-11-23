@@ -1,5 +1,12 @@
+using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 켜고 끄는 UI(Panel·Popup)의 바탕. 오브젝트를 끄지 않고 CanvasGroup으로 숨긴다.
+///
+/// <b>ESC로 닫히는 창</b>(<c>_closesOnCancel</c>)은 열린 순서대로 쌓인다. ESC는 맨 위 하나를 닫고(<see cref="TryCloseTop"/>),
+/// 닫을 게 없을 때만 일시정지가 뜬다(<see cref="PanelGamePause"/>). 인벤토리를 연 채 ESC를 누르면 인벤토리가 닫힌다.
+/// </summary>
 [RequireComponent(typeof(CanvasGroup))]
 public class UIPanelBase : MonoBehaviour, IWindowPanel
 {
@@ -7,6 +14,12 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
 
     [Tooltip("떠 있는 동안 조준·발사 같은 게임플레이 입력을 막는다. 인벤토리처럼 화면을 잡는 패널만 켠다.")]
     [SerializeField] private bool _blocksGameplayInput;
+
+    [Tooltip("ESC로 닫힌다. 열린 순서대로 쌓여 맨 위부터 닫힌다.")]
+    [SerializeField] private bool _closesOnCancel;
+
+    // ESC로 닫을 수 있는 열린 창. 나중에 열린 것이 뒤에 있다.
+    private static readonly List<UIPanelBase> s_cancelStack = new();
 
     public CanvasGroup canvasGroup;
 
@@ -42,6 +55,8 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
     protected virtual void OnDisable()
     {
         Localization.OnChangedEvent -= RefreshLocalization;
+
+        s_cancelStack.Remove(this);
 
         // 열린 채로 꺼지거나 파괴되면 아무도 빼주지 않아 조작이 영영 막힌다.
         ReleaseBlock();
@@ -87,12 +102,39 @@ public class UIPanelBase : MonoBehaviour, IWindowPanel
         IsShown = value;
         ApplyBlock(value);
 
+        s_cancelStack.Remove(this);
+        if (value && _closesOnCancel) s_cancelStack.Add(this);
+
         if (canvasGroup == null) return;
 
         canvasGroup.alpha = value ? 1f : 0f;
         canvasGroup.interactable = value;
         canvasGroup.blocksRaycasts = value;
     }
+
+    /// <summary>ESC로 닫히는 창이 하나라도 떠 있는가.</summary>
+    public static bool HasCancelable => s_cancelStack.Count > 0;
+
+    /// <summary>ESC. 맨 위 창 하나를 닫는다. 닫았으면 true — 그때는 일시정지를 띄우지 않는다.</summary>
+    public static bool TryCloseTop()
+    {
+        for (int i = s_cancelStack.Count - 1; i >= 0; i--)
+        {
+            UIPanelBase top = s_cancelStack[i];
+            s_cancelStack.RemoveAt(i);
+
+            if (top == null || !top.IsShown) continue;
+
+            top.Hide();
+            return true;
+        }
+
+        return false;
+    }
+
+    // 정적이라 플레이 모드를 나가도 남는다.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetOnPlay() => s_cancelStack.Clear();
 
     private void ApplyBlock(bool shown)
     {

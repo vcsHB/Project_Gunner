@@ -11,8 +11,8 @@ Health.OnDeadEvent
   ├─ (연출) PartBreakFeedback — 몸 전체를 어두운 잔해(Wreck)로 남기고 원본을 숨김
   ├─ (연출) DeathCameraShake — 강한 흔들림 / CameraFollowEffector — 사망 상태를 읽어 천천히 줌아웃(×1.5)
   ├─ (연출) PlayerAimPoint — 조준점 끔
-  ├─ (UI) DeathScreenUI — "기체 파괴 — 비상 탈출" + 재출격 카운트다운
-  └─ (UI) PartInventory — 열려 있으면 닫고, 죽어 있는 동안 안 열림
+  ├─ (UI) PanelDeathScreen — "기체 파괴 — 비상 탈출" + 재출격 카운트다운
+  └─ (UI) PanelInventory — 열려 있으면 닫고, 죽어 있는 동안 안 열림
 ```
 
 **잃는 순간은 새 판이 시작될 때입니다.** 죽은 직후에는 기체가 잔해로 보여야 해서 장비를 바로 걷지 않습니다. 대신 그사이 **인벤토리 화면이 열리지 않습니다** — 죽은 뒤에 안전 슬롯으로 옮겨 담는 걸 막습니다.
@@ -45,7 +45,7 @@ Health.OnDeadEvent
 
 `InventoryController.SafeSlot` — 칸 수 1짜리 `Inventory`. **아무 아이템이나 한 칸 분량(최대 스택)까지** 들어갑니다. 적재함과 같은 타입이라 드래그·스왑이 그대로 됩니다. 칸 수는 적재 스탯과 무관하게 고정입니다.
 
-UI는 인벤토리 화면 장비 칸 옆의 `CellSafeSlot`(`PartPlayerInventory._safeSlot`)입니다.
+UI는 인벤토리 화면 장비 칸 옆의 `CellSafeSlot`(`SectionPlayerInventory._safeSlot`)입니다.
 
 ## 착지 불가 지역 — `NoLandingZone`
 

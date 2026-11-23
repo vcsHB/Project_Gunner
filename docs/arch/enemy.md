@@ -80,12 +80,20 @@ MechaPartController.ApplyEntries
 
 ### 단일 기체
 
-조립되지 않는 적(터렛·드론·부표·보스). **무기는 메카 손의 것과 같은 오브젝트**를 쓴다 — 같은 총이 터렛에 달려도 같은 수치·과열·투사체로 나간다.
+조립되지 않는 적(터렛·드론·부표·보스). **1기체 1무기** — 팔(`HandController`)을 쓰지 않고 `UnitWeapon` 하나를 총구 소켓에 단다.
+
+**플레이어 무기와 섞지 않는다.** 같은 것은 탄(`Projectile`, `ProjectileLaunchData`)뿐이다. 플레이어 무기는 개량·과열·탄종·내구도가 핵심이고,
+적 무기는 "언제 쏘는지 읽히는가"가 핵심이다. 플레이어 무기를 꽂으면 탄 무한·내구도 예외가 플레이어 코드에 섞이고,
+적만 쓸 무기가 아이템 DB(루팅)에 들어간다. (처음엔 그렇게 했다가 2026-11-24에 걷어냈다.)
 
 | 빠졌던 것 | 어떻게 |
 |---|---|
-| 무기를 달 곳 | **고정 무장** — `HandController._mounts`에 자리(`socket`)와 무기(`fixedWeapon`, 탄종 `fixedAmmo`)를 직접 적는다. 장비·조립(`EquipmentController`·`MechaAssembler`)이 없어도 된다(선택 의존) |
-| 탄 | 적재함이 없으므로 **무한**(`WeaponAmmoController.SetInfinite`). 탄종은 개체에 지정한 것을 써서 탄종 보정도 걸린다. **내구도도 안 닳는다** — 보급도 수리도 없는 몸이라 닳으면 조용히 멈춘다 |
+| 무기 | `UnitWeapon`(소켓에) + `UnitWeaponSO`(**아이템 아님** — Id·루팅·인벤토리 없음). SO에는 **한 발**(투사체·위력·탄속·사거리·관통·폭발·맞히는 대상·반응 시간)만 |
+| 공격 방식 | **SO 파생 타입**이 정한다(`CreatePattern()` → 기체마다 진행 상태 하나). `UnitBurstWeaponSO` 연발 → 쉼(단발·기관포·산탄이 수치 차이) / `UnitPrecisionWeaponSO` 조준선 → 고정 → 한 발. 새 방식 = 파생 하나 |
+| 박자 | AI는 "대상 쪽을 보고 있고 맞힐 수 있나"만 넘긴다(`UnitWeapon.Tick`). 단계(`UnitWeaponPhase`)는 이벤트로 나가 연출이 예고를 그린다. **쉼은 시각으로 잰다** — 사정권 밖에서도 흘러야 경계를 들락거려 쉼 없이 쏘지 못한다 |
+| 정밀 사격의 회피 | 고정(`Locked`) 동안 포탑이 돌지 않고(`EnemyAIController.IsAimLocked`) 사정권을 벗어나도 상태를 놓지 않는다 — 예고한 한 발은 제 시간에 나간다. 죽으면 `Stop(cancel: true)`로 안 나간다 |
+| 맞히는 대상 | `UnitWeaponSO._hitTargets`(지상/공중/둘 다). 탄 판정에 걸리고(`ProjectileLaunchData.targetTypes` → `CasterBase.OverrideTargetTypes`, 풀에서 나올 때 되돌림) AI도 못 맞힐 대상엔 안 쏜다(`CanHitTarget`). 범위 표시도 이걸 본다 |
+| 거리 | 사격 거리 = **무기 사거리**(AI `_fireRange` 무시). 탐지 거리는 사거리보다 좁아지지 않는다 |
 | 다리 | `EnemyMoveController._locomotion` — 걷기(구렁 가장자리에서 멈춤) / 비행(넘음) / 제자리(몸은 안 움직이고 바라보기만 돈다) |
 | 포탑 | `_visualRoot`를 포탑 머리로 두고 `_turnSpeed`를 느리게. 무기는 머리의 소켓에 단다 |
 | 피할 틈 | `EnemyAIController._aimFollowsFacing` — 대상이 아니라 **포탑이 보는 쪽으로** 쏜다. 보는 쪽과 대상 사이가 `_fireAngleTolerance` 안일 때만 방아쇠를 당긴다. 메카는 끈다(몸이 덜 돌았어도 대상 쪽으로) |
@@ -93,7 +101,15 @@ MechaPartController.ApplyEntries
 
 판정 분류(지상/공중)는 다리와 따로 `TargetBase._defaultTargetType`이 정한다. 비행 다리를 달고 지상 판정일 수도 있다.
 
-테스트 터렛 `Enemy_Turret_Test` — 제자리 다리, 머리 60°/s, 사거리 10, Hunter 고정 무장, 체력 600.
+**공격 범위 표시** — `UnitRangeIndicator`(기체 `Root/RangeIndicator`). 지상 = 바닥 실선 원 + 옅은 채움, 공중 = 활공 높이(`_airLift`, 플레이어 `_glideHeight`와 맞출 것)만큼 띄운 점선 원. 색도 분류별. 공격 상태면 진해진다. 메시는 시작 때 한 번 만든다.
+
+테스트 터렛 — 제자리 다리, 머리 60°/s, 체력 600. 무기는 `08.SO/UnitWeapon/`.
+
+| 프리팹 | 무기 | 대상 |
+|---|---|---|
+| `Enemy_Turret_Test` | 기관포(연발 5, 쉼 1.4초) | 지상 |
+| `Enemy_Turret_Sniper_Test` | 정밀(노림 1.2 → 고정 0.45 → 35 피해) | 둘 다 |
+| `Enemy_Turret_Flak_Test` | 산탄 5발 × 2(대공) | 공중 |
 
 ### 방아쇠는 AI가 민다
 

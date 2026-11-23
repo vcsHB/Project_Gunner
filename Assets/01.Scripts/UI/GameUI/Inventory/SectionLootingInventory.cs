@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PartLootingInventory : MonoBehaviour
+public class SectionLootingInventory : MonoBehaviour
 {
 
 }

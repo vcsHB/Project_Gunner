@@ -9,7 +9,7 @@ using UnityEngine;
 ///
 /// 남은 시간 줄만 매 프레임 갱신한다. 제목·안내는 죽을 때 한 번 넣는다.
 /// </summary>
-public class DeathScreenUI : MonoBehaviour
+public class PanelDeathScreen : MonoBehaviour
 {
     [SerializeField] private CanvasGroup _group;
     [SerializeField] private TextMeshProUGUI _textTitle;

@@ -4,7 +4,7 @@ using UnityEngine;
 /// 게임 중 상시 떠 있는 HUD. 플레이어를 찾아 조각들에게 나눠준다.
 ///
 /// 무장 패널이 <b>둘</b>인 이유는 좌우 무장이 동시에 활성이기 때문이다.
-/// 각 패널이 어느 팔을 보는지는 패널 자신(<see cref="WeaponPanelBase"/>)이 들고 간다 —
+/// 각 패널이 어느 팔을 보는지는 패널 자신(<see cref="WeaponPartBase"/>)이 들고 간다 —
 /// 여기서 짝지어주면 인스펙터의 슬롯 설정과 배열 순서가 어긋날 수 있다.
 /// </summary>
 public class PartHud : MonoBehaviour

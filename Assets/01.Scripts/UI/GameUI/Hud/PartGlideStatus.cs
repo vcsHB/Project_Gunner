@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// 우선순위 — 추진체 파손 &gt; 활공 중(착지 불가 지역 위면 경고) &gt; 연료 없음 &gt; 착륙 잠금(남은 시간 막대) &gt; 준비됨.
 /// 상태는 이동(<see cref="PlayerMoveController"/>)에서 매 프레임 읽는다. 값 몇 개를 보는 것뿐이라 이벤트를 따로 파지 않았다.
 /// </summary>
-public class GlideStatusUI : MonoBehaviour
+public class PartGlideStatus : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _label;
     [Tooltip("착륙 잠금의 남은 시간. 잠금 중에만 찬다(1 → 0).")]

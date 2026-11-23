@@ -105,7 +105,7 @@
 지금은 우클릭 드래그로 **반개**만 됩니다. `ItemTransfer.Move`가 `count`를 받으므로 개수를 정하는 창만 붙이면 됩니다.
 
 ### 컨테이너(상자) 인벤토리
-`PartLootingInventory`가 비어 있습니다. `Inventory`를 가진 `ItemContainer` 컴포넌트를 만들고 `UIInventory.Bind`를 부르면 됩니다. **`UIInventory`는 이미 재사용 가능한 상태입니다** (`_bindPlayerInventory`를 끄고 직접 Bind).
+`SectionLootingInventory`가 비어 있습니다. `Inventory`를 가진 `ItemContainer` 컴포넌트를 만들고 `SectionInventoryGrid.Bind`를 부르면 됩니다. **`SectionInventoryGrid`는 이미 재사용 가능한 상태입니다** (`_bindPlayerInventory`를 끄고 직접 Bind).
 
 ### ~~`EquipSlotType`의 무기 3종~~ → 전환에서 해소 (2026-10-25)
 `PrimaryWeapon` / `SecondaryWeapon`이 `ArmLeft` / `ArmRight`가 되고, 무장이 **다시 장비 슬롯에서 나옵니다.** 핫바가 없어지므로 "쓰이는 곳이 없는 슬롯" 문제 자체가 사라집니다. ([PIVOT.md](PIVOT.md#슬롯))
@@ -148,7 +148,7 @@
 ## UI
 
 ### `UIManager` 패널 라우팅
-패널을 스택으로 쌓을지, 이름으로 조회할지, 직접 참조할지 미정이라 비워뒀습니다. 지금은 `PartInventory`가 입력을 직접 받아 스스로 토글합니다.
+패널을 스택으로 쌓을지, 이름으로 조회할지, 직접 참조할지 미정이라 비워뒀습니다. 지금은 `PanelInventory`가 입력을 직접 받아 스스로 토글합니다.
 
 ### `Button`
 호버 스케일 필드만 있고 핸들러가 비어 있습니다. DOTween이 들어와 있으니 그걸 쓰면 됩니다.

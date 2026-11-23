@@ -132,7 +132,7 @@ Health.ApplyDamage
 
 ### HUD 실루엣
 
-`MechaSilhouetteUI`(`PartHud/MechaSilhouette`)가 **조립된 기체를 그대로 UI로 옮깁니다.** 코어 아래의 보이는 SpriteRenderer를 전부 코어 기준 상대 위치·회전·크기로 `Image`에 복제합니다 — 기체가 돌거나 활공으로 커져도 실루엣은 정면을 봅니다. 왼팔 반전도 따라옵니다. 조립·팔이 바뀌면 다음 프레임에 다시 짓습니다(파괴 예약된 옛 파츠가 섞이지 않게).
+`PartMechaSilhouette`(`PartHud/MechaSilhouette`)가 **조립된 기체를 그대로 UI로 옮깁니다.** 코어 아래의 보이는 SpriteRenderer를 전부 코어 기준 상대 위치·회전·크기로 `Image`에 복제합니다 — 기체가 돌거나 활공으로 커져도 실루엣은 정면을 봅니다. 왼팔 반전도 따라옵니다. 조립·팔이 바뀌면 다음 프레임에 다시 짓습니다(파괴 예약된 옛 파츠가 섞이지 않게).
 
 색은 코어 = `Health`, 팔·추진체 = `MechaPartHealth`(그라디언트), 부서지면 `_destroyedColor`. 부위 판별은 `HitBox.Part`와 같은 규칙(상위 소켓). HUD 안 위치는 RectTransform, 크기는 `_pixelsPerUnit`.
 

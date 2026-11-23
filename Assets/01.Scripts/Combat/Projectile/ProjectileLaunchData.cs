@@ -30,4 +30,10 @@ public struct ProjectileLaunchData
 
     /// <summary>0보다 크면 사라질 때 이 반경으로 터진다. 투사체 프리팹에 폭발 캐스터가 있어야 한다.</summary>
     public float explosionRadius;
+
+    /// <summary>
+    /// 맞힐 대상 분류(지상/공중). null이면 투사체 프리팹의 캐스터 설정을 그대로 쓴다.
+    /// 대공포탑처럼 무기가 대상을 정할 때 채운다 — 직격과 폭발 둘 다에 걸린다.
+    /// </summary>
+    public TargetType? targetTypes;
 }

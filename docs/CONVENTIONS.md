@@ -9,6 +9,22 @@
 - 접미사 — `___Base`(상속용 베이스), `___Type`(enum), `___SO`(ScriptableObject), `___Manager`(싱글턴), `___Controller`(Agent 컴포넌트)
 - 주석은 한국어. **무엇이 아니라 왜**를 씁니다
 
+### UI 클래스 (2026-11-24)
+
+UI 클래스는 **화면에 어떻게 떠 있는가**를 접두사로 붙입니다. 씬 오브젝트 이름도 클래스 이름과 같게 둡니다.
+
+| 접두사 | 뜻 | 예 |
+|---|---|---|
+| `Part` | **상시** 떠 있는 HUD 구성 요소 | `PartHud`, `PartPlayerStatus` |
+| `Panel` | 그 위에 **간헐적으로** 뜨는 화면. 열고 닫는다 | `PanelGamePause`, `PanelDeathScreen` |
+| `Popup` | **조건에 따라** 뜨는 확인창·안내 | `PopupItemInformation` |
+| `Cell` | 목록·격자에서 반복되는 한 칸 | `CellInventorySlot`, `CellConditionDisplay` |
+
+UI가 아닌 것(입력·드래그 처리)은 접두사 없이 `___Controller`. 공용 부품(`SimpleGauge`, `SlicedFilledImage`)도 접두사 없음.
+`___UI` 접미사는 쓰지 않습니다 — 상시인지 간헐인지 이름에서 안 보입니다.
+
+> 아직 규칙에 안 맞는 것: `GlideStatusUI`, `RepairStatusUI`, `MechaSilhouetteUI`, `UIInventory`, `ConditionDisplayGroup`, `WeaponPanelBase`(상시 HUD인데 `Panel`), `PartInventory`(Tab으로 여닫는데 `Part`).
+
 ## 용어
 
 **파츠**와 **모듈**을 섞어 쓰지 마세요. 층이 다릅니다.
@@ -71,6 +87,7 @@ SO에 런타임 상태를 두지 마세요. 에셋이라 **플레이 모드를 �
 - `Tools > Item Creator` — 아이템 SO 생성, 이름 규칙 일괄 적용
 - `ItemDatabase` 인스펙터 — 프로젝트 스캔 & Id 부여, Id 대역 편집, **Id 충돌 해결**, 전체 재부여
 - `Tools > Asset Highlight Settings` — 에셋 색칠 팔레트. 프로젝트 창에서 `Ctrl+/`
+- `Tools > Asset Bookmarks` — 자주 여는 에셋·폴더를 탭별로 모아둔다. 창에 끌어다 놓으면 지금 탭에 등록. 검색, 순서 변경. 키는 `PlayerSettings.productGUID`
 - `Tools > Item Database > Rebuild` — 프로젝트 스캔 & Id 부여. 인스펙터 버튼과 같은 일을 메뉴로도 부를 수 있게 한 것
 - `Tools > Cleanup > Remove Missing Scripts` — 스크립트를 지운 뒤 남는 끊어진 컴포넌트 정리. 비활성 오브젝트까지 훑는다
 - `Tools > Mecha > Part Forge` — 파츠 생성 → 설정 → 로드아웃 → Play를 한 창에서. 씬을 더럽히지 않는다

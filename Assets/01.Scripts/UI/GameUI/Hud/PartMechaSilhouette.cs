@@ -13,7 +13,7 @@ using UnityEngine.UI;
 /// 색 — 코어는 <see cref="Health"/>, 팔·추진체는 <see cref="MechaPartHealth"/>. 부서진 부위는 <see cref="_destroyedColor"/>.
 /// HUD 안에서의 위치·크기는 이 RectTransform과 <see cref="_pixelsPerUnit"/>로 맞춘다.
 /// </summary>
-public class MechaSilhouetteUI : MonoBehaviour
+public class PartMechaSilhouette : MonoBehaviour
 {
     [Tooltip("월드 1유닛을 몇 픽셀로 그릴지. 실루엣 전체 크기다.")]
     [SerializeField, Min(1f)] private float _pixelsPerUnit = 24f;

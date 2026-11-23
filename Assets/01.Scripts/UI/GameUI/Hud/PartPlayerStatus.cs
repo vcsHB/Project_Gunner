@@ -14,7 +14,7 @@ public class PartPlayerStatus : MonoBehaviour
     [SerializeField] private SimpleGauge _fuelGauge;
 
     [Header("Additional")]
-    [SerializeField] private ConditionDisplayGroup _conditionDisplayGroup;
+    [SerializeField] private PartConditionDisplay _conditionDisplayGroup;
 
     private Health _health;
     private VitalStatus _vitals;

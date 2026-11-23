@@ -51,7 +51,10 @@ public class EnemyAttackState : EnemyState
         }
 
         Ai.Move.Stop();
-        Ai.Move.LookAt(Ai.DirectionToTarget);
+
+        // 정밀 사격이 조준을 고정했으면 돌지 않는다 — 이 틈에 선 밖으로 빠지는 것이 회피다.
+        if (!Ai.IsAimLocked)
+            Ai.Move.LookAt(Ai.DirectionToTarget);
 
         if (Ai.IsArmed)
         {
@@ -65,7 +68,8 @@ public class EnemyAttackState : EnemyState
     /// <summary>쏘는 쪽. 사정권 안이면 방아쇠를 민다. 발사 속도는 무기가 정한다.</summary>
     private void TickRanged(float deltaTime)
     {
-        if (Ai.DistanceToTarget > Ai.AttackLeaveRange)
+        // 고정 중에는 사정권을 벗어나도 놓지 않는다. 예고한 한 발은 제 시간에 나가야 한다.
+        if (Ai.DistanceToTarget > Ai.AttackLeaveRange && !Ai.IsAimLocked)
         {
             Ai.ChangeState(EnemyStateType.Chase);
             return;

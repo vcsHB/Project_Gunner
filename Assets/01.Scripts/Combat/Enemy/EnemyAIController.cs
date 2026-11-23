@@ -71,25 +71,39 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     // 메카 적은 팔에 무기를 달고 쏜다. 비메카(짐승·드론)는 없으므로 null일 수 있다.
     private EnemyHandController _hands;
 
+    // 단일 기체(터렛·드론)는 팔 대신 무기 하나를 몸에 단다. 둘 다 있으면 단일 기체 무기가 우선한다.
+    private UnitWeapon _weapon;
+
     public EnemyMoveController Move { get; private set; }
 
     public EnemyStateType CurrentState { get; private set; } = EnemyStateType.Idle;
 
-    public float DetectRange => _detectRange;
-    public float LoseRange => _detectRange + _loseMargin;
+    /// <summary>사정권보다 좁으면 쏠 수 있는 거리에서 못 알아챈다. 무기 사거리가 데이터에서 오므로 여기서 맞춘다.</summary>
+    public float DetectRange => Mathf.Max(_detectRange, AttackRange);
+    public float LoseRange => DetectRange + _loseMargin;
 
     /// <summary>
     /// 멈춰서 공격하기 시작하는 거리. <b>무장을 달았으면 사격 거리, 없으면 근접 사정권이다.</b>
     /// 총을 든 기체가 주먹 거리까지 붙을 이유가 없다.
+    /// 단일 기체 무기는 무기의 사거리를 그대로 쓴다 — 화면에 그린 범위와 실제로 쏘는 거리가 달라지면 안 된다.
     /// </summary>
-    public float AttackRange => IsArmed ? _fireRange : _attackRange;
+    public float AttackRange => _weapon != null ? _weapon.Range : IsArmed ? _fireRange : _attackRange;
 
     public float AttackLeaveRange => AttackRange + _attackLeaveMargin;
     public float AttackWindup => _attackWindup;
     public float AttackCooltime => _attackCooltime;
 
     /// <summary>팔에 무기가 달려 있는가. 달려 있으면 때리지 않고 쏜다.</summary>
-    public bool IsArmed => _hands != null && _hands.HasAnyHand;
+    public bool IsArmed => _weapon != null || (_hands != null && _hands.HasAnyHand);
+
+    /// <summary>단일 기체 무기. 없으면 null.</summary>
+    public UnitWeapon Weapon => _weapon;
+
+    /// <summary>정밀 사격이 조준을 고정했다. 이 동안은 돌지 않고, 상태도 벗어나지 않는다 — 예고한 한 발은 나가야 한다.</summary>
+    public bool IsAimLocked => _weapon != null && _weapon.IsAimLocked;
+
+    /// <summary>지금 대상을 맞힐 수 있는 무기인가. 대공포는 걷는 기체를, 지상포는 활공 중인 기체를 쏘지 않는다.</summary>
+    public bool CanHitTarget => _weapon == null || _weapon.CanHit(_target);
 
     /// <summary>
     /// 무기가 탄을 보낼 방향. 기체가 아직 다 돌지 않았어도 겨눈 곳으로 나간다 —
@@ -151,12 +165,13 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
         }
 
         _hands = _owner.GetCompo<EnemyHandController>();
+        _weapon = _owner.GetCompo<UnitWeapon>();
 
         if (_attackCaster == null)
             _attackCaster = GetComponentInChildren<CasterBase>(true);
 
         // 무장도 캐스터도 없으면 영영 못 때린다. 둘 중 하나는 있어야 한다.
-        if (_attackCaster == null && _hands == null)
+        if (_attackCaster == null && _hands == null && _weapon == null)
             Debug.LogWarning($"[EnemyAI] {name}에 무장도 공격 캐스터도 없습니다. 쫓아오기만 합니다.", this);
 
         _states[EnemyStateType.Idle] = new EnemyIdleState(this);
@@ -183,7 +198,7 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
         {
             // 연사 무기는 트리거를 들고 있는 동안 스스로 발사를 이어간다.
             // 놓아주지 않으면 파괴되기까지의 한두 프레임 동안 계속 쏜다.
-            StopFiring();
+            CancelFiring();
             return;
         }
 
@@ -231,13 +246,30 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     /// </summary>
     public void SetFiring(bool firing, float deltaTime)
     {
+        if (_weapon != null)
+        {
+            _weapon.Tick(firing && CanHitTarget, deltaTime);
+            return;
+        }
+
         if (_hands == null) return;
 
         _hands.Tick(firing, deltaTime);
     }
 
-    /// <summary>즉시 놓는다. 죽거나 상태를 벗어날 때.</summary>
-    public void StopFiring() => _hands?.StopFiring();
+    /// <summary>즉시 놓는다. 상태를 벗어날 때. 정밀 사격이 고정까지 갔으면 그 한 발은 나간다.</summary>
+    public void StopFiring()
+    {
+        _weapon?.Stop(false);
+        _hands?.StopFiring();
+    }
+
+    /// <summary>죽었을 때. 예고 중이던 것도 내보내지 않는다.</summary>
+    private void CancelFiring()
+    {
+        _weapon?.Stop(true);
+        _hands?.StopFiring();
+    }
 
     /// <summary>
     /// 판정을 내보낸다. 위력은 캐스터가 <see cref="Agent.AgentStatus"/>에서 읽으므로

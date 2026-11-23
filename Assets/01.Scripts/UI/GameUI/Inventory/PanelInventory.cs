@@ -5,11 +5,11 @@ using UnityEngine;
 ///
 /// <b>죽어 있는 동안은 열리지 않는다.</b> 열려 있었으면 닫는다 — 기체를 잃기 전에 안전 슬롯으로 옮겨 담는 걸 막는다(<see cref="RunController"/>).
 /// </summary>
-public class PartInventory : UIPanelBase
+public class PanelInventory : UIPanelBase
 {
-    [SerializeField] private PartPlayerInventory _playerInventory;
+    [SerializeField] private SectionPlayerInventory _playerInventory;
     [SerializeField] private PartItemDetail _itemDetail;
-    [SerializeField] private PartLootingInventory _lootingInventory;
+    [SerializeField] private SectionLootingInventory _lootingInventory;
 
     private PlayerInput _input;
     private Health _health;
@@ -40,6 +40,9 @@ public class PartInventory : UIPanelBase
     private void HandleToggle()
     {
         if (_health != null && _health.IsDead && !IsShown) return;
+
+        // 일시정지 밑에서 열리면 ESC 한 번에 둘 중 무엇이 닫힐지 헷갈린다.
+        if (PanelGamePause.IsPaused) return;
 
         Toggle();
     }

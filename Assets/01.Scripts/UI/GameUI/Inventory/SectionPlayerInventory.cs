@@ -1,11 +1,11 @@
 using UnityEngine;
 
-public class PartPlayerInventory : MonoBehaviour
+public class SectionPlayerInventory : MonoBehaviour
 {
     [Header("Main Slots")]
     [SerializeField] private CellEquipmentSlot[] _mainEquipmentSlots; // 장비, 갑옷 등등.
 
-    [SerializeField] private UIInventory _inventory;
+    [SerializeField] private SectionInventoryGrid _inventory;
 
     [Tooltip("안전 슬롯. 죽어도 남는 한 칸(InventoryController.SafeSlot).")]
     [SerializeField] private CellInventorySlot _safeSlot;

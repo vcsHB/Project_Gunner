@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aed71540782a0c84c8473196b64f7d43, type: 3}
+  m_Name: UnitWeapon_Precision_Sniper
+  m_EditorClassIdentifier: Assembly-CSharp::UnitPrecisionWeaponSO
+  _projectile: 1
+  _damage: 35
+  _criticalRate: 0
+  _projectileSpeed: 32
+  _range: 14
+  _penetration: 0
+  _explosionRadius: 0
+  _hitTargets: 3
+  _engageDelay: 0.4
+  _chargeTime: 1.2
+  _lockTime: 0.45
+  _cooldown: 2.5

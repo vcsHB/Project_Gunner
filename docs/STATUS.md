@@ -40,7 +40,9 @@
 | 편 가르기 (`FactionType`) | ✅ | 캐스터가 때릴 편을 고른다. 적끼리 오사 방지 |
 | 적 메카 조립 | ✅ | 플레이어와 같은 경로. `MechaLoadoutTableSO`가 매번 굴린다 |
 | `HandController` 분리 | ✅ | 만들고 붙이는 일은 공용, 방아쇠만 플레이어/적이 다르다 |
-| 단일 기체 | ✅ | 조립 없는 적. 고정 무장(`HandController` 자리+무기 직접 지정, 무한 탄·내구도 안 닳음), 몸을 따라 쏘기(`_aimFollowsFacing` + 허용각), 잔해(`PartBreakFeedback._bodyRoot`). 테스트 터렛 `Enemy_Turret_Test`(`Item_Unit_TurretTest` 9001) |
+| 단일 기체 | ✅ | 조립 없는 적. **1기체 1무기** `UnitWeapon` + `UnitWeaponSO`(아이템 아님, 플레이어 무기와 분리). 공격 방식은 파생 SO — 연발(`UnitBurstWeaponSO`: 단발·기관포·산탄) / 정밀(`UnitPrecisionWeaponSO`: 조준선 → 고정 → 한 발). 맞히는 대상(지상/공중/둘 다)은 무기가 정하고 탄 판정에 걸린다(`ProjectileLaunchData.targetTypes`). 몸을 따라 쏘기(`_aimFollowsFacing` + 허용각), 잔해(`PartBreakFeedback._bodyRoot`) ([arch/enemy](arch/enemy.md#단일-기체)) |
+| 터렛 공격 범위 | ✅ | `UnitRangeIndicator` — 지상 = 실선 원 + 옅은 채움, 공중 = 활공 높이만큼 띄운 점선 원(색도 다름). 반경 = 무기 사거리. 공격 중이면 진해짐. 조준선 `UnitWeaponFeedback` |
+| 테스트 터렛 | 🟡 | `Enemy_Turret_Test`(기관포, 지상) / `_Sniper_Test`(정밀, 둘 다) / `_Flak_Test`(산탄, 공중만). 무기 `08.SO/UnitWeapon/`. 아트·이펙트·소리 임시, 셋 다 `Item_Unit_TurretTest`(9001) 데이터 공유 |
 | `IAimDirectionProvider` | ✅ | 무기가 겨누는 쪽을 인터페이스로 묻는다 |
 | `UnitDataSO` | ✅ | 유닛 데이터 + 전리품 테이블. Id 대역 9000~9999 |
 | Shadow | 🟡 | 크기 설정만 |
@@ -65,7 +67,7 @@
 | 무기 들기 | ✅ | 핫바가 아니라 `Equipment[ArmLeft/ArmRight]`를 따라감 |
 | 전력 / 연료 | ✅ | `VitalStatus`. 전력은 차고 연료는 안 찬다. 고갈 시 페널티 + 손상 |
 | 실드 | ✅ | `ShieldStatus`. 피해를 먼저 받고 그 타격은 실드에서 끝. 20초 대기 후 전력을 쓰며 회복. 코어 Deltas로 수치. 실드 원(`ShieldHitArea`)이 판정 — 실드가 있는 동안만 켜짐. 실드 프리팹 `UnitShield`(플레이어·`Enemy_Test` 공용), 0이면 그림도 꺼짐. 플레이어 1000 / 적 400·700. 깨짐·복귀 연출 `ShieldFeedback`(프리팹) + `ShieldBreakCameraShake` |
-| 부위파괴 | 🟡 | `MechaPartHealth`. 팔·추진체 체력(`EquipableItemDataSO._partHealth`), 코어 = `Health`. 맞은 부위는 히트박스가 붙은 소켓으로. 부서지면 어두운 조각으로 떨어져 나가고(`PartBreakFeedback`) 화면 크게 흔들림. 팔 파괴 = 무기 정지, 추진체 파괴 = 활공·부스터 불가 + 40% 감속. 추진체 `Item_Booster_Booster1`(Unit_Booster_1_0, 체력 120) + 히트박스. HUD 실루엣 `MechaSilhouetteUI` |
+| 부위파괴 | 🟡 | `MechaPartHealth`. 팔·추진체 체력(`EquipableItemDataSO._partHealth`), 코어 = `Health`. 맞은 부위는 히트박스가 붙은 소켓으로. 부서지면 어두운 조각으로 떨어져 나가고(`PartBreakFeedback`) 화면 크게 흔들림. 팔 파괴 = 무기 정지, 추진체 파괴 = 활공·부스터 불가 + 40% 감속. 추진체 `Item_Booster_Booster1`(Unit_Booster_1_0, 체력 120) + 히트박스. HUD 실루엣 `PartMechaSilhouette` |
 | 필드 수리 (R) | ✅ | `MechaRepair` + `RepairKitDataSO`(Id 10000~). 키트 1개 → 4초간 코어·부위 각 60. 맞으면 끊김(키트는 소모). 부서진 부위는 30%까지 차면 복구 |
 | 소모품 사용 | ❌ | `PlayerItemUseController`. 쿨타임 UI는 과열 게이지로 재활용 |
 | 포복(Crawl) | ❌ | 폐기. 액션이 `Glide`로 이름이 바뀌었다 |
@@ -145,25 +147,26 @@
 |---|---|---|
 | SlicedFilledImage | ✅ | 9슬라이스 + fillAmount 동시 지원, 전용 인스펙터 |
 | SimpleGauge | ✅ | |
-| UIPanelBase | ✅ | CanvasGroup 기반 Show/Hide/Toggle |
-| UIInventory ↔ Inventory | ✅ | 슬롯 변경 이벤트 구독 |
+| UIPanelBase | ✅ | CanvasGroup 기반 Show/Hide/Toggle. `_closesOnCancel` 창은 열린 순서로 쌓여 ESC가 맨 위부터 닫는다(`TryCloseTop`) |
+| 일시정지 | 🟡 | ESC / 패드 Start(`PlayerInput.OnPauseEvent`, `Pause` 액션). 다른 창이 떠 있으면 그 창 먼저. `PanelGamePause` — `timeScale` 0, 게임플레이 입력 막음. 계속하기 / 게임 종료. **UI 임시** |
+| SectionInventoryGrid ↔ Inventory | ✅ | 슬롯 변경 이벤트 구독 |
 | 슬롯 컨테이너 추상화 | ✅ | `IItemSlotContainer` — 인벤토리/장비가 구현 |
 | 드래그 이동 | ✅ | 병합·스왑·반개 분할. `ItemTransfer` 한 곳에 규칙 |
 | 아이템 선택 | ✅ | `ItemSelectionController`, 어느 칸이든 클릭 |
 | 버리기 영역 | 🟡 | `ItemDropArea` — 이벤트만 쏨. 월드 픽업 필요 |
 | PartItemDetail / ItemPreview | ⬜ | 모듈 슬롯 배치 방식 미정 |
 | PartPlayerStatus | ✅ | 체력·실드(겹침, 실드 남으면 실드만 / 0이면 체력만) + 전력 / 연료 게이지 |
-| MechaSilhouetteUI | 🟡 | 기체 실루엣. 조립된 코어·팔·추진체 스프라이트를 그대로 Image로 옮기고 단색 셰이더(`UI/SilhouetteSolid`, 안쪽 외곽선) + 부위 체력 색(부서지면 어둡게). `PartHud/MechaSilhouette`. **위치·크기(`_pixelsPerUnit`) 미조정** |
+| PartMechaSilhouette | 🟡 | 기체 실루엣. 조립된 코어·팔·추진체 스프라이트를 그대로 Image로 옮기고 단색 셰이더(`UI/SilhouetteSolid`, 안쪽 외곽선) + 부위 체력 색(부서지면 어둡게). `PartHud/MechaSilhouette`. **위치·크기(`_pixelsPerUnit`) 미조정** |
 | SimpleGauge 서브게이지 | ✅ | `_increaseMode`(Instant / SubFirst) · `_decreaseMode`(Instant / BlinkThenDrain). 체력·실드 = SubFirst + Blink, 연료 = SubFirst + Instant, 나머지(전력·과열) Instant. 처음 값·다시 켜질 때는 연출 없이 맞춘다 |
-| RepairStatusUI | 🟡 | 실루엣 위. 키트 수 상시, 수리 중 진행 막대, 완료·중단·키트 없음 문구 후 흐려짐. **배치·스타일 임시** |
-| GlideStatusUI | 🟡 | 연료 게이지 옆. 준비 / 활공 중 / 착륙 잠금(남은 시간 막대) / 연료 없음 / 추진체 파손. **배치·스타일 임시** |
+| PartRepairStatus | 🟡 | 실루엣 위. 키트 수 상시, 수리 중 진행 막대, 완료·중단·키트 없음 문구 후 흐려짐. **배치·스타일 임시** |
+| PartGlideStatus | 🟡 | 연료 게이지 옆. 준비 / 활공 중 / 착륙 잠금(남은 시간 막대) / 연료 없음 / 추진체 파손. **배치·스타일 임시** |
 | PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
 | PartEquipmentStatus | ✅ | 팔마다 하나. 잔탄 + 열 게이지(잠기면 남은 시간). **위치·크기는 임시** |
 | PopupReload | ❌ | 재장전 폐기 |
 | PlayerAimPoint | ✅ | 커서 추적. 조준점·조준거리를 **코어**가 정함 |
-| WeaponPanelBase | ✅ | `_slot`으로 어느 팔을 볼지 지정. 다른 팔의 변화는 여기서 걸러짐 |
-| ConditionDisplayGroup ↔ 상태이상 | ✅ | 셀 재사용, 남은 시간 갱신 |
+| WeaponPartBase | ✅ | `_slot`으로 어느 팔을 볼지 지정. 다른 팔의 변화는 여기서 걸러짐 |
+| PartConditionDisplay ↔ 상태이상 | ✅ | 셀 재사용, 남은 시간 갱신 |
 | PartHudHotbar ↔ Equipment | ❌ | 핫바 폐기. 무장 HUD 좌/우 2칸으로 대체 |
 | MainCanvas / SubCanvas | 🟡 | Initialize/LateInitialize 뼈대만 |
 | Button | 🟡 | 호버 스케일 필드만, 핸들러 비어있음 |
@@ -171,7 +174,7 @@
 
 HUD와 인벤토리는 `Start()`에서 씬의 `Player`를 찾아 스스로 붙습니다. 플레이어 스폰 흐름이 생기면 `Bind()`를 밖에서 불러주면 됩니다.
 
-**연결 필요** — `Inventory` 토글 입력 → 패널 `Toggle()`. `ConditionVisualTableSO` 에셋 생성 후 `ConditionDisplayGroup`에 지정.
+**연결 필요** — `Inventory` 토글 입력 → 패널 `Toggle()`. `ConditionVisualTableSO` 에셋 생성 후 `PartConditionDisplay`에 지정.
 
 TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
@@ -179,7 +182,7 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 | 시스템 | 상태 |
 |---|---|
-| 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → 3초 뒤 새 판. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`DeathScreenUI` — 제목·잃은 것·"N초 뒤 주둔지로" 세 줄) ([arch/run](arch/run.md)) |
+| 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → 3초 뒤 새 판. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`PanelDeathScreen` — 제목·잃은 것·"N초 뒤 주둔지로" 세 줄) ([arch/run](arch/run.md)) |
 | 안전 슬롯 | 🟡 `InventoryController.SafeSlot`(1칸). UI `CellSafeSlot` — **배치 임시, 드래그는 눈으로 확인 전** |
 | 착지 불가 지역 | 🟡 `NoLandingZone`(콜라이더 모양 판정). 위에서 Space 착륙 막힘, 강제 착륙 = 추락 즉사. 지상: 걸어서는 가장자리에서 멈춤(적도), 미끄러져 들어가면 연료 있으면 자동 활공·없으면 추락. 테스트 영역 하나. 배치는 맵 작업 |
 | CameraManager | ✅ |

@@ -37,22 +37,42 @@ public abstract class CasterBase : MonoBehaviour
     private readonly List<CastHit> _hits = new();
     private readonly Dictionary<TargetBase, int> _hitIndices = new();
 
+    /// <summary>지금 때릴 수 있는 대상 분류. 덮어쓰지 않았으면 프리팹에 찍힌 값이다.</summary>
+    public TargetType TargetTypes { get; private set; }
+
     protected virtual void Awake()
     {
         Owner = GetComponentInParent<Agent>();
 
-        _contactFilter = new ContactFilter2D
-        {
-            useLayerMask = true,
-            layerMask = TargetLayerTableSO.MaskOf(_targetTypes),
-            useTriggers = true,
-        };
+        ApplyTargetTypes(_targetTypes);
 
         _castEffectors = GetComponentsInChildren<ICastEffector>();
         for (int i = 0; i < _castEffectors.Length; i++)
         {
             _castEffectors[i].Initialize();
         }
+    }
+
+    /// <summary>
+    /// 때릴 대상 분류를 덮어쓴다. 같은 투사체 프리팹을 지상 전용·공중 전용 무기가 나눠 쓸 때(<see cref="UnitWeaponSO"/>).
+    /// 마스크는 여전히 <see cref="TargetLayerTableSO"/>가 만든다 — 레이어를 직접 받지 않는다.
+    /// </summary>
+    public void OverrideTargetTypes(TargetType types) => ApplyTargetTypes(types);
+
+    /// <summary>프리팹에 찍힌 값으로 되돌린다. 풀에서 다시 나온 투사체가 이전 무기의 설정을 들고 있으면 안 된다.</summary>
+    public void ResetTargetTypes() => ApplyTargetTypes(_targetTypes);
+
+    private void ApplyTargetTypes(TargetType types)
+    {
+        if (TargetTypes == types && _contactFilter.useLayerMask) return;
+
+        TargetTypes = types;
+        _contactFilter = new ContactFilter2D
+        {
+            useLayerMask = true,
+            layerMask = TargetLayerTableSO.MaskOf(types),
+            useTriggers = true,
+        };
     }
 
     public void Cast()
