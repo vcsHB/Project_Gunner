@@ -34,12 +34,13 @@
 | Projectile | ✅ | 경로 스윕, 관통, 사거리 소멸, 폭발 |
 | ProjectileCaster | ✅ | 직전 위치→현재 위치 CircleCast. 터널링·중복타 방지 |
 | `Enemy` | ✅ | 데이터 주입·사망·드랍 |
-| `EnemyMoveController` | ✅ | Rigidbody2D 이동 + 진행 방향 바라보기 |
+| `EnemyMoveController` | ✅ | Rigidbody2D 이동 + 진행 방향 바라보기. 다리(`EnemyLocomotion`) 걷기 / 비행 / 제자리. 제자리도 바라보기는 돈다(포탑) |
 | `EnemyAIController` | ✅ | 상태 머신 Idle / Chase / Attack. 무장이 있으면 사격, 없으면 선딜 근접 |
 | `EnemyManager` | ✅ | 플레이어 주위 고리에 스폰. 최대 수·주기 |
 | 편 가르기 (`FactionType`) | ✅ | 캐스터가 때릴 편을 고른다. 적끼리 오사 방지 |
 | 적 메카 조립 | ✅ | 플레이어와 같은 경로. `MechaLoadoutTableSO`가 매번 굴린다 |
 | `HandController` 분리 | ✅ | 만들고 붙이는 일은 공용, 방아쇠만 플레이어/적이 다르다 |
+| 단일 기체 | ✅ | 조립 없는 적. 고정 무장(`HandController` 자리+무기 직접 지정, 무한 탄·내구도 안 닳음), 몸을 따라 쏘기(`_aimFollowsFacing` + 허용각), 잔해(`PartBreakFeedback._bodyRoot`). 테스트 터렛 `Enemy_Turret_Test`(`Item_Unit_TurretTest` 9001) |
 | `IAimDirectionProvider` | ✅ | 무기가 겨누는 쪽을 인터페이스로 묻는다 |
 | `UnitDataSO` | ✅ | 유닛 데이터 + 전리품 테이블. Id 대역 9000~9999 |
 | Shadow | 🟡 | 크기 설정만 |

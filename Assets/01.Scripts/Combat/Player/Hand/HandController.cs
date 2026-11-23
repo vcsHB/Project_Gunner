@@ -15,15 +15,31 @@ using UnityEngine;
 /// (<see cref="Agent"/>) 한쪽이 통째로 조회되지 않는다. 손을 안에서 배열로 들고 간다.
 ///
 /// 개체 상태는 ItemInstance에 있으므로 오브젝트를 부수고 다시 만들어도 유지된다.
+///
+/// <b>고정 무장</b> — 자리(<c>socket</c>)와 무기(<c>fixedWeapon</c>)를 프리팹에 직접 적으면 장비·조립 없이 그 자리에 무기를 단다.
+/// 조립되지 않는 단일 기체(터렛·드론·보스)가 쓴다. <b>무기 오브젝트는 메카 손의 것과 같다</b> — 과열·투사체·발사 연출이 그대로라
+/// 같은 총이 터렛에 달려도 같은 수치로 나간다. 적재함이 없으므로 탄은 무한이다(<see cref="WeaponAmmoController.SetInfinite"/>).
 /// </summary>
-[RequireAgentComponent(typeof(EquipmentController))]
-[RequireAgentComponent(typeof(MechaAssembler))]
+[RequireAgentComponent(typeof(EquipmentController), optional: true)]
+[RequireAgentComponent(typeof(MechaAssembler), optional: true)]
 public abstract class HandController : MonoBehaviour, IAgentComponent
 {
     [Serializable]
     private struct ArmMount
     {
+        [Tooltip("이 팔의 슬롯. 고정 무장이면 좌우 뒤집기에만 쓴다(그려둔 팔과 다르면 뒤집힌다).")]
         public EquipSlotType slot;
+
+        [Tooltip("고정 무장의 자리. 비우면 장비 → 조립된 코어의 소켓 경로를 쓴다.")]
+        public Transform socket;
+
+        [Tooltip("고정 무장. 있으면 장비와 무관하게 이것을 단다. 탄은 무한.")]
+        public PlayerWeaponDataSO fixedWeapon;
+
+        [Tooltip("고정 무장의 탄종. 탄종 보정(StatDelta)이 걸린다. 비우면 무기 기본 탄.")]
+        public AmmoDataSO fixedAmmo;
+
+        public bool IsFixed => fixedWeapon != null;
     }
 
     [Tooltip("이 기체가 가진 팔 슬롯. 붙을 자리는 코어 소켓이 정한다.")]
@@ -120,18 +136,29 @@ public abstract class HandController : MonoBehaviour, IAgentComponent
 
     private void RefreshAll()
     {
-        if (_equipment == null) return;
-
         for (int i = 0; i < _mounts.Length; i++)
-            Refresh(i, _equipment.GetStack(_mounts[i].slot));
+        {
+            if (_mounts[i].IsFixed)
+            {
+                Refresh(i, new ItemStack(_mounts[i].fixedWeapon.Id, 1));
+                continue;
+            }
+
+            if (_equipment != null)
+                Refresh(i, _equipment.GetStack(_mounts[i].slot));
+        }
     }
 
     private void HandleEquipChanged(EquipSlotType slot, ItemStack stack)
     {
-        int index = IndexOf(slot);
-        if (index < 0) return;
+        for (int i = 0; i < _mounts.Length; i++)
+        {
+            // 고정 무장은 장비를 따르지 않는다.
+            if (_mounts[i].slot != slot || _mounts[i].IsFixed) continue;
 
-        Refresh(index, stack);
+            Refresh(i, stack);
+            return;
+        }
     }
 
     private void Refresh(int index, ItemStack stack)
@@ -168,6 +195,7 @@ public abstract class HandController : MonoBehaviour, IAgentComponent
     /// <summary>이 팔이 달릴 자리. 조립된 코어의 소켓만 쓴다.</summary>
     private Transform ResolveRoot(int index)
     {
+        if (_mounts[index].socket != null) return _mounts[index].socket;
         if (_assembler == null) return null;
 
         MechaPartView core = _assembler.Core;
@@ -181,6 +209,8 @@ public abstract class HandController : MonoBehaviour, IAgentComponent
         for (int i = 0; i < _hands.Length; i++)
         {
             if (_hands[i] == null) continue;
+
+            if (_mounts[i].socket != null) continue;
 
             Transform root = ResolveRoot(i);
             if (root == null || _hands[i].transform.parent == root) continue;
@@ -208,6 +238,10 @@ public abstract class HandController : MonoBehaviour, IAgentComponent
         hand.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
         hand.Initialize(Owner, _mounts[index].slot, stack);
+
+        if (_mounts[index].IsFixed)
+            SetupFixed(hand, _mounts[index].fixedAmmo);
+
         hand.OnEquipped();
 
         _hands[index] = hand;
@@ -219,6 +253,17 @@ public abstract class HandController : MonoBehaviour, IAgentComponent
         Owner.GetCompo<TargetBase>()?.RefreshColliders();
 
         OnHandChangedEvent?.Invoke(_mounts[index].slot, hand);
+    }
+
+    /// <summary>고정 무장은 적재함이 없다. 탄을 무한으로 하고, 탄종이 지정됐으면 그 보정을 건다.</summary>
+    private static void SetupFixed(HandActionBase hand, AmmoDataSO ammo)
+    {
+        if (hand is not PlayerRangedWeapon ranged || ranged.Ammo == null) return;
+
+        ranged.Ammo.SetInfinite(true);
+
+        if (ammo != null && ranged.Instance != null)
+            ranged.Instance.SetLoadedAmmo(ammo.Id);
     }
 
     private void DestroyHand(int index)

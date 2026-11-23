@@ -71,7 +71,8 @@ public class EnemyAttackState : EnemyState
             return;
         }
 
-        Ai.SetFiring(true, deltaTime);
+        // 포탑이 아직 돌고 있으면 당기지 않는다. 놓지도 않으면 연사가 엉뚱한 쪽으로 이어진다.
+        Ai.SetFiring(Ai.IsAimedAtTarget, deltaTime);
     }
 
     private void TickMelee(float deltaTime)

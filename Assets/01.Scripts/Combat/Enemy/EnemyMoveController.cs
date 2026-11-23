@@ -8,6 +8,10 @@ using UnityEngine;
 ///
 /// 속도는 <see cref="AgentStatus.MoveSpeed"/>를 읽는다. 둔화·가속이 modifier로 걸리면
 /// 여기를 고치지 않고도 그대로 반영된다.
+///
+/// <b>다리(<see cref="EnemyLocomotion"/>)는 여기서 갈아 끼운다</b> — 걷기 / 비행 / 제자리.
+/// 제자리여도 바라보기는 돈다. 터렛의 포탑이 그것이다: <see cref="_visualRoot"/>를 포탑 머리로 두고
+/// <see cref="_turnSpeed"/>를 느리게 잡으면 "천천히 돌아서 피할 틈이 있는" 포탑이 된다.
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireAgentComponent(typeof(AgentStatus))]
@@ -17,7 +21,10 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
     [Tooltip("방향이 바뀔 때 속도가 따라붙는 속도. 클수록 즉각적이다.")]
     [SerializeField, Min(1f)] private float _acceleration = 25f;
 
-    [Tooltip("걸을 때 착지 불가 지역 가장자리에서 이만큼 앞에서 멈춘다(유닛). 공중 유닛은 안 걸린다.")]
+    [Tooltip("다리. 걷기는 착지 불가 지역 가장자리에서 멈추고, 비행은 넘고, 제자리는 몸이 안 움직인다(바라보기는 돈다).")]
+    [SerializeField] private EnemyLocomotion _locomotion = EnemyLocomotion.Walk;
+
+    [Tooltip("걸을 때 착지 불가 지역 가장자리에서 이만큼 앞에서 멈춘다(유닛).")]
     [SerializeField, Min(0f)] private float _edgeMargin = 0.3f;
 
     [Header("바라보기")]
@@ -27,14 +34,13 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
     [Tooltip("리소스가 그려진 정면. 보정은 여기 한 곳에서만 들어간다.")]
     [SerializeField] private FacingType _spriteFacing = FacingType.Up;
 
-    [Tooltip("초당 회전 각도.")]
+    [Tooltip("초당 회전 각도. 포탑이면 느리게 — 이 속도가 곧 피할 틈이다.")]
     [SerializeField, Min(1f)] private float _turnSpeed = 360f;
 
     private Rigidbody2D _rigidbody;
     private Agent _owner;
     private AgentStatus _status;
     private AgentConditionEffector _conditions;
-    private TargetBase _target;
 
     private Vector2 _moveDirection;
 
@@ -43,6 +49,21 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
 
     /// <summary>지금 향하고 있는 논리 각도(도). 0° = +X.</summary>
     public float FacingAngle { get; private set; }
+
+    /// <summary>지금 향하고 있는 방향(단위 벡터). 포탑이 보는 쪽으로 쏘는 적이 쓴다.</summary>
+    public Vector2 FacingDirection
+    {
+        get
+        {
+            float r = FacingAngle * Mathf.Deg2Rad;
+            return new Vector2(Mathf.Cos(r), Mathf.Sin(r));
+        }
+    }
+
+    public EnemyLocomotion Locomotion => _locomotion;
+
+    /// <summary>바라보기가 돌 수 있는가. 돌릴 오브젝트가 없으면 <see cref="FacingAngle"/>이 영영 0이다.</summary>
+    public bool CanTurn => _visualRoot != null;
 
     public Vector2 Velocity => _rigidbody.linearVelocity;
 
@@ -65,11 +86,11 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
     {
         _status = _owner.GetCompo<AgentStatus>();
         _conditions = _owner.GetCompo<AgentConditionEffector>();
-        _target = _owner.GetCompo<TargetBase>();
-    }
 
-    // 지상 유닛만 구렁 가장자리에서 멈춘다. 길찾기가 없어서, 쫓다가 가장자리에 서서 기다린다.
-    private bool WalksOnGround => _target == null || (_target.CurrentTargetType & TargetType.Ground) != 0;
+        // 처음 바라보는 쪽은 놓인 그대로. 0°에서 시작하면 스폰 직후 포탑이 한 바퀴 돌아 제자리를 찾는다.
+        if (_visualRoot != null)
+            FacingAngle = _visualRoot.eulerAngles.z - _spriteFacing.ToAngleOffset();
+    }
 
     public void Dispose() { }
 
@@ -97,11 +118,15 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent
     {
         float deltaTime = Time.fixedDeltaTime;
 
-        Vector2 target = CanMove ? _moveDirection * CurrentSpeed : Vector2.zero;
+        bool moves = CanMove && _locomotion != EnemyLocomotion.Fixed;
+        Vector2 target = moves ? _moveDirection * CurrentSpeed : Vector2.zero;
 
-        Vector2 velocity = Vector2.MoveTowards(_rigidbody.linearVelocity, target, _acceleration * deltaTime);
+        Vector2 velocity = _locomotion == EnemyLocomotion.Fixed
+            ? Vector2.zero
+            : Vector2.MoveTowards(_rigidbody.linearVelocity, target, _acceleration * deltaTime);
 
-        if (WalksOnGround)
+        // 길찾기가 없어서, 쫓다가 구렁 가장자리에 서서 기다린다.
+        if (_locomotion == EnemyLocomotion.Walk)
             velocity = NoLandingZone.ClampWalk(_rigidbody.position, velocity, deltaTime, _edgeMargin);
 
         _rigidbody.linearVelocity = velocity;

@@ -26,6 +26,10 @@ public class PartBreakFeedback : MonoBehaviour
     [SerializeField] private Color _wreckTint = new(0.22f, 0.22f, 0.25f, 1f);
     [SerializeField, Min(0.1f)] private float _wreckLifetime = 3.5f;
 
+    [Tooltip("조립되지 않는 단일 기체(터렛·드론)의 몸. 이 아래 스프라이트가 잔해가 된다. " +
+             "비우면 유닛 루트 전체(그림자는 뺀다). 메카는 코어가 쓰이므로 비워둔다.")]
+    [SerializeField] private Transform _bodyRoot;
+
     [Header("Effect / Sound")]
     [SerializeField] private PoolType _breakEffect = PoolType.None;
     [SerializeField] private SoundDataSO _breakSound;
@@ -118,9 +122,9 @@ public class PartBreakFeedback : MonoBehaviour
     private void HandleDead()
     {
         MechaPartView core = _assembler != null ? _assembler.Core : null;
-        if (core == null) return;
 
-        Transform root = core.transform;
+        // 메카는 코어와 거기 붙은 것 전부, 단일 기체는 지정한 몸(없으면 유닛 전체).
+        Transform root = core != null ? core.transform : (_bodyRoot != null ? _bodyRoot : transform);
 
         GameObject wreck = new("Wreck");
         wreck.transform.SetPositionAndRotation(root.position, root.rotation);
@@ -128,6 +132,10 @@ public class PartBreakFeedback : MonoBehaviour
         foreach (SpriteRenderer source in root.GetComponentsInChildren<SpriteRenderer>(false))
         {
             if (source.sprite == null || !source.enabled) continue;
+
+            // 그림자·실드 원은 몸이 아니다. 유닛 전체를 훑을 때 섞여 들어온다.
+            if (source.GetComponentInParent<Shadow>() != null) continue;
+            if (source.GetComponentInParent<ShieldHitArea>() != null) continue;
 
             CopyInto(wreck.transform, source, _wreckTint);
             source.enabled = false;

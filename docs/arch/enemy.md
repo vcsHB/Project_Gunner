@@ -76,8 +76,24 @@ MechaPartController.ApplyEntries
 사라지지 않아서, 적이 스폰될 때마다 하나씩 만들면 조용히 쌓인다. 굴린 결과는 재사용 리스트에
 담아 `ApplyEntries`로 넘긴다.
 
-**메카가 아닌 적도 있다.** `LoadoutTable`을 비워두면 조립하지 않는다 — 짐승·드론처럼
-파츠로 만들어지지 않는 적이 그렇다. 그런 적은 근접 캐스터로 때린다.
+**메카가 아닌 적도 있다.** `LoadoutTable`을 비워두면 조립하지 않는다 — 아래 [단일 기체](#단일-기체).
+
+### 단일 기체
+
+조립되지 않는 적(터렛·드론·부표·보스). **무기는 메카 손의 것과 같은 오브젝트**를 쓴다 — 같은 총이 터렛에 달려도 같은 수치·과열·투사체로 나간다.
+
+| 빠졌던 것 | 어떻게 |
+|---|---|
+| 무기를 달 곳 | **고정 무장** — `HandController._mounts`에 자리(`socket`)와 무기(`fixedWeapon`, 탄종 `fixedAmmo`)를 직접 적는다. 장비·조립(`EquipmentController`·`MechaAssembler`)이 없어도 된다(선택 의존) |
+| 탄 | 적재함이 없으므로 **무한**(`WeaponAmmoController.SetInfinite`). 탄종은 개체에 지정한 것을 써서 탄종 보정도 걸린다. **내구도도 안 닳는다** — 보급도 수리도 없는 몸이라 닳으면 조용히 멈춘다 |
+| 다리 | `EnemyMoveController._locomotion` — 걷기(구렁 가장자리에서 멈춤) / 비행(넘음) / 제자리(몸은 안 움직이고 바라보기만 돈다) |
+| 포탑 | `_visualRoot`를 포탑 머리로 두고 `_turnSpeed`를 느리게. 무기는 머리의 소켓에 단다 |
+| 피할 틈 | `EnemyAIController._aimFollowsFacing` — 대상이 아니라 **포탑이 보는 쪽으로** 쏜다. 보는 쪽과 대상 사이가 `_fireAngleTolerance` 안일 때만 방아쇠를 당긴다. 메카는 끈다(몸이 덜 돌았어도 대상 쪽으로) |
+| 잔해 | `PartBreakFeedback._bodyRoot` — 그 아래 스프라이트가 잔해가 된다. 그림자·실드 원은 뺀다 |
+
+판정 분류(지상/공중)는 다리와 따로 `TargetBase._defaultTargetType`이 정한다. 비행 다리를 달고 지상 판정일 수도 있다.
+
+테스트 터렛 `Enemy_Turret_Test` — 제자리 다리, 머리 60°/s, 사거리 10, Hunter 고정 무장, 체력 600.
 
 ### 방아쇠는 AI가 민다
 

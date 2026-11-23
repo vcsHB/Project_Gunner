@@ -37,6 +37,14 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     [Tooltip("사정권에 더해지는 여유. 이만큼 벌어져야 다시 쫓는다.")]
     [SerializeField, Min(0f)] private float _attackLeaveMargin = 0.6f;
 
+    [Header("조준")]
+    [Tooltip("켜면 대상이 아니라 몸(포탑)이 보는 쪽으로 쏜다. 포탑이 느리게 돌면 그 사이가 피할 틈이 된다. " +
+             "끄면 몸이 덜 돌았어도 대상 쪽으로 나간다(메카).")]
+    [SerializeField] private bool _aimFollowsFacing;
+
+    [Tooltip("보는 쪽과 대상 사이가 이 각도 안일 때만 방아쇠를 당긴다(도). 조준이 몸을 따를 때만 쓴다.")]
+    [SerializeField, Range(0f, 180f)] private float _fireAngleTolerance = 8f;
+
     [Header("공격")]
     [Tooltip("판정이 나가는 자리. 보통 몸 앞쪽에 둔 CircleCaster다.")]
     [SerializeField] private CasterBase _attackCaster;
@@ -91,11 +99,23 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     {
         get
         {
+            if (AimsWithFacing) return Move.FacingDirection;
+
             Vector2 direction = DirectionToTarget;
 
             return direction.sqrMagnitude > 0.0001f ? direction : (Vector2)transform.right;
         }
     }
+
+    /// <summary>몸이 보는 쪽으로 쏘는가. 돌릴 몸이 없으면 대상 쪽으로 쏜다 — 안 그러면 영영 0°로 쏜다.</summary>
+    private bool AimsWithFacing => _aimFollowsFacing && Move != null && Move.CanTurn;
+
+    /// <summary>
+    /// 지금 쏴도 대상 쪽인가. 몸을 따라 쏘는 적은 포탑이 대상 쪽으로 다 돌기 전에는 당기지 않는다 —
+    /// 엉뚱한 쪽으로 계속 쏘면 탄막이 "피할 틈"이 아니라 그냥 소음이 된다.
+    /// </summary>
+    public bool IsAimedAtTarget
+        => !AimsWithFacing || Vector2.Angle(Move.FacingDirection, DirectionToTarget) <= _fireAngleTolerance;
 
     /// <summary>노릴 대상이 있는가. 죽었거나 무적이면 false가 된다.</summary>
     public bool HasTarget => _target != null && _target.IsTargetable;
