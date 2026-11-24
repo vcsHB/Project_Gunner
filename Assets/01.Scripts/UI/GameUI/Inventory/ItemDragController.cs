@@ -11,6 +11,10 @@ using UnityEngine.UI;
 ///
 /// 드래그를 시작해도 아이템을 원래 칸에서 빼지 않는다. 드롭 시점에 ItemTransfer가 한 번에 옮긴다.
 /// 미리 빼두면 드래그 도중 창이 닫히거나 예외가 나는 순간 아이템이 증발한다.
+///
+/// <b>패널 밖에 놓으면 버린다</b>(2026-11-25). "패널"은 <see cref="_keepAreas"/>(각 Section의 상자)다 — 화면 전체를 덮는
+/// 인벤토리 바탕이 아니다. 커서가 그 밖으로 나가는 순간 고스트에 "버리기"가 붙고 패널 밖이 붉어진다.
+/// 놓기 전에 결과가 보여야 실수로 버리지 않는다.
 /// </summary>
 public class ItemDragController : Singleton<ItemDragController>
 {
@@ -19,12 +23,27 @@ public class ItemDragController : Singleton<ItemDragController>
     [SerializeField] private Image _ghostIcon;
     [SerializeField] private TextMeshProUGUI _ghostAmount;
 
+    [Header("버리기")]
+    [Tooltip("이 영역 안에 놓으면 버리지 않는다. 각 Section의 상자. 꺼진 것은 무시한다. 비우면 버리기를 쓰지 않는다.")]
+    [SerializeField] private RectTransform[] _keepAreas;
+
+    [Tooltip("커서가 패널 밖에 있을 때 켜진다. 패널 뒤 화면 전체를 붉게.")]
+    [SerializeField] private GameObject _discardHint;
+
+    [Tooltip("커서가 패널 밖에 있을 때 고스트에 붙는 \"버리기\" 표시.")]
+    [SerializeField] private GameObject _ghostDiscardLabel;
+
+    private Agent _dropper;
+
     private CellInventorySlot _sourceCell;
     private int _count;
 
     public bool IsDragging => _sourceCell != null;
     public CellInventorySlot SourceCell => _sourceCell;
     public int Count => _count;
+
+    /// <summary>지금 놓으면 버려지는가.</summary>
+    public bool IsOverDiscard { get; private set; }
 
     protected override void Awake()
     {
@@ -35,6 +54,12 @@ public class ItemDragController : Singleton<ItemDragController>
 
         MakeGhostClickThrough();
         SetGhostVisible(false);
+        SetDiscardVisual(false);
+    }
+
+    private void Start()
+    {
+        _dropper = FindAnyObjectByType<Player>();
     }
 
     /// <summary>
@@ -58,6 +83,7 @@ public class ItemDragController : Singleton<ItemDragController>
         if (!IsDragging) return;
 
         FollowPointer();
+        RefreshDiscard();
     }
 
     public void Begin(CellInventorySlot cell, int count)
@@ -80,6 +106,7 @@ public class ItemDragController : Singleton<ItemDragController>
 
         SetGhostVisible(true);
         FollowPointer();
+        RefreshDiscard();
     }
 
     /// <summary>대상 칸 위에서 놓았을 때. 셀의 OnDrop에서 호출한다.</summary>
@@ -102,11 +129,20 @@ public class ItemDragController : Singleton<ItemDragController>
         Cancel();
     }
 
-    /// <summary>드롭 없이 드래그가 끝났을 때. 셀의 OnEndDrag에서 호출한다.</summary>
+    /// <summary>
+    /// 칸 위가 아닌 곳에서 드래그가 끝났을 때. 셀의 OnEndDrag에서 호출한다.
+    /// 패널 밖이면 버리고, 패널 안의 빈 곳이면 되돌린다.
+    /// </summary>
     public void End()
     {
-        if (IsDragging)
-            Cancel();
+        if (!IsDragging) return;
+
+        RefreshDiscard();
+
+        if (IsOverDiscard && _dropper != null)
+            ItemDiscard.Discard(_sourceCell.Container, _sourceCell.SlotKey, _count, _dropper);
+
+        Cancel();
     }
 
     public void Cancel()
@@ -114,6 +150,41 @@ public class ItemDragController : Singleton<ItemDragController>
         _sourceCell = null;
         _count = 0;
         SetGhostVisible(false);
+        SetDiscardVisual(false);
+    }
+
+    private void RefreshDiscard()
+    {
+        bool over = IsDragging && _keepAreas != null && _keepAreas.Length > 0 && !IsPointerInKeepArea();
+        if (over == IsOverDiscard) return;
+
+        SetDiscardVisual(over);
+    }
+
+    private bool IsPointerInKeepArea()
+    {
+        if (Pointer.current == null) return true;
+
+        Vector2 screen = Pointer.current.position.ReadValue();
+        Camera camera = _canvas == null || _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
+
+        for (int i = 0; i < _keepAreas.Length; i++)
+        {
+            RectTransform area = _keepAreas[i];
+            if (area == null || !area.gameObject.activeInHierarchy) continue;
+
+            if (RectTransformUtility.RectangleContainsScreenPoint(area, screen, camera)) return true;
+        }
+
+        return false;
+    }
+
+    private void SetDiscardVisual(bool over)
+    {
+        IsOverDiscard = over;
+
+        if (_discardHint != null) _discardHint.SetActive(over);
+        if (_ghostDiscardLabel != null) _ghostDiscardLabel.SetActive(over);
     }
 
 #if UNITY_EDITOR

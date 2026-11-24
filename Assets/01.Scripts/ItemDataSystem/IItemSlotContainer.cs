@@ -16,6 +16,12 @@ public interface IItemSlotContainer
     /// </summary>
     bool CanAccept(int slotKey, ItemStack stack, out string reason);
 
+    /// <summary>
+    /// 뺄 수 있는지. 드래그를 <b>시작하기 전에</b> 묻는다 — 들어 올린 뒤에 거절하면 고스트만 떴다가 돌아간다.
+    /// 빈 칸은 여기서 보지 않는다(칸이 이미 걸러낸다).
+    /// </summary>
+    bool CanTake(int slotKey, out string reason);
+
     /// <summary>실제로 빼낸 것을 반환한다. 못 빼면 Empty.</summary>
     ItemStack Take(int slotKey, int count);
 

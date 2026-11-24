@@ -150,17 +150,22 @@
 | SimpleGauge | ✅ | |
 | UIPanelBase | ✅ | CanvasGroup 기반 Show/Hide/Toggle. `_closesOnCancel` 창은 열린 순서로 쌓여 ESC가 맨 위부터 닫는다(`TryCloseTop`) |
 | 일시정지 | 🟡 | ESC / 패드 Start(`PlayerInput.OnPauseEvent`, `Pause` 액션). 다른 창이 떠 있으면 그 창 먼저. `PanelGamePause` → `GameTime.RequestPause`, 게임플레이 입력 막음. 계속하기 / 게임 종료. **UI 임시** |
-| SectionInventoryGrid ↔ Inventory | ✅ | 슬롯 변경 이벤트 구독 |
+| SectionInventoryGrid ↔ Inventory | ✅ | 슬롯 변경 이벤트 구독. 칸은 `CellInventorySlot` 프리팹으로 용량만큼 자동 생성. 배너에 사용 칸 "5 / 30"(남은 칸 3 이하 주황) |
+| 인벤토리 배치 | 🟡 | 위 기체 구역(장비 4칸을 실루엣 모양 — 코어 위, 좌·우무기 양옆, 추진체 아래 — + 안전 슬롯), 아래 적재함 격자. 칸 라벨 한글(`ItemText.SlotName`). 게임은 멈추지 않는다. **스타일 임시** |
+| 장비 잠금 | ✅ | 필드에서는 장비 칸을 드래그로 빼거나 끼울 수 없다(`EquipmentController.IsLocked`, 기본 true). 칸 오른쪽 위 자물쇠(`UI_Sheet_5_2`, `CellEquipmentSlot._lockMark`). 막는 건 UI 경로(`IItemSlotContainer.CanTake`/`CanAccept`)뿐 — 출격 로드아웃·죽음·툴의 `Equip`/`Unequip`은 통한다. 툴팁에 "장착 중 · 안전지대에서만 교체할 수 있습니다". 격납고(M5)가 `SetLocked(false)` |
+| 인벤토리 UX 3·5단계 | ⬜ | 3 루팅 구역 → M4 "잔해 루팅"(탐색·Shift+클릭·공간 부족) · 5 모듈·개량은 격납고의 파츠 상세 화면(M5) |
 | 슬롯 컨테이너 추상화 | ✅ | `IItemSlotContainer` — 인벤토리/장비가 구현 |
-| 드래그 이동 | ✅ | 병합·스왑·반개 분할. `ItemTransfer` 한 곳에 규칙 |
+| 드래그 이동 | ✅ | 병합·스왑. **Alt 드래그 = 반**(홀수면 원래 칸에 큰 쪽). 왼쪽 버튼만 — 오른쪽은 메뉴. `ItemTransfer` 한 곳에 규칙(뺄 수 있는지 `CanTake`까지) |
+| 우클릭 메뉴 | 🟡 | `PopupItemContext` — 커서 옆 작은 메뉴. 목록은 `ItemContextActions`: 사용(수리 키트 — 그 칸의 키트로 `MechaRepair.TryStartRepair(slot)`) · 분할 · 버리기. 못 하면 회색 + 이유. 메뉴 밖 클릭·ESC로 닫힘. **분해·자세히 보기(도감) 없음** |
+| 분할 창 | ✅ | `PopupItemSplit` — 슬라이더 + 입력칸(서로 맞춤), 취소/확인. 같은 적재함의 첫 빈 칸으로. 처음 값은 반 |
 | 아이템 선택 | ✅ | `ItemSelectionController`, 어느 칸이든 클릭 |
-| 버리기 영역 | 🟡 | `ItemDropArea` — 이벤트만 쏨. 월드 픽업 필요 |
+| 버리기 | ✅ | **패널 밖에 놓으면 버린다** — `ItemDragController._keepAreas`(각 Section 상자) 밖. 밖으로 나가면 고스트에 "버리기" + 패널 뒤 붉게(`DiscardHint`). 버리는 길은 `ItemDiscard` 하나(드래그·메뉴·`ItemDropArea`). 버린 사람은 줍기 반경을 한 번 벗어나야 다시 줍는다(`WorldItem.IgnorePickupBy`) |
 | PartPlayerStatus | ✅ | 체력·실드(겹침, 실드 남으면 실드만 / 0이면 체력만) + 전력 / 연료 게이지 |
 | PartMechaSilhouette | 🟡 | 기체 실루엣. 조립된 코어·팔·추진체 스프라이트를 그대로 Image로 옮기고 단색 셰이더(`UI/SilhouetteSolid`, 안쪽 외곽선) + 부위 체력 색(부서지면 어둡게). `PartHud/MechaSilhouette`. **위치·크기(`_pixelsPerUnit`) 미조정** |
 | SimpleGauge 서브게이지 | ✅ | `_increaseMode`(Instant / SubFirst) · `_decreaseMode`(Instant / BlinkThenDrain). 체력·실드 = SubFirst + Blink, 연료 = SubFirst + Instant, 나머지(전력·과열) Instant. 처음 값·다시 켜질 때는 연출 없이 맞춘다 |
 | PartRepairStatus | 🟡 | 실루엣 위. 키트 수 상시, 수리 중 진행 막대, 완료·중단·키트 없음 문구 후 흐려짐. **배치·스타일 임시** |
 | PartGlideStatus | 🟡 | 연료 게이지 옆. 준비 / 활공 중 / 착륙 잠금(남은 시간 막대) / 연료 없음 / 추진체 파손. **배치·스타일 임시** |
-| PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님. 이름·설명·내구도, 화면 밖 보정 |
+| PopupItemInformation | ✅ | 슬롯 호버 시 커서 따라다님(상세는 호버로만 — 클릭 고정 없음). 이름·설명·**수치**(`ItemStatSheet` — 무기는 모듈·개량·탄 반영 최종값, 파츠는 Deltas, 탄·모듈·수리 키트). 적재함의 장비는 들어갈 칸 중 먼저 차 있는 칸의 장착품과 비교해 ▲▼(좋으면 초록). 장비 칸은 "장착 중". 내용 길이에 맞춰 늘어나고 자체 Canvas(UI 레이어 100)로 HUD 위에 |
 | UIInputBlocker | ✅ | 패널이 뜨면 조준선·발사 차단 (겹침 대비 카운트) |
 | PartEquipmentStatus | ✅ | 팔마다 하나. 잔탄 + 열 게이지(잠기면 남은 시간). **위치·크기는 임시** |
 | PopupReload | ❌ | 재장전 폐기 |
@@ -183,7 +188,7 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 | 시스템 | 상태 |
 |---|---|
 | 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → 3초 뒤 새 판. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`PanelDeathScreen` — 제목·잃은 것·"N초 뒤 주둔지로" 세 줄) ([arch/run](arch/run.md)) |
-| 안전 슬롯 | 🟡 `InventoryController.SafeSlot`(1칸). UI `CellSafeSlot` — **배치 임시, 드래그는 눈으로 확인 전** |
+| 안전 슬롯 | 🟡 `InventoryController.SafeSlot`(1칸). UI `CellSafeSlot` — 기체 구역 오른쪽. **드래그는 눈으로 확인 전** |
 | 착지 불가 지역 | 🟡 `NoLandingZone`(콜라이더 모양 판정). 위에서 Space 착륙 막힘, 강제 착륙 = 추락 즉사. 지상: 걸어서는 가장자리에서 멈춤(적도), 미끄러져 들어가면 연료 있으면 자동 활공·없으면 추락. 테스트 영역 하나. 배치는 맵 작업 |
 | CameraManager | ✅ |
 | CameraFollowEffector | ✅ (플레이어↔조준점 중간, 정조준 줌) |

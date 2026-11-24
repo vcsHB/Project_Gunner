@@ -18,7 +18,32 @@ public class WorldItem : PoolableMono
 
     private float _spawnTime;
 
+    // 버린 사람. 그 사람이 한 번 멀어지기 전까지는 그 사람에게 안 주워진다 — 발밑에 버리면 0.5초 뒤 다시 주워졌다.
+    private Transform _ignoredPicker;
+    private float _ignoreRadius;
+
     public bool CanPickup => _autoPickup && !Stack.IsEmpty && Time.time >= _spawnTime + _pickupDelay;
+
+    public bool CanPickupBy(Transform picker) => CanPickup && (_ignoredPicker == null || picker != _ignoredPicker);
+
+    /// <summary>
+    /// <paramref name="picker"/>가 <paramref name="radius"/> 밖으로 나갔다 올 때까지 줍지 않게 한다. 버릴 때 부른다.
+    /// 다른 사람(멀티)은 바로 주울 수 있다.
+    /// </summary>
+    public void IgnorePickupBy(Transform picker, float radius)
+    {
+        _ignoredPicker = picker;
+        _ignoreRadius = radius;
+    }
+
+    private void Update()
+    {
+        if (_ignoredPicker == null) return;
+
+        float distance = Vector2.Distance(_ignoredPicker.position, transform.position);
+        if (distance > _ignoreRadius || !_ignoredPicker.gameObject.activeInHierarchy)
+            _ignoredPicker = null;
+    }
 
     private void Reset() => _renderer = GetComponentInChildren<SpriteRenderer>();
 
@@ -36,6 +61,7 @@ public class WorldItem : PoolableMono
     public override void OnDespawn()
     {
         Stack = ItemStack.Empty;
+        _ignoredPicker = null;
 
         if (_renderer != null)
             _renderer.sprite = null;

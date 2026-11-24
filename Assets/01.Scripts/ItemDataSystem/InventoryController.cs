@@ -40,6 +40,9 @@ public class InventoryController : MonoBehaviour, IAgentComponent
 
     public Inventory Inventory { get; private set; }
 
+    /// <summary>줍는 반경. 버린 아이템이 "이 반경을 한 번 벗어나기 전까지는 안 주워진다"의 기준.</summary>
+    public float PickupRadius => _pickup != null ? _pickup.radius : 0f;
+
     /// <summary>
     /// 안전 슬롯. <b>죽어도 남는 한 칸.</b> 아무 아이템이나 한 칸 분량(최대 스택)까지 넣을 수 있다.
     /// 적재함(<see cref="Inventory"/>)과 같은 <see cref="global::Inventory"/>라 드래그·스왑이 그대로 된다. 칸 수는 적재 스탯과 무관하게 고정이다.
@@ -142,7 +145,7 @@ public class InventoryController : MonoBehaviour, IAgentComponent
             if (_buffer[i] == null) continue;
 
             WorldItem item = _buffer[i].GetComponentInParent<WorldItem>();
-            if (item == null || !item.CanPickup) continue;
+            if (item == null || !item.CanPickupBy(transform)) continue;
 
             item.TryPickup(Inventory);
         }

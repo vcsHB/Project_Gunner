@@ -195,6 +195,13 @@ public class WeaponItemInstance : ItemInstance, IItemSlotContainer
         return string.IsNullOrEmpty(reason);
     }
 
+    // 모듈 교체가 필드에서 막히는 건 격납고 UI에서만 모듈 칸을 보여주는 것으로 지킨다(M5).
+    public bool CanTake(int slotKey, out string reason)
+    {
+        reason = string.Empty;
+        return true;
+    }
+
     public ItemStack Take(int slotKey, int count)
     {
         ModuleSlotType slot = (ModuleSlotType)slotKey;

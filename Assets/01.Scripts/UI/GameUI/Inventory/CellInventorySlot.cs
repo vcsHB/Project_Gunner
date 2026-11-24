@@ -3,6 +3,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
@@ -204,6 +205,9 @@ public class CellInventorySlot : MonoBehaviour,
     {
         if (Stack.IsEmpty) return;
 
+        // 들어 올린 뒤에 거절하면 고스트만 떴다 돌아간다. 아예 들리지 않게 한다(필드의 장비 칸).
+        if (Container != null && !Container.CanTake(SlotKey, out _)) return;
+
         ItemDragController drag = Drag;
         if (drag == null)
         {
@@ -211,10 +215,12 @@ public class CellInventorySlot : MonoBehaviour,
             return;
         }
 
-        // 우클릭 드래그는 반씩 뗀다. 나중에 상세 분할 UI가 생기면 개수만 바꿔 넣으면 된다.
-        int count = eventData.button == PointerEventData.InputButton.Right
-            ? ItemTransfer.GetHalfCount(Stack)
-            : Stack.count;
+        // 우클릭은 메뉴(PopupItemContext)다. 드래그는 왼쪽으로만.
+        if (eventData.button != PointerEventData.InputButton.Left) return;
+
+        // Alt를 누른 채 끌면 반을 떼어 간다. 원하는 개수는 우클릭 → 분할(PopupItemSplit).
+        bool split = Keyboard.current != null && Keyboard.current.altKey.isPressed;
+        int count = split ? ItemTransfer.GetHalfCount(Stack) : Stack.count;
 
         drag.Begin(this, count);
     }
@@ -241,6 +247,13 @@ public class CellInventorySlot : MonoBehaviour,
     public void OnPointerClick(PointerEventData eventData)
     {
         if (eventData.dragging) return;
+
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            OpenContextMenu();
+            return;
+        }
+
         if (eventData.button != PointerEventData.InputButton.Left) return;
 
         ItemSelectionController selection = Selection;
@@ -250,10 +263,25 @@ public class CellInventorySlot : MonoBehaviour,
         OnClickedEvent?.Invoke(this);
     }
 
+    /// <summary>우클릭. 이 아이템에 할 수 있는 일(분할·사용·버리기…)을 작은 메뉴로.</summary>
+    private void OpenContextMenu()
+    {
+        if (IsEmpty || Container == null) return;
+
+        PopupItemContext menu = PopupItemContext.Instance;
+        if (menu == null) return;
+
+        PopupItemInformation popup = PopupItemInformation.Instance;
+        if (popup != null) popup.Hide();
+
+        menu.Open(this);
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         // 드래그 중에는 띄우지 않는다. 커서 밑에 고스트가 있는데 설명까지 겹치면 아무것도 안 보인다.
-        if (IsEmpty || (Drag != null && Drag.IsDragging)) return;
+        // 메뉴가 떠 있을 때도 — 메뉴 위로 툴팁이 덮인다.
+        if (IsEmpty || (Drag != null && Drag.IsDragging) || PopupItemContext.IsOpen) return;
 
         PopupItemInformation popup = PopupItemInformation.Instance;
         if (popup != null)
@@ -269,7 +297,7 @@ public class CellInventorySlot : MonoBehaviour,
 
     #endregion
 
-    private void OnDestroy() => UnsubscribeInstance();
+    protected virtual void OnDestroy() => UnsubscribeInstance();
 
 #if UNITY_EDITOR
     /// <summary>

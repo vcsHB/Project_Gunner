@@ -91,7 +91,7 @@
 > **해야 하는 시점** — 게임 중 언어 전환을 실제로 지원할 때. 지금은 에디터에서 확인하는 용도라 문제가 안 됩니다.
 
 ### 아이템 설명을 보여주는 UI가 없다
-`ItemDataSO.Description`은 키까지 갖춰졌는데 **읽는 곳이 거의 없습니다**(호버 툴팁 `PopupItemInformation`뿐). 총 시절 상세 패널(`PartItemDetail` 등 스텁)은 2026-11-24에 걷어냈습니다 — 새 상세 표시는 인벤토리 UX 계획에서 정합니다.
+`ItemDataSO.Description`은 키까지 갖춰졌는데 읽는 곳이 호버 툴팁(`PopupItemInformation`)뿐입니다. 2026-11-25에 상세는 **호버로만** 보이기로 정했습니다(클릭 고정 패널 없음) — 툴팁이 수치와 장착품 비교까지 맡습니다. 설명이 길어지는 아이템이 생기면 툴팁 폭(400)을 다시 볼 것.
 
 ### 아이템 외 문자열
 상태이상 이름(`ConditionVisualTableSO.GetDisplayName`), 장비 슬롯 이름(`CellEquipmentSlot._displayName`)은 아직 하드코딩입니다. 아이템과 `LocalizedText`가 붙은 UI 문구만 키를 갖습니다.

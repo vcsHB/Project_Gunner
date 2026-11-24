@@ -7,6 +7,11 @@ using UnityEngine;
 /// 실제 오브젝트 생성(무기 프리팹 등)은 이벤트를 구독하는 쪽이 한다.
 ///
 /// SO가 아니라 ItemStack을 들고 있는 이유는 개체 상태(instanceId)를 잃지 않기 위해서다.
+///
+/// <b>필드에서는 잠겨 있다</b>(<see cref="IsLocked"/>). 무장은 진입할 때 들고 간 것만 쓰고, 교체는 안전지대에서만 한다.
+/// 잠금은 <b>UI 경로(<see cref="IItemSlotContainer"/>)만</b> 막는다 — 드래그로 빼거나 끼우지 못한다.
+/// 코드가 부르는 <see cref="Equip(EquipSlotType, ItemStack)"/> / <see cref="Unequip"/>(출격 로드아웃, 죽음, 툴)는 그대로 통한다.
+/// 격납고(M5)가 생기면 그 Panel이 열려 있는 동안 <see cref="SetLocked"/>(false).
 /// </summary>
 public class EquipmentController : MonoBehaviour, IAgentComponent, IItemSlotContainer
 {
@@ -16,6 +21,22 @@ public class EquipmentController : MonoBehaviour, IAgentComponent, IItemSlotCont
     private readonly Dictionary<EquipSlotType, ItemStack> _equipped = new();
 
     public Agent Owner { get; private set; }
+
+    /// <summary>드래그로 장비를 바꿀 수 없다. 필드 = true, 안전지대 = false.</summary>
+    public bool IsLocked { get; private set; } = true;
+
+    public event Action<bool> OnLockChangedEvent;
+
+    public void SetLocked(bool locked)
+    {
+        if (IsLocked == locked) return;
+
+        IsLocked = locked;
+        OnLockChangedEvent?.Invoke(locked);
+    }
+
+    /// <summary>잠겨 있을 때 화면에 보일 이유.</summary>
+    public static string LockedReason => Localization.Get("ui.equip.locked", "안전지대에서만 교체할 수 있습니다");
 
     public void Initialize(Agent owner)
     {
@@ -92,6 +113,12 @@ public class EquipmentController : MonoBehaviour, IAgentComponent, IItemSlotCont
     {
         reason = string.Empty;
 
+        if (IsLocked)
+        {
+            reason = LockedReason;
+            return false;
+        }
+
         EquipSlotType slot = (EquipSlotType)slotKey;
         if (slot == EquipSlotType.None)
         {
@@ -115,9 +142,17 @@ public class EquipmentController : MonoBehaviour, IAgentComponent, IItemSlotCont
         return true;
     }
 
-    /// <summary>장비는 항상 통째로 빠진다. count는 무시한다.</summary>
+    public bool CanTake(int slotKey, out string reason)
+    {
+        reason = IsLocked ? LockedReason : string.Empty;
+        return !IsLocked;
+    }
+
+    /// <summary>장비는 항상 통째로 빠진다. count는 무시한다. 잠겨 있으면 Empty.</summary>
     public ItemStack Take(int slotKey, int count)
     {
+        if (IsLocked) return ItemStack.Empty;
+
         EquipSlotType slot = (EquipSlotType)slotKey;
 
         ItemStack stack = GetStack(slot);

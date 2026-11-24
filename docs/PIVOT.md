@@ -6,7 +6,7 @@
 
 본문 전체는 아래에 걸릴 때만 읽습니다.
 
-- **남은 단계** — 8 모딩 일반화(`ModdableItemInstance`), 10 안전지대 잠금(`LoadoutLocked`, M5). 나머지는 완료. [작업 순서](#작업-순서)
+- **남은 단계** — 8 모딩 일반화(`ModdableItemInstance`), 10 안전지대 잠금(필드 잠금은 `EquipmentController.IsLocked`로 들어감 2026-11-25 — 남은 건 안전지대에서 푸는 쪽, M5). 나머지는 완료. [작업 순서](#작업-순서)
 - **폐기 대상을 건드리면** [제거 목록](#제거-목록)을 보세요 — 핫바, 소모품 사용, `ThrowableHand`, 재장전·탄종순환, 정조준 입력, `GunAim_*`/`Scrope_*`, 허기·갈증, `LargeHeavyMagazine`.
 - **새로 생길 것을 만들면** [신설 목록](#신설-목록)을 보세요 — 특히 `ToolDataSO`/`PlayerToolBase`(도구는 무기와 판정 분리), `ModdableItemInstance`, `AgentStatDelta`.
 - **아직 결정되지 않은 것** — [아직 안 정한 것](#아직-안-정한-것). 여기 걸리는 작업은 진행 전에 사용자에게 물어볼 것.
@@ -259,7 +259,7 @@ Root(소켓)는 호스트 쪽, Pivot은 게스트 쪽이라 주인이 다릅니�
 | ~~7~~ | ~~조립 + Part Forge~~ | **완료 (2026-11-14).** 구조는 ARCHITECTURE로 옮길 것 |
 | 8 | 모딩 일반화 (`ModdableItemInstance`) | 코어 하위 모듈이 실제로 필요해질 때 |
 | ~~9~~ | ~~UI 재배선~~ | **완료 (2026-11-14).** 무장 HUD 좌/우 2개 + 열 게이지, 장비 칸 4개. 격납고는 M5 |
-| 10 | 안전지대 잠금 (`LoadoutLocked`) | 안전지대 개념이 생길 때 켜면 됨 (M5) |
+| 10 | 안전지대 잠금 (`EquipmentController.IsLocked`) | 🟡 필드 잠금 완료(2026-11-25). 격납고가 `SetLocked(false)` (M5) |
 
 `EquipmentController.CanAccept`가 이미 `out string reason`을 반환하고 드래그 UI가 그걸 쓰므로, 10단계는 플래그 하나 + 문구 한 줄입니다.
 

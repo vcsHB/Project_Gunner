@@ -13,15 +13,14 @@ public class ItemDropArea : MonoBehaviour, IDropHandler
     public event Action<IItemSlotContainer, int, int> OnDropRequestedEvent;
 
     private ItemDragController _drag;
-    private Transform _dropOrigin;
+    private Agent _dropper;
 
     private void Awake() => _drag = GetComponentInParent<ItemDragController>(true);
 
     private void Start()
     {
         Player player = FindAnyObjectByType<Player>();
-        if (player != null)
-            _dropOrigin = player.transform;
+        _dropper = player;
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -46,19 +45,12 @@ public class ItemDropArea : MonoBehaviour, IDropHandler
 
     private void DropToWorld(IItemSlotContainer container, int slotKey, int count)
     {
-        if (container == null) return;
-
-        if (_dropOrigin == null)
+        if (_dropper == null)
         {
-            Debug.LogWarning("[ItemDrop] 떨어뜨릴 기준 위치가 없어 취소합니다.", this);
+            Debug.LogWarning("[ItemDrop] 떨어뜨릴 주인이 없어 취소합니다.", this);
             return;
         }
 
-        // 꺼낸 다음에 스폰이 실패하면 아이템이 사라지므로, 실패 시 되돌린다.
-        ItemStack taken = container.Take(slotKey, count);
-        if (taken.IsEmpty) return;
-
-        if (WorldItemSpawner.Spawn(taken, _dropOrigin.position) == null)
-            container.Place(slotKey, taken);
+        ItemDiscard.Discard(container, slotKey, count, _dropper);
     }
 }

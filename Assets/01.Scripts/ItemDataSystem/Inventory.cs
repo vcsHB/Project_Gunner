@@ -236,6 +236,23 @@ public class Inventory : IItemSlotContainer
 
     public ItemStack Peek(int slotKey) => this[slotKey];
 
+    /// <summary>첫 빈 칸. 없으면 -1. 분할한 것을 내려놓을 자리를 찾는다.</summary>
+    public int FindEmptySlot()
+    {
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            if (_slots[i].IsEmpty) return i;
+        }
+
+        return -1;
+    }
+
+    public bool CanTake(int slotKey, out string reason)
+    {
+        reason = string.Empty;
+        return IsValidIndex(slotKey);
+    }
+
     public bool CanAccept(int slotKey, ItemStack stack, out string reason)
     {
         reason = string.Empty;

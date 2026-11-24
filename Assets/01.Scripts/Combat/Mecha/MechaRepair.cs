@@ -84,7 +84,8 @@ public class MechaRepair : MonoBehaviour, IAgentComponent
 
     private void HandleRepairInput() => TryStartRepair();
 
-    public bool TryStartRepair()
+    /// <param name="preferredSlot">적재함의 이 칸에 있는 키트를 쓴다(인벤토리 우클릭 "사용"). -1이면 앞칸부터.</param>
+    public bool TryStartRepair(int preferredSlot = -1)
     {
         if (_health == null || _health.IsDead) return Reject(RepairFailReason.Dead);
         if (IsRepairing) return Reject(RepairFailReason.Busy);
@@ -92,7 +93,7 @@ public class MechaRepair : MonoBehaviour, IAgentComponent
         bool damaged = _health.CurrentHealth < _health.MaxHealth || (_parts != null && _parts.IsDamaged);
         if (!damaged) return Reject(RepairFailReason.NothingToRepair);
 
-        if (!TryConsumeKit(out RepairKitDataSO kit)) return Reject(RepairFailReason.NoKit);
+        if (!TryConsumeKit(preferredSlot, out RepairKitDataSO kit)) return Reject(RepairFailReason.NoKit);
 
         _remaining = kit.Duration;
         _ratePerSecond = kit.Amount / kit.Duration;
@@ -108,12 +109,22 @@ public class MechaRepair : MonoBehaviour, IAgentComponent
     }
 
     /// <summary>적재함 앞칸부터 찾는다. 종류가 여럿이면 먼저 만난 것을 쓴다.</summary>
-    private bool TryConsumeKit(out RepairKitDataSO kit)
+    private bool TryConsumeKit(int preferredSlot, out RepairKitDataSO kit)
     {
         kit = null;
 
         Inventory inventory = _inventory != null ? _inventory.Inventory : null;
         if (inventory == null) return false;
+
+        if (preferredSlot >= 0)
+        {
+            RepairKitDataSO chosen = inventory[preferredSlot].Resolve<RepairKitDataSO>();
+            if (chosen != null && inventory.RemoveAt(preferredSlot, 1))
+            {
+                kit = chosen;
+                return true;
+            }
+        }
 
         for (int i = 0; i < inventory.Capacity; i++)
         {

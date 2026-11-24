@@ -46,6 +46,13 @@ public class PanelInventory : UIPanelBase
         Toggle();
     }
 
+    // 칸에서 띄운 작은 창들은 이 패널 안에 있다. 패널이 투명해져도 저들은 "떠 있는" 채로 남아 ESC 한 번을 먹는다.
+    protected override void OnHide()
+    {
+        PopupItemContext.HideIfOpen();
+        PopupItemSplit.HideIfOpen();
+    }
+
     private void HandleDead()
     {
         if (IsShown) Hide();

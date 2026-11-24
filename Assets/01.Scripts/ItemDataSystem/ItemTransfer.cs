@@ -30,6 +30,7 @@ public static class ItemTransfer
 
         count = Mathf.Clamp(count, 1, source.count);
 
+        if (!from.CanTake(fromKey, out reason)) return false;
         if (!to.CanAccept(toKey, source, out reason)) return false;
 
         ItemStack target = to.Peek(toKey);
@@ -105,7 +106,10 @@ public static class ItemTransfer
         return leftover.count < moving.count;
     }
 
-    /// <summary>우클릭 드래그로 반씩 떼는 기본 규칙.</summary>
+    /// <summary>
+    /// Alt 드래그로 반을 떼어 갈 때 <b>떼어 가는</b> 개수. 홀수면 원래 칸에 큰 쪽이 남는다(5 → 2를 들고 3이 남는다).
+    /// 1개짜리는 통째로 든다.
+    /// </summary>
     public static int GetHalfCount(ItemStack stack)
-        => stack.IsEmpty ? 0 : Mathf.Max(1, Mathf.CeilToInt(stack.count * 0.5f));
+        => stack.IsEmpty ? 0 : Mathf.Max(1, stack.count / 2);
 }

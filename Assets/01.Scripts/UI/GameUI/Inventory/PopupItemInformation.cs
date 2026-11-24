@@ -166,7 +166,9 @@ public class PopupItemInformation : Singleton<PopupItemInformation>
         _sb.Clear();
 
         string note = equipped
-            ? ItemText.Label("equipped", "장착 중")
+            ? (_equipment.IsLocked
+                ? Localization.Format("ui.item.equippedLocked", "장착 중 · {0}", EquipmentController.LockedReason)
+                : ItemText.Label("equipped", "장착 중"))
             : comparing
                 ? Localization.Format("ui.item.compare", "{0} 장착품과 비교", ItemText.SlotName(compareSlot))
                 : null;

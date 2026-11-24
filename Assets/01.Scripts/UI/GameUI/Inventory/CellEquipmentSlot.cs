@@ -18,6 +18,11 @@ public class CellEquipmentSlot : CellInventorySlot
     [Tooltip("빈 칸일 때 활성화된다.")]
     [SerializeField] private GameObject _plusMark;
 
+    [Tooltip("잠겨 있을 때(필드) 켜진다. 칸 오른쪽 위 자물쇠.")]
+    [SerializeField] private GameObject _lockMark;
+
+    private EquipmentController _equipment;
+
     public EquipSlotType SlotType => _slotType;
 
     protected override void Awake()
@@ -29,7 +34,28 @@ public class CellEquipmentSlot : CellInventorySlot
     }
 
     /// <summary>이 칸이 담당하는 장착 슬롯으로 컨테이너에 연결한다.</summary>
-    public void Bind(EquipmentController equipment) => Bind(equipment, (int)_slotType);
+    public void Bind(EquipmentController equipment)
+    {
+        if (_equipment != null) _equipment.OnLockChangedEvent -= HandleLockChanged;
+
+        _equipment = equipment;
+        if (_equipment != null) _equipment.OnLockChangedEvent += HandleLockChanged;
+
+        Bind(equipment, (int)_slotType);
+        HandleLockChanged(_equipment != null && _equipment.IsLocked);
+    }
+
+    private void HandleLockChanged(bool locked)
+    {
+        if (_lockMark != null) _lockMark.SetActive(locked);
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_equipment != null) _equipment.OnLockChangedEvent -= HandleLockChanged;
+
+        base.OnDestroy();
+    }
 
     protected override void OnStackChanged()
     {

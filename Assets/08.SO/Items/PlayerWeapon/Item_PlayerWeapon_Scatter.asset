@@ -15,8 +15,8 @@ MonoBehaviour:
   _id: 1003
   <ItemGrade>k__BackingField: 1
   <ItemCategory>k__BackingField: 3
-  <IconSprite>k__BackingField: {fileID: 21300000, guid: 013131efd4f953f478bfcb9381384477, type: 3}
-  _worldSprite: {fileID: 1408885641, guid: 6b20b914aa1e8cc4589280e68ee7e8a1, type: 3}
+  <IconSprite>k__BackingField: {fileID: 21300000, guid: bc423ff2823a2254998e6eb3347e6b09, type: 3}
+  _worldSprite: {fileID: 21300000, guid: bc423ff2823a2254998e6eb3347e6b09, type: 3}
   _maxStackCount: 1
   _maxDurability: 1500
   _editorName: Scatter
