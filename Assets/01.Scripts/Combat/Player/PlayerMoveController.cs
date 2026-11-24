@@ -9,14 +9,20 @@ using UnityEngine;
 ///
 /// 빠른 채로 착륙하면 <b>미끄러진다</b> — 진행 방향으로 천천히 감속하고 조향이 거의 안 먹는다.
 /// 착륙 직후 잠시는 다시 뜰 수 없다. 착륙을 공짜 급정거로 쓰지 못하게 하려는 것이다.
+///
+/// <b>활공 중에 죽으면 추락한다</b>(<see cref="IDeathCrash"/>). 조종을 잃은 채 그때 속도로 미끄러지듯 날아가며 고도를 잃고,
+/// 땅에 닿는 순간 부서진다(폭발·잔해·새 판 카운트다운). 착지 불가 지역 위에서 닿으면 떨어진 것으로 친다(<see cref="OnFellEvent"/>).
 /// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireAgentComponent(typeof(AgentStatus))]
 [RequireAgentComponent(typeof(AgentConditionEffector), optional: true)]
 [RequireAgentComponent(typeof(VitalStatus), optional: true)]
 [RequireAgentComponent(typeof(TargetBase), optional: true)]
-public class PlayerMoveController : MonoBehaviour, IAgentComponent
+public class PlayerMoveController : MonoBehaviour, IAgentComponent, IDeathCrash
 {
+    public event Action OnCrashStartedEvent;
+    public event Action OnCrashImpactEvent;
+
     /// <summary>모드가 바뀌었다. (이전, 다음)</summary>
     public event Action<MechaMoveMode, MechaMoveMode> OnMoveModeChangedEvent;
 
@@ -75,6 +81,16 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     [Tooltip("걸을 때 가장자리에서 이만큼 앞에서 멈춘다(유닛). 몸 반지름 정도. 미끄러짐에는 안 걸린다.")]
     [SerializeField, Min(0f)] private float _edgeMargin = 0.3f;
 
+    [Header("추락 (활공 중 사망)")]
+    [Tooltip("고도를 다 잃는 데 걸리는 시간(초). 그동안 미끄러지듯 날아간다.")]
+    [SerializeField, Min(0.1f)] private float _crashFallDuration = 1.1f;
+
+    [Tooltip("추락하는 동안의 감속(유닛/초²). 작을수록 멀리 간다.")]
+    [SerializeField, Min(0f)] private float _crashDeceleration = 3f;
+
+    [Tooltip("추락하는 동안 진행 방향이 흔들리는 정도(도/초). 통제를 잃은 느낌. 연출이라 시드를 쓰지 않는다.")]
+    [SerializeField, Min(0f)] private float _crashWobble = 25f;
+
     [Header("추진체 파괴")]
     [Tooltip("추진체가 부서지면 이동속도에 더해지는 비율. -0.4면 40% 느려진다. 활공·부스터도 막힌다.")]
     [SerializeField, Range(-0.9f, 0f)] private float _brokenBoosterSpeed = -0.4f;
@@ -102,6 +118,8 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
     private MechaMoveMode _mode = MechaMoveMode.Landed;
     private bool _skidding;
+    private bool _crashing;
+    private Action _onCrashImpact;
     private float _glideLockTimer;
     private float _liftProgress;
 
@@ -109,6 +127,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     public MechaMoveMode Mode => _mode;
     public bool IsGliding => _mode == MechaMoveMode.Gliding;
     public bool IsSkidding => _skidding;
+    public bool IsCrashing => _crashing;
 
     /// <summary>지금 Space를 누르면 뜰 수 있는지. UI가 잠금을 보여줄 때 쓴다.</summary>
     public bool CanStartGlide => !IsGliding && _glideLockTimer <= 0f && CanMove && HasFuel && !IsBoosterBroken;
@@ -206,7 +225,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     {
         if (slot != EquipSlotType.Booster) return;
 
-        if (IsGliding) ForceLand();
+        if (IsGliding && !_crashing) ForceLand();
         SetSprintActive(false);
 
         if (_status != null)
@@ -226,6 +245,14 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     // 고도는 보이는 값이라 렌더 프레임마다 움직인다. FixedUpdate에서 올리면 몸체가 계단처럼 뜬다.
     private void Update()
     {
+        if (_crashing)
+        {
+            // 떠 있던 높이에서 천천히 잃는다. 다 잃으면 땅에 닿은 것.
+            _liftProgress = Mathf.MoveTowards(_liftProgress, 0f, Time.deltaTime / _crashFallDuration);
+            if (_liftProgress <= 0f) CrashImpact();
+            return;
+        }
+
         float target = IsGliding ? 1f : 0f;
         _liftProgress = Mathf.MoveTowards(_liftProgress, target, Time.deltaTime / _liftDuration);
     }
@@ -236,6 +263,12 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
         if (_glideLockTimer > 0f)
             _glideLockTimer -= deltaTime;
+
+        if (_crashing)
+        {
+            TickCrash(deltaTime);
+            return;
+        }
 
         UpdateGlideFuel(deltaTime);
         UpdateSprint(deltaTime);
@@ -286,6 +319,9 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
 
     private void HandleGlideToggle()
     {
+        // 죽은 뒤(추락 중 포함)에는 내려앉지도 뜨지도 않는다.
+        if (_player.IsDead) return;
+
         if (IsGliding)
         {
             // 착지 불가 지역 위에서는 내려앉지 않는다. 눌렀다는 사실만 알린다(UI·경고음).
@@ -382,6 +418,65 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
         if (overNoLanding) Fall();
     }
 
+    #region 추락
+
+    /// <summary>
+    /// 죽는 순간 <see cref="Health"/>가 묻는다. 떠 있으면(완전히 내려앉기 전이면) 추락을 시작한다.
+    /// 막 이륙하던 중이어도 몸이 떠 있으면 추락이다 — 고도가 있는 만큼만 떨어진다.
+    /// </summary>
+    public bool TryBeginCrash(Action onImpact)
+    {
+        if (_crashing) return true;
+        if (!IsGliding && _liftProgress <= 0f) return false;
+
+        _crashing = true;
+        _onCrashImpact = onImpact;
+        _skidding = false;
+        SetSprintActive(false);
+
+        OnCrashStartedEvent?.Invoke();
+        return true;
+    }
+
+    /// <summary>조종 없이 진행 방향으로 천천히 감속하며, 방향이 조금씩 흔들린다.</summary>
+    private void TickCrash(float deltaTime)
+    {
+        Vector2 velocity = _rigidbody.linearVelocity;
+        float speed = Mathf.Max(0f, velocity.magnitude - _crashDeceleration * deltaTime);
+
+        if (speed <= 0.01f)
+        {
+            _rigidbody.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        float wobble = (Mathf.PerlinNoise(Time.time * 2f, 0.37f) - 0.5f) * 2f * _crashWobble * deltaTime;
+        _rigidbody.linearVelocity = (Vector2)(Quaternion.Euler(0f, 0f, wobble) * velocity.normalized) * speed;
+    }
+
+    /// <summary>땅에 닿았다. 멈추고 착륙 상태로, 착지 불가 지역이면 떨어진 것으로 알린 뒤 부서진다.</summary>
+    private void CrashImpact()
+    {
+        _crashing = false;
+        _rigidbody.linearVelocity = Vector2.zero;
+
+        if (_status != null)
+            _status.MoveSpeed.RemoveModifier(_glideOrigin);
+
+        SetMode(MechaMoveMode.Landed);
+
+        if (IsOverNoLandingZone)
+            OnFellEvent?.Invoke();
+
+        OnCrashImpactEvent?.Invoke();
+
+        Action impact = _onCrashImpact;
+        _onCrashImpact = null;
+        impact?.Invoke();
+    }
+
+    #endregion
+
     private void Fall()
     {
         if (_player.IsDead) return;
@@ -397,6 +492,9 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     /// </summary>
     public void ResetMotion()
     {
+        // 추락 중에 새 판이 오면 끊는다. 부서짐은 부르지 않는다 — 이미 되살아났다.
+        _crashing = false;
+        _onCrashImpact = null;
         _skidding = false;
         _glideLockTimer = 0f;
         _liftProgress = 0f;
@@ -417,7 +515,7 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent
     /// <summary>연료가 바닥나면 강제로 내려앉는다. 빠르면 그대로 미끄러진다.</summary>
     private void UpdateGlideFuel(float deltaTime)
     {
-        if (!IsGliding) return;
+        if (!IsGliding || _crashing) return;
 
         bool keep = !_player.IsDead && !IsBoosterBroken;
 

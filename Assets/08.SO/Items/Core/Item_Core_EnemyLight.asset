@@ -23,6 +23,16 @@ MonoBehaviour:
   _displayName: EnemyLight
   _description: 
   _localizationKey: item.core.enemylight
+  _composition:
+  - item: {fileID: 11400000, guid: 2f70317c139bb6b4a8afccfaeca113bb, type: 2}
+    count: 4
+  - item: {fileID: 11400000, guid: bcd2b395d7e37be41b9ef90ed672c033, type: 2}
+    count: 2
+  - item: {fileID: 11400000, guid: 7dd504073820644428834d6a5572c492, type: 2}
+    count: 1
+  - item: {fileID: 11400000, guid: e33b253691234ca4db3188b78704e6ab, type: 2}
+    count: 1
+  _disassemblable: 0
   _allowedSlots: 06000000
   _partHealth: 0
   _deltas:

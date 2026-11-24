@@ -260,6 +260,18 @@ assets.Sort((a, b) => {
 
 ---
 
+## 버린 아이템이 0.5초 뒤 다시 주워진다 (2026-11-25)
+
+**증상** — 인벤토리에서 버리면(패널 밖·우클릭) 아이템이 발밑에 떨어졌다가 곧바로 적재함으로 돌아왔다. 버리기가 "안 되는" 것처럼 보인다.
+
+**원인** — 줍기가 자동(`InventoryController.Scan`)이고, 떨군 아이템의 줍기 지연(`WorldItem._pickupDelay` 0.5초)이 끝나면 아직 발밑에 서 있는 그 사람이 다시 줍는다.
+
+**대응** — 버린 사람은 **줍기 반경을 한 번 벗어나야** 다시 줍는다(`WorldItem.IgnorePickupBy`). 다른 사람은 바로 줍는다. 아이템을 떨구는 새 경로를 만들 때는 `ItemDiscard`를 거치거나 같은 처리를 할 것(분해 넘침 `ItemDisassembly`도 그렇게 함).
+
+## 플레이 모드 검증은 `EditorApplication.Step`으로 프레임을 민다 (2026-11-25)
+
+에디터가 비활성이면 시간이 안 흐른다(위). 그때는 `execute_code`에서 `EditorApplication.isPaused = true; EditorApplication.Step();`으로 **한 번 부를 때 한 프레임**씩 민다. 긴 타이머는 검증용으로 짧게 바꿔(리플렉션) 몇 번만 밀면 된다. 끝나면 `isPaused = false`로 되돌릴 것.
+
 ## ~~컴포넌트 속성 덤프에서 참조형이 null로 나온다~~ (mcp-unity 시절)
 
 > **2026-11-15에 MCP 서버를 바꿨습니다.** 이건 `CoderGamester/mcp-unity`의 리플렉션 덤프 문제로 보입니다.

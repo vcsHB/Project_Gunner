@@ -23,6 +23,14 @@ MonoBehaviour:
   _displayName: "\uD14C\uC2A4\uD2B8 \uD130\uB81B"
   _description: 
   _localizationKey: item.unit.turrettest
+  _composition:
+  - item: {fileID: 11400000, guid: 2f70317c139bb6b4a8afccfaeca113bb, type: 2}
+    count: 5
+  - item: {fileID: 11400000, guid: bcd2b395d7e37be41b9ef90ed672c033, type: 2}
+    count: 2
+  - item: {fileID: 11400000, guid: e33b253691234ca4db3188b78704e6ab, type: 2}
+    count: 1
+  _disassemblable: 0
   _prefab: {fileID: 2494443894999911409, guid: 35fd78d654a966646a97cb2efddf0df5, type: 3}
   _maxHealth: 600
   _moveSpeed: 0

@@ -106,6 +106,8 @@
 | 인벤토리 칸 수 | ✅ | `AgentStatus.InventorySize` 스탯. 줄면 넘친 건 바닥에 |
 | 내구도 | ✅ | `ItemInstance.Durability`. 무기는 발사마다 감소, 0이면 사용 불가 |
 | 사용 가능 판정 | ✅ | `ItemUsability` 한 곳. 슬롯 표시와 실제 동작이 같은 답 |
+| 재료 / 고철 | 🟡 | `MaterialDataSO`(7000~). 임시 4종(강철·회로 기판·고분자·연료 전지) + 고철. **아이콘 없음** |
+| 재료 구성 / 분해 | ✅ | `ItemDataSO.Composition` + `_disassemblable`. 우클릭 → 분해(`ItemDisassembly`, 넘치면 발밑). 코어 3종·터렛 유닛 데이터에 구성 입력 |
 | 저장/불러오기 | ⬜ | **미착수** |
 
 **에셋** — 무기 `Perro`, `Scatter` / 모듈 `ScopeReddot`, `HeavyCoolant`. 추진체 에셋은 아직 없습니다.
@@ -153,10 +155,10 @@
 | SectionInventoryGrid ↔ Inventory | ✅ | 슬롯 변경 이벤트 구독. 칸은 `CellInventorySlot` 프리팹으로 용량만큼 자동 생성. 배너에 사용 칸 "5 / 30"(남은 칸 3 이하 주황) |
 | 인벤토리 배치 | 🟡 | 위 기체 구역(장비 4칸을 실루엣 모양 — 코어 위, 좌·우무기 양옆, 추진체 아래 — + 안전 슬롯), 아래 적재함 격자. 칸 라벨 한글(`ItemText.SlotName`). 게임은 멈추지 않는다. **스타일 임시** |
 | 장비 잠금 | ✅ | 필드에서는 장비 칸을 드래그로 빼거나 끼울 수 없다(`EquipmentController.IsLocked`, 기본 true). 칸 오른쪽 위 자물쇠(`UI_Sheet_5_2`, `CellEquipmentSlot._lockMark`). 막는 건 UI 경로(`IItemSlotContainer.CanTake`/`CanAccept`)뿐 — 출격 로드아웃·죽음·툴의 `Equip`/`Unequip`은 통한다. 툴팁에 "장착 중 · 안전지대에서만 교체할 수 있습니다". 격납고(M5)가 `SetLocked(false)` |
-| 인벤토리 UX 3·5단계 | ⬜ | 3 루팅 구역 → M4 "잔해 루팅"(탐색·Shift+클릭·공간 부족) · 5 모듈·개량은 격납고의 파츠 상세 화면(M5) |
+| 인벤토리 UX 3·5단계 | 🟡 | 3 루팅 구역 ✅(잔해 루팅) · 5 모듈·개량은 격납고의 파츠 상세 화면(M5) |
 | 슬롯 컨테이너 추상화 | ✅ | `IItemSlotContainer` — 인벤토리/장비가 구현 |
 | 드래그 이동 | ✅ | 병합·스왑. **Alt 드래그 = 반**(홀수면 원래 칸에 큰 쪽). 왼쪽 버튼만 — 오른쪽은 메뉴. `ItemTransfer` 한 곳에 규칙(뺄 수 있는지 `CanTake`까지) |
-| 우클릭 메뉴 | 🟡 | `PopupItemContext` — 커서 옆 작은 메뉴. 목록은 `ItemContextActions`: 사용(수리 키트 — 그 칸의 키트로 `MechaRepair.TryStartRepair(slot)`) · 분할 · 버리기. 못 하면 회색 + 이유. 메뉴 밖 클릭·ESC로 닫힘. **분해·자세히 보기(도감) 없음** |
+| 우클릭 메뉴 | 🟡 | `PopupItemContext` — 커서 옆 작은 메뉴. 목록은 `ItemContextActions`: 사용(수리 키트 — 그 칸의 키트로 `MechaRepair.TryStartRepair(slot)`) · 분할 · 분해 · 버리기. 못 하면 회색 + 이유. 메뉴 밖 클릭·ESC로 닫힘. **자세히 보기(도감) 없음** |
 | 분할 창 | ✅ | `PopupItemSplit` — 슬라이더 + 입력칸(서로 맞춤), 취소/확인. 같은 적재함의 첫 빈 칸으로. 처음 값은 반 |
 | 아이템 선택 | ✅ | `ItemSelectionController`, 어느 칸이든 클릭 |
 | 버리기 | ✅ | **패널 밖에 놓으면 버린다** — `ItemDragController._keepAreas`(각 Section 상자) 밖. 밖으로 나가면 고스트에 "버리기" + 패널 뒤 붉게(`DiscardHint`). 버리는 길은 `ItemDiscard` 하나(드래그·메뉴·`ItemDropArea`). 버린 사람은 줍기 반경을 한 번 벗어나야 다시 줍는다(`WorldItem.IgnorePickupBy`) |
@@ -187,7 +189,9 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 
 | 시스템 | 상태 |
 |---|---|
-| 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → 3초 뒤 새 판. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`PanelDeathScreen` — 제목·잃은 것·"N초 뒤 주둔지로" 세 줄) ([arch/run](arch/run.md)) |
+| 활공 중 사망 = 추락 | ✅ (2026-11-25) 조종을 잃고 연기를 끌며 그때 속도로 날아가다 고도 0에서 폭발 → 잔해. `IDeathCrash`(`PlayerMoveController`), 죽음 2단계 `OnDeadEvent` / `OnWreckedEvent`. 연기·폭발은 **임시 코드 파티클**(`DeathCrashFeedback`, 적도 붙음). 나는 적은 드론 때 |
+| 잔해 루팅 | ✅ (2026-11-25) `WreckLoot`(적 프리팹 4종) → 잔해에 `LootContainer`. 코어 재료 일부 + 고철 + 전리품 표. 비지 않으면 남음. E 탐색(`PlayerInteractor`, `PartInteractPrompt`) → 루팅 구역. 하나씩 드러남(보는 사람마다), Shift+클릭 빠른 이동, 꽉 차면 깜빡임 ([arch/run](arch/run.md)) |
+| 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → (추락) → 부서진 뒤 3초 뒤 새 판. 남은 잔해 적재함도 치움. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`PanelDeathScreen` — 제목·잃은 것·"N초 뒤 주둔지로" 세 줄) ([arch/run](arch/run.md)) |
 | 안전 슬롯 | 🟡 `InventoryController.SafeSlot`(1칸). UI `CellSafeSlot` — 기체 구역 오른쪽. **드래그는 눈으로 확인 전** |
 | 착지 불가 지역 | 🟡 `NoLandingZone`(콜라이더 모양 판정). 위에서 Space 착륙 막힘, 강제 착륙 = 추락 즉사. 지상: 걸어서는 가장자리에서 멈춤(적도), 미끄러져 들어가면 연료 있으면 자동 활공·없으면 추락. 테스트 영역 하나. 배치는 맵 작업 |
 | CameraManager | ✅ |

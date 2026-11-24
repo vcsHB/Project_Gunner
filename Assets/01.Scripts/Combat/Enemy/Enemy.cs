@@ -104,9 +104,10 @@ public class Enemy : Agent
         s_loadoutBuffer.Clear();
     }
 
-    protected override void HandleDead()
+    // 죽는 순간이 아니라 부서지는 순간에 치운다 — 나는 적은 추락하는 동안 몸이 남아 있어야 한다.
+    protected override void HandleWrecked()
     {
-        base.HandleDead();
+        base.HandleWrecked();
 
         DropLoot();
 
@@ -118,6 +119,10 @@ public class Enemy : Agent
     private void DropLoot()
     {
         if (_data == null) return;
+
+        // 잔해 적재함이 있으면 전리품도 그 안에 들어간다(WreckLoot가 굴린다). 바닥에 또 떨구지 않는다.
+        WreckLoot wreckLoot = GetComponentInChildren<WreckLoot>();
+        if (wreckLoot != null && wreckLoot.HandlesLoot) return;
 
         s_lootBuffer.Clear();
         _data.RollLoot(s_lootBuffer);

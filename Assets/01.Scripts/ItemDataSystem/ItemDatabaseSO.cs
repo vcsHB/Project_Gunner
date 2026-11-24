@@ -46,10 +46,12 @@ public class ItemDatabaseSO : ScriptableObject
         // 필드 수리 키트. 폐기된 소모품 대역(4000)은 재사용하지 않는다.
         new(nameof(RepairKitDataSO), "수리 키트", 10000, 10999),
 
+        // 재료(강철·회로 등)와 고철. 예약해 둔 "자원" 대역을 쓴다.
+        new(nameof(MaterialDataSO), "재료", 7000, 7999),
+
         // 아직 타입이 없는 예약 대역. 클래스를 만들면 typeName만 채우면 된다.
         new(string.Empty, "(폐기) 소모품", 4000, 4999),
         new(string.Empty, "도구", 5000, 5999),
-        new(string.Empty, "자원", 7000, 7999),
         new(string.Empty, "블럭", 8000, 8999),
         new(string.Empty, "유닛", 9000, 9999),
     };

@@ -557,6 +557,8 @@ GameObject:
   - component: {fileID: 1135918476844857588}
   - component: {fileID: 976389448952817415}
   - component: {fileID: 2775786804392912172}
+  - component: {fileID: 76008969694244305}
+  - component: {fileID: 1158048395626270655}
   m_Layer: 9
   m_Name: Enemy_Turret_Test
   m_TagString: Untagged
@@ -773,6 +775,44 @@ MonoBehaviour:
   _breakSound: {fileID: 0}
   _wreckEffect: 0
   _wreckSound: {fileID: 0}
+--- !u!114 &76008969694244305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6118006364926195526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54e1d8a50b8db94429307cf922478de2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DeathCrashFeedback
+  _emitAt: {fileID: 5971474897486661813}
+  _material: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  _sortingLayer: Effect_Front
+  _smoke: {fileID: 0}
+  _smokeColor: {r: 0.25, g: 0.25, b: 0.27, a: 0.85}
+  _smokeRate: 40
+  _impactEffect: 0
+  _impactSound: {fileID: 0}
+  _fireColor: {r: 1, g: 0.6, b: 0.15, a: 1}
+  _emberColor: {r: 0.9, g: 0.2, b: 0.1, a: 1}
+  _burstCount: 45
+--- !u!114 &1158048395626270655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6118006364926195526}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edc0c61f62eb89d47a1f0d35a316cb65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WreckLoot
+  _compositionShare: {x: 0.25, y: 0.6}
+  _scrap: {fileID: 11400000, guid: d4f7ba2197332384ab8fcc99519bff48, type: 2}
+  _scrapCount: {x: 1, y: 3}
 --- !u!1 &7675488721212299023
 GameObject:
   m_ObjectHideFlags: 0

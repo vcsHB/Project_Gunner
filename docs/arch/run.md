@@ -4,20 +4,46 @@
 
 **코어 체력이 0이면 죽습니다.** 컨셉은 비상탈출입니다 — 조종사가 기체를 버리고 나가므로 **장착 파츠(코어·양팔·추진체)와 적재함을 전부 잃습니다.** 안전 슬롯 한 칸만 남습니다 (2026-11-22 결정).
 
+**죽음은 두 단계입니다** (2026-11-25). 땅에서 죽으면 둘이 같은 프레임에 옵니다. **활공 중이면 그 사이에 추락이 끼어듭니다.**
+
 ```
-Health.OnDeadEvent
-  ├─ (로직) 무기 정지(PlayerRangedWeapon — Owner.IsDead), 이동 정지(CanMove), 수리 중단, 실드 0(ShieldStatus)
-  ├─ (로직) RunController — 새 판 타이머 시작(3초)
-  ├─ (연출) PartBreakFeedback — 몸 전체를 어두운 잔해(Wreck)로 남기고 원본을 숨김
-  ├─ (연출) DeathCameraShake — 강한 흔들림 / CameraFollowEffector — 사망 상태를 읽어 천천히 줌아웃(×1.5)
+Health.OnDeadEvent — 조종을 잃음
+  ├─ (로직) 무기 정지(PlayerRangedWeapon — Owner.IsDead), 이동 입력 끊김(CanMove), 수리 중단, 실드 0(ShieldStatus), 판정 None
   ├─ (연출) PlayerAimPoint — 조준점 끔
-  ├─ (UI) PanelDeathScreen — "기체 파괴 — 비상 탈출" + 재출격 카운트다운
   └─ (UI) PanelInventory — 열려 있으면 닫고, 죽어 있는 동안 안 열림
+        │
+        │  떠 있으면 IDeathCrash.TryBeginCrash — 연기를 끌며 그때 속도로 미끄러지듯 날아가고 고도를 잃는다(~1.1초)
+        ▼
+Health.OnWreckedEvent — 몸이 부서짐(땅에 닿음)
+  ├─ (로직) RunController — 새 판 타이머 시작(3초) — 폭발부터 센다
+  ├─ (로직) Enemy — 전리품·자기 파괴(HandleWrecked)
+  ├─ (연출) DeathCrashFeedback — 폭발(임시 파티클) / PartBreakFeedback — 몸 전체를 어두운 잔해(Wreck)로
+  ├─ (연출) DeathCameraShake — 강한 흔들림 / CameraFollowEffector — IsWrecked를 읽어 천천히 줌아웃(×1.5)
+  └─ (UI) PanelDeathScreen — RunController.OnPlayerDiedEvent로 "기체 파괴 — 비상 탈출" + 카운트다운
 ```
+
+**추락은 `IDeathCrash`가 맡습니다.** `Health.Die()`가 Agent에서 찾아 묻고, true면 구현체가 땅에 닿을 때 부서짐을 부릅니다. 지금은 `PlayerMoveController`(활공 중 사망) 하나. 나는 적(드론)은 자기 이동에 구현하면 같은 길을 탑니다.
+착지 불가 지역 위에서 땅에 닿으면 `OnFellEvent`를 먼저 쏩니다(떨어진 것). 추락 중 새 판이 오면(`ResetMotion`) 끊고 부서짐은 부르지 않습니다.
+
+**연출은 `OnWreckedEvent`를 듣습니다. 조종을 잃는 일(입력·AI·조준)은 `OnDeadEvent`.** 새 사망 연출을 붙일 때 둘을 헷갈리면 활공 중 사망에서 잔해가 공중에 생깁니다.
 
 **잃는 순간은 새 판이 시작될 때입니다.** 죽은 직후에는 기체가 잔해로 보여야 해서 장비를 바로 걷지 않습니다. 대신 그사이 **인벤토리 화면이 열리지 않습니다** — 죽은 뒤에 안전 슬롯으로 옮겨 담는 걸 막습니다.
 
 실드를 거치지 않는 죽음(추락 즉사 `Health.Kill`)도 있어서, `ShieldStatus`는 주인이 죽으면 0으로 떨어집니다. 안 그러면 실드 원이 잔해를 감싼 채 남습니다.
+
+## 잔해 적재함 — `LootContainer` (2026-11-25)
+
+적이 부서지면 잔해(`PartBreakFeedback`가 만든 모양)에 `WreckLoot`가 **적재함**을 얹습니다.
+
+| | |
+|---|---|
+| 내용 | 달고 있던 **코어의 재료 구성 일부**(재료마다 25~60%) + **고철** 1~3 + 유닛 데이터 전리품 표. 코어가 없는 단일 기체는 유닛 데이터의 재료 구성 |
+| 수명 | **비지 않은 동안 남는다**(`PartDebris.MakePersistent`). 다 꺼내면 잔해째 사라진다. 새 판이 `LootContainer.ClearAll()` |
+| 열기 | 가까이 가면 `PlayerInteractor`가 가장 가까운 하나를 고르고 `PartInteractPrompt`가 "[E] 탐색". E → `LootContainer.OnOpenRequestedEvent` → `PanelInventory`가 오른쪽에 `SectionLootingInventory`를 붙여 연다. 활공 중에는 고르지 않는다. 멀어지면 닫힌다 |
+| 탐색 | 처음 연 사람에게 안의 것이 전부 가려지고(`?`) 앞에서부터 하나씩 드러난다(0.5초 + 등급×0.35초). 진행은 쿨타임 막대를 빌려 보인다. **보는 사람마다** 따로, 상태는 잔해에. 닫았다 열면 이어서 |
+| 옮기기 | 드래그, 또는 Shift+클릭(`ItemQuickMove` → `ItemTransfer.QuickMove`) — 반대편 적재함으로. 꽉 차면 사용 칸 표시가 깜빡인다. 가려진 칸은 드래그·툴팁·메뉴·놓기 전부 막힌다 |
+
+UI는 적재함을 직접 부르지 않고 적재함도 UI를 부르지 않습니다 — 여는 요청은 정적 이벤트, 탐색 상태는 적재함이 들고 구역이 읽기만 합니다.
 
 ## 새 판 — `RunController`
 

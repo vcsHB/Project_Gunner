@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 내 기체가 부서지면(사망) 화면을 강하게 흔든다. 카메라가 뒤로 빠지는 건 <see cref="CameraFollowEffector"/>가 사망 상태를 읽어서 한다.
-/// <see cref="Health.OnDeadEvent"/>를 듣는다 — 죽음이 카메라를 부르지 않는다. 발사·피격 흔들림과 같은 자리(CameraManager)에 산다.
+/// <see cref="Health.OnWreckedEvent"/>(부서지는 순간 — 활공 중이면 추락이 끝날 때)를 듣는다 — 죽음이 카메라를 부르지 않는다. 발사·피격 흔들림과 같은 자리(CameraManager)에 산다.
 /// </summary>
 public class DeathCameraShake : MonoBehaviour
 {
@@ -32,14 +32,14 @@ public class DeathCameraShake : MonoBehaviour
         _health = player.GetCompo<Health>();
 
         if (_health != null)
-            _health.OnDeadEvent += HandleDead;
+            _health.OnWreckedEvent += HandleDead;
     }
 
     public void Unbind()
     {
         if (_health != null)
         {
-            _health.OnDeadEvent -= HandleDead;
+            _health.OnWreckedEvent -= HandleDead;
             _health = null;
         }
 

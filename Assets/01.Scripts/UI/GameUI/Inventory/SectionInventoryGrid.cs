@@ -143,6 +143,53 @@ public class SectionInventoryGrid : MonoBehaviour
         return _maxVisibleCount > 0 ? Mathf.Min(available, _maxVisibleCount) : available;
     }
 
+    #region 탐색 (잔해)
+
+    /// <summary>
+    /// 가려진 칸과 지금 뒤지는 칸의 진행을 칸에 입힌다. 루팅 구역이 매 프레임 부른다.
+    /// 진행은 쿨타임 막대(<see cref="CellInventorySlot.SetCooldownRatio"/>)를 빌려 쓴다 — 줄어드는 막대가 "곧 보인다".
+    /// </summary>
+    public void ApplyConcealment(System.Func<int, bool> isConcealed, int searchingSlot, float progress01)
+    {
+        for (int i = 0; i < _builder.Count; i++)
+        {
+            CellInventorySlot cell = _builder[i];
+            if (cell == null || !cell.gameObject.activeSelf) continue;
+
+            int slot = _startSlotIndex + i;
+            cell.SetConcealed(isConcealed != null && isConcealed(slot));
+            cell.SetCooldownRatio(slot == searchingSlot ? 1f - progress01 : 0f);
+        }
+    }
+
+    public void ClearConcealment() => ApplyConcealment(null, -1, 0f);
+
+    #endregion
+
+    #region 공간 부족 표시
+
+    private float _flashUntil;
+
+    /// <summary>빠른 이동이 꽉 차서 실패했다. 사용 칸 표시를 잠깐 깜빡인다.</summary>
+    public void FlashFull(float duration = 0.6f) => _flashUntil = Time.unscaledTime + duration;
+
+    private void Update()
+    {
+        if (_textUsage == null || _flashUntil <= 0f) return;
+
+        if (Time.unscaledTime >= _flashUntil)
+        {
+            _flashUntil = 0f;
+            RefreshUsage();
+            return;
+        }
+
+        bool on = Mathf.Repeat(Time.unscaledTime * 8f, 1f) < 0.5f;
+        _textUsage.color = on ? _usageWarnColor : _usageColor;
+    }
+
+    #endregion
+
     private void HandleSlotChanged(int slotIndex)
     {
         int cellIndex = slotIndex - _startSlotIndex;

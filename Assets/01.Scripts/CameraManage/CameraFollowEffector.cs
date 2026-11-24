@@ -178,7 +178,8 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
             target *= Mathf.Lerp(1f, _glideZoomScale, _move.Altitude01);
 
         // 사망은 상태를 읽기만 한다. 죽음이 카메라를 부르지 않는다.
-        bool dead = _player != null && _player.IsDead;
+        // 줌아웃은 부서진 뒤부터 — 추락하는 동안은 따라간다.
+        bool dead = _player != null && _player.AgentHealth != null && _player.AgentHealth.IsWrecked;
         if (dead)
             target = _baseSize * _deathZoomScale;
 

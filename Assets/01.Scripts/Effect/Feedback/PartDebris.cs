@@ -30,6 +30,9 @@ public class PartDebris : MonoBehaviour
             _baseAlpha[i] = _renderers[i].color.a;
     }
 
+    /// <summary>흐려져 사라지지 않게 한다. 적재함이 붙은 잔해 — 비울 때까지 남고, 비우면 적재함이 지운다.</summary>
+    public void MakePersistent() => _lifetime = float.PositiveInfinity;
+
     private void Update()
     {
         float dt = Time.deltaTime;

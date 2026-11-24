@@ -46,7 +46,7 @@ public class RunController : MonoBehaviour
     public void Bind(Player player)
     {
         if (_health != null)
-            _health.OnDeadEvent -= HandlePlayerDead;
+            _health.OnWreckedEvent -= HandlePlayerDead;
 
         _player = player;
         _health = player != null ? player.GetCompo<Health>() : null;
@@ -55,15 +55,16 @@ public class RunController : MonoBehaviour
             _startPosition = _player.transform.position;
 
         if (_health != null)
-            _health.OnDeadEvent += HandlePlayerDead;
+            _health.OnWreckedEvent += HandlePlayerDead;
     }
 
     private void OnDestroy()
     {
         if (_health != null)
-            _health.OnDeadEvent -= HandlePlayerDead;
+            _health.OnWreckedEvent -= HandlePlayerDead;
     }
 
+    // 죽은 순간이 아니라 부서진 순간부터 센다 — 활공 중 죽으면 추락하는 동안은 아직 "죽는 중"이다.
     private void HandlePlayerDead()
     {
         _respawnTimer = _respawnDelay;
@@ -99,6 +100,9 @@ public class RunController : MonoBehaviour
         EnemyManager enemies = FindAnyObjectByType<EnemyManager>();
         if (enemies != null)
             enemies.ClearAll();
+
+        // 남은 잔해 적재함. 비지 않은 잔해는 판 안에서는 계속 남지만 새 판에는 넘어가지 않는다.
+        LootContainer.ClearAll();
 
         // 바닥의 아이템과 날아가던 탄. 이펙트는 스스로 끝나므로 두고, 소리도 둔다.
         foreach (PoolableMono item in FindObjectsByType<PoolableMono>(FindObjectsSortMode.None))

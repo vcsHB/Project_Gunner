@@ -48,11 +48,11 @@ MonoBehaviour:
     start: 6000
     end: 6999
     nextId: 6004
-  - typeName: 
-    label: "\uC790\uC6D0"
+  - typeName: MaterialDataSO
+    label: "\uC7AC\uB8CC"
     start: 7000
     end: 7999
-    nextId: 7000
+    nextId: 7005
   - typeName: 
     label: "\uBE14\uB7ED"
     start: 8000
@@ -84,6 +84,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fc3c327f3a6bc564f93bae6004cb9804, type: 2}
   - {fileID: 11400000, guid: ca9b3a0fdaf54e14ea1b0a75f3adf7b5, type: 2}
   - {fileID: 11400000, guid: bafc68e4590d637429227e5d5b836329, type: 2}
+  - {fileID: 11400000, guid: bcd2b395d7e37be41b9ef90ed672c033, type: 2}
+  - {fileID: 11400000, guid: 7dd504073820644428834d6a5572c492, type: 2}
+  - {fileID: 11400000, guid: e33b253691234ca4db3188b78704e6ab, type: 2}
+  - {fileID: 11400000, guid: d4f7ba2197332384ab8fcc99519bff48, type: 2}
+  - {fileID: 11400000, guid: 2f70317c139bb6b4a8afccfaeca113bb, type: 2}
   - {fileID: 11400000, guid: f3268ea4ac4d9ac43a456b3763141702, type: 2}
   - {fileID: 11400000, guid: e01e0ee6d8bbc164e80707843766550e, type: 2}
   - {fileID: 11400000, guid: 5f3fd1cba306bab4894b76dd51292614, type: 2}

@@ -107,6 +107,45 @@ public static class ItemTransfer
     }
 
     /// <summary>
+    /// Shift+클릭. 칸 하나를 통째로 <paramref name="to"/> 적재함으로 — 겹칠 수 있는 데 먼저, 그다음 빈 칸.
+    /// 다 못 넣으면 남은 것은 제자리에 남는다. 하나도 못 옮겼으면 false와 이유.
+    /// </summary>
+    public static bool QuickMove(IItemSlotContainer from, int fromKey, Inventory to, out string reason)
+    {
+        reason = string.Empty;
+        if (from == null || to == null || ReferenceEquals(from, to)) return false;
+
+        ItemStack source = from.Peek(fromKey);
+        if (source.IsEmpty) return false;
+
+        if (!from.CanTake(fromKey, out reason)) return false;
+
+        ItemStack moving = from.Take(fromKey, source.count);
+        if (moving.IsEmpty) return false;
+
+        if (moving.HasInstance)
+        {
+            if (to.AddStack(moving)) return true;
+
+            from.Place(fromKey, moving);
+            reason = Localization.Get("ui.inventory.full", "공간이 없습니다");
+            return false;
+        }
+
+        int left = to.Add(moving.itemId, moving.count);
+        if (left <= 0) return true;
+
+        ItemStack returned = from.Place(fromKey, new ItemStack(moving.itemId, left));
+        if (!returned.IsEmpty)
+            Debug.LogError($"[ItemTransfer] 빠른 이동에서 남은 아이템을 되돌리지 못했습니다. (수량 {returned.count})");
+
+        if (left < moving.count) return true;
+
+        reason = Localization.Get("ui.inventory.full", "공간이 없습니다");
+        return false;
+    }
+
+    /// <summary>
     /// Alt 드래그로 반을 떼어 갈 때 <b>떼어 가는</b> 개수. 홀수면 원래 칸에 큰 쪽이 남는다(5 → 2를 들고 3이 남는다).
     /// 1개짜리는 통째로 든다.
     /// </summary>

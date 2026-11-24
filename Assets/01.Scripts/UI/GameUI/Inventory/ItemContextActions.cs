@@ -19,7 +19,9 @@ public struct ItemContextAction
 /// | 분할 | 겹친 것(2개 이상), 적재함 칸 |
 /// | 버리기 | 언제나(못 빼는 칸이면 회색) |
 ///
-/// 새 작업은 여기에 한 갈래를 더한다. <b>분해</b>는 분해 데이터가, <b>자세히 보기</b>는 도감 패널이,
+/// | 분해 | 재료가 적혀 있고 분해를 켠 아이템(<see cref="ItemDataSO.CanDisassemble"/>), 적재함 칸 |
+///
+/// 새 작업은 여기에 한 갈래를 더한다. <b>자세히 보기</b>는 도감 패널이,
 /// <b>모듈</b>은 파츠 상세 화면이 생길 때 붙는다.
 /// </summary>
 public static class ItemContextActions
@@ -67,6 +69,18 @@ public static class ItemContextActions
                     PopupItemSplit split = PopupItemSplit.Instance;
                     if (split != null) split.Open(inventory, slotKey);
                 },
+            });
+        }
+
+        // 분해 — 하나씩. 재료가 적혀 있고 분해를 켠 아이템만(고철 등).
+        if (data.CanDisassemble && container is Inventory disassemblyInventory)
+        {
+            actions.Add(new ItemContextAction
+            {
+                label = ItemText.Label("action.disassemble", "분해"),
+                enabled = canTake,
+                reason = canTake ? null : takeReason,
+                run = () => ItemDisassembly.TryDisassemble(disassemblyInventory, slotKey, owner),
             });
         }
 

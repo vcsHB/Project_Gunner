@@ -8,12 +8,22 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
     public event Action<DamageData> OnDamagedEvent;
     public event Action<float, float> OnHealthChangedEvent; // (current, max)
+    /// <summary>
+    /// 죽었다 — <b>조종을 잃은 순간.</b> 입력·AI·조준·판정이 여기서 꺼진다.
+    /// 몸이 부서지는 연출(폭발·잔해·흔들림·새 판)은 <see cref="OnWreckedEvent"/>를 들을 것 — 떠 있으면 추락하는 동안 둘이 벌어진다.
+    /// </summary>
     public event Action OnDeadEvent;
+
+    /// <summary>몸이 부서졌다(땅에 닿아 폭발). 땅에서 죽으면 <see cref="OnDeadEvent"/> 바로 뒤, 떠 있었으면 추락이 끝날 때.</summary>
+    public event Action OnWreckedEvent;
 
     /// <summary>죽어 있다가 되살아났다(새 판·리스폰). 사망 연출을 되돌릴 쪽이 듣는다.</summary>
     public event Action OnRevivedEvent;
 
     public bool IsDead { get; private set; }
+
+    /// <summary>몸이 부서졌다. 죽었지만 아직 추락 중이면 false.</summary>
+    public bool IsWrecked { get; private set; }
 
     /// <summary>대시/스폰 무적 등에서 외부가 켜고 끈다.</summary>
     public bool IsInvincible { get; set; }
@@ -133,6 +143,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         bool wasDead = IsDead;
 
         IsDead = false;
+        IsWrecked = false;
         IsInvincible = false;
         SetHealth(_maxHealth);
 
@@ -169,6 +180,23 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
 
         IsDead = true;
         OnDeadEvent?.Invoke();
+
+        // 떠 있으면 추락이 끝날 때 부서진다. 리스너가 되살렸으면(그럴 일은 없지만) 거기서 멈춘다.
+        if (!IsDead) return;
+
+        IDeathCrash crash = _owner != null ? _owner.GetCompo<IDeathCrash>() : null;
+        if (crash != null && crash.TryBeginCrash(Wreck)) return;
+
+        Wreck();
+    }
+
+    /// <summary>몸이 부서진다. 추락이 땅에 닿을 때 <see cref="IDeathCrash"/>가 부른다. 되살아난 뒤에 늦게 와도 무시한다.</summary>
+    private void Wreck()
+    {
+        if (!IsDead || IsWrecked) return;
+
+        IsWrecked = true;
+        OnWreckedEvent?.Invoke();
     }
 
     // 버프 등으로 최대 체력이 변하면 현재 체력의 비율을 유지한다.

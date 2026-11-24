@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e8e26f700876104087594550daee3b2, type: 3}
+  m_Name: Item_Material_Scrap
+  m_EditorClassIdentifier: Assembly-CSharp::MaterialDataSO
+  _id: 7003
+  <ItemGrade>k__BackingField: 0
+  <ItemCategory>k__BackingField: 1
+  <IconSprite>k__BackingField: {fileID: 0}
+  _worldSprite: {fileID: 0}
+  _maxStackCount: 50
+  _maxDurability: 0
+  _editorName: Material_Scrap
+  _displayName: "\uACE0\uCCA0"
+  _description: "\uBD80\uC11C\uC9C4 \uAE30\uCCB4\uC758 \uC870\uAC01. \uBD84\uD574\uD558\uBA74
+    \uC4F8 \uB9CC\uD55C \uC7AC\uB8CC\uAC00 \uB098\uC628\uB2E4."
+  _localizationKey: item.material.scrap
+  _composition:
+  - item: {fileID: 11400000, guid: 2f70317c139bb6b4a8afccfaeca113bb, type: 2}
+    count: 2
+  - item: {fileID: 11400000, guid: e33b253691234ca4db3188b78704e6ab, type: 2}
+    count: 1
+  _disassemblable: 1

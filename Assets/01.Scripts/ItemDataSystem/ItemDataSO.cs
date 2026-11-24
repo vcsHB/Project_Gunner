@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -49,6 +50,15 @@ public abstract class ItemDataSO : ScriptableObject
              "Item Creator가 채워주고, 한 번 정해지면 에셋 이름을 바꿔도 따라 바뀌지 않는다.")]
     [SerializeField] private string _localizationKey;
 
+    [Header("Composition")]
+    [Tooltip("이 아이템을 이루는 재료. 분해하면 이게 나오고, 부서진 기체의 잔해는 코어의 이 목록에서 일부를 떨군다. " +
+             "나중에 제작 레시피도 이걸 읽는다.")]
+    [SerializeField] private List<ItemAmount> _composition = new();
+
+    [Tooltip("플레이어가 분해할 수 있는가(우클릭 → 분해). 재료가 적혀 있어도 꺼 두면 분해 메뉴가 뜨지 않는다 — " +
+             "코어처럼 잔해 드랍에만 재료 목록을 쓰는 아이템.")]
+    [SerializeField] private bool _disassemblable;
+
     public int MaxStackCount => _maxStackCount;
     public bool IsStackable => _maxStackCount > 1;
 
@@ -77,6 +87,12 @@ public abstract class ItemDataSO : ScriptableObject
 
     /// <summary>개체 상태가 필요한 아이템이 자기 타입에 맞는 인스턴스를 만든다.</summary>
     public virtual ItemInstance CreateRuntimeInstance() => new PlainItemInstance();
+
+    /// <summary>이 아이템을 이루는 재료(한 개 기준).</summary>
+    public IReadOnlyList<ItemAmount> Composition => _composition;
+
+    /// <summary>우클릭 메뉴에 "분해"가 뜨는가.</summary>
+    public bool CanDisassemble => _disassemblable && _composition.Count > 0;
 
     public uint Id => _id;
     public bool IsRegistered => _id != 0;

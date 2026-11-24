@@ -12,6 +12,9 @@ using UnityEngine;
 /// </summary>
 public class PartBreakFeedback : MonoBehaviour
 {
+    /// <summary>잔해 오브젝트를 만들었다. 잔해에 적재함을 얹는 쪽(<see cref="WreckLoot"/>)이 듣는다.</summary>
+    public event System.Action<GameObject> OnWreckSpawnedEvent;
+
     [Header("Debris")]
     [Tooltip("떨어져 나간 조각에 곱하는 색. 어둡게.")]
     [SerializeField] private Color _debrisTint = new(0.35f, 0.35f, 0.38f, 1f);
@@ -52,7 +55,7 @@ public class PartBreakFeedback : MonoBehaviour
         _health = owner.GetCompo<Health>();
 
         if (_health != null)
-            _health.OnDeadEvent += HandleDead;
+            _health.OnWreckedEvent += HandleWrecked;
 
         if (_parts == null) return;
 
@@ -63,7 +66,7 @@ public class PartBreakFeedback : MonoBehaviour
     private void OnDestroy()
     {
         if (_health != null)
-            _health.OnDeadEvent -= HandleDead;
+            _health.OnWreckedEvent -= HandleWrecked;
 
         if (_parts == null) return;
 
@@ -118,8 +121,9 @@ public class PartBreakFeedback : MonoBehaviour
     /// <summary>
     /// 기체 파괴. 몸 전체(코어와 거기 붙은 모든 부위)를 어두운 잔해로 바꿔 그 자리에 남긴다 — 거의 안 움직이고 천천히 돈다.
     /// 원본은 숨긴다. 새 판에서 장비가 갈리며 원본은 어차피 새로 만들어진다.
+    /// 죽는 순간이 아니라 <b>부서지는 순간</b>(<see cref="Health.OnWreckedEvent"/>)이다 — 활공 중이면 추락이 끝난 자리.
     /// </summary>
-    private void HandleDead()
+    private void HandleWrecked()
     {
         MechaPartView core = _assembler != null ? _assembler.Core : null;
 
@@ -147,6 +151,8 @@ public class PartBreakFeedback : MonoBehaviour
 
         EffectPlayer.Play(_wreckEffect, root.position, Vector2.up);
         SoundManager.Play(_wreckSound, root.position);
+
+        OnWreckSpawnedEvent?.Invoke(wreck);
     }
 
     private void HandleRestored(EquipSlotType slot)

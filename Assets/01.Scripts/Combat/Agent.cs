@@ -24,6 +24,7 @@ public class Agent : MonoBehaviour
         if (AgentHealth != null)
         {
             AgentHealth.OnDeadEvent += HandleDead;
+            AgentHealth.OnWreckedEvent += HandleWrecked;
             AgentHealth.OnRevivedEvent += HandleRevived;
         }
     }
@@ -38,6 +39,7 @@ public class Agent : MonoBehaviour
         if (AgentHealth != null)
         {
             AgentHealth.OnDeadEvent -= HandleDead;
+            AgentHealth.OnWreckedEvent -= HandleWrecked;
             AgentHealth.OnRevivedEvent -= HandleRevived;
         }
 
@@ -47,6 +49,11 @@ public class Agent : MonoBehaviour
     protected virtual void HandleDead()
     {
         IsDead = true;
+    }
+
+    /// <summary>몸이 부서졌다(땅에서 죽었거나, 추락이 끝났다). 시체를 치우는 일은 여기서 한다.</summary>
+    protected virtual void HandleWrecked()
+    {
     }
 
     /// <summary>새 판·리스폰으로 되살아났다. <see cref="Health.ResetHealth"/>가 알린다.</summary>

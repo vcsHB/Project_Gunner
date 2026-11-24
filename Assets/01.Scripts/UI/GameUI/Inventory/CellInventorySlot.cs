@@ -28,6 +28,9 @@ public class CellInventorySlot : MonoBehaviour,
     [Tooltip("내구도 게이지. 내구도가 없는 아이템에서는 꺼진다.")]
     [SerializeField] private Image _durabilityFill;
 
+    [Tooltip("아직 탐색하지 않은 칸(잔해)을 덮는다. 칸 전체를 가리는 \"?\" 판.")]
+    [SerializeField] private GameObject _concealedMark;
+
     /// <summary>왼쪽 클릭됐을 때. 핫바처럼 클릭에 다른 의미를 더할 때 쓴다.</summary>
     public event Action<CellInventorySlot> OnClickedEvent;
 
@@ -36,6 +39,25 @@ public class CellInventorySlot : MonoBehaviour,
     public ItemStack Stack { get; private set; }
 
     public bool IsEmpty => Stack.IsEmpty;
+
+    /// <summary>
+    /// 가려진 칸(탐색 전). 무엇이 있는지 보이지 않고 만질 수도 없다 — 드래그·툴팁·메뉴·놓기가 전부 막힌다.
+    /// </summary>
+    public bool IsConcealed { get; private set; }
+
+    public void SetConcealed(bool concealed)
+    {
+        if (IsConcealed == concealed) return;
+
+        IsConcealed = concealed;
+        if (_concealedMark != null) _concealedMark.SetActive(concealed);
+
+        if (concealed)
+        {
+            PopupItemInformation popup = PopupItemInformation.Instance;
+            if (popup != null) popup.HideFor(Stack);
+        }
+    }
 
     private int _displayIndex = -1;
 
@@ -203,7 +225,7 @@ public class CellInventorySlot : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (Stack.IsEmpty) return;
+        if (Stack.IsEmpty || IsConcealed) return;
 
         // 들어 올린 뒤에 거절하면 고스트만 떴다 돌아간다. 아예 들리지 않게 한다(필드의 장비 칸).
         if (Container != null && !Container.CanTake(SlotKey, out _)) return;
@@ -240,13 +262,21 @@ public class CellInventorySlot : MonoBehaviour,
     public void OnDrop(PointerEventData eventData)
     {
         ItemDragController drag = Drag;
+
+        // 가려진 칸에 놓으면 자리 바꾸기로 안의 것을 보지도 않고 꺼내게 된다.
+        if (IsConcealed)
+        {
+            if (drag != null) drag.Cancel();
+            return;
+        }
+
         if (drag != null)
             drag.DropOn(this);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.dragging) return;
+        if (eventData.dragging || IsConcealed) return;
 
         if (eventData.button == PointerEventData.InputButton.Right)
         {
@@ -255,6 +285,9 @@ public class CellInventorySlot : MonoBehaviour,
         }
 
         if (eventData.button != PointerEventData.InputButton.Left) return;
+
+        // Shift+클릭 — 반대편 적재함으로(루팅 중일 때).
+        if (Keyboard.current != null && Keyboard.current.shiftKey.isPressed && ItemQuickMove.TryMove(this)) return;
 
         ItemSelectionController selection = Selection;
         if (selection != null)
@@ -281,7 +314,7 @@ public class CellInventorySlot : MonoBehaviour,
     {
         // 드래그 중에는 띄우지 않는다. 커서 밑에 고스트가 있는데 설명까지 겹치면 아무것도 안 보인다.
         // 메뉴가 떠 있을 때도 — 메뉴 위로 툴팁이 덮인다.
-        if (IsEmpty || (Drag != null && Drag.IsDragging) || PopupItemContext.IsOpen) return;
+        if (IsEmpty || IsConcealed || (Drag != null && Drag.IsDragging) || PopupItemContext.IsOpen) return;
 
         PopupItemInformation popup = PopupItemInformation.Instance;
         if (popup != null)
