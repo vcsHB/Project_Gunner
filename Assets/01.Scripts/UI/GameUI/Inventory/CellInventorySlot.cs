@@ -51,6 +51,9 @@ public class CellInventorySlot : MonoBehaviour,
         RefreshAmountText();
         OnStackChanged();
 
+        // 쿨타임은 핫바만 밀어 넣는다. 프리팹에 켜진 채로 저장돼 있으면 아무도 끄지 않아 칸이 회색으로 덮인다.
+        SetCooldownRatio(0f);
+
 #if UNITY_EDITOR
         ValidateDropTarget();
 #endif
@@ -254,7 +257,7 @@ public class CellInventorySlot : MonoBehaviour,
 
         PopupItemInformation popup = PopupItemInformation.Instance;
         if (popup != null)
-            popup.ShowFor(Stack);
+            popup.ShowFor(Stack, Container);
     }
 
     public void OnPointerExit(PointerEventData eventData)

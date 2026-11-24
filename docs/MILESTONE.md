@@ -400,7 +400,7 @@ SoundManager.Play(SoundDataSO, Vector2 position) → SoundHandle
 - 파츠 애니메이션 — 부스터 화염·코어 아이들은 파츠별 Animator, 반동·과열 떨림은 DOTween ([PIVOT.md](PIVOT.md#애니메이션))
 - 활공·착륙 연출 — 뜰 때·내려앉을 때 이펙트, 미끄러질 때 바닥 긁는 파티클과 소리(`OnSkidStartedEvent`), 활공 중 그림자 띄우기
 - 과열 연출 — 열기·증기·경고음
-- 아이템 상세 패널 (`PartItemDetail`, `ItemPreview`)
+- 인벤토리 UX — 총 시절 상세 패널은 걷어냄(2026-11-24). 새 계획은 STATUS UI 표
 - `Button` 호버
 
 # M4 — 적의 종류

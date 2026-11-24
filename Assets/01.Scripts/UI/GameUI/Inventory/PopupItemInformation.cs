@@ -1,9 +1,17 @@
+using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
 /// 슬롯에 마우스를 올리면 뜨는 아이템 설명. 커서를 따라다닌다.
+///
+/// 이름·설명 아래에 <b>수치</b>(<see cref="ItemStatSheet"/>)를 적는다. 적재함에 있는 장비 아이템이면
+/// 같은 칸에 지금 달린 것과 비교해 ▲▼를 붙인다 — 바꿔 낄지 말지를 툴팁 하나로 정하게 한다.
+/// 장비 칸 자체에 올렸을 때는 비교하지 않고 "장착 중"만 붙인다.
+///
+/// 비교 대상은 그 아이템이 들어갈 수 있는 칸 중 <b>먼저 차 있는 칸</b>이다. 양팔에 다 무기가 있으면 좌무기와 비교한다.
 ///
 /// 커서가 하나라 툴팁도 하나뿐이므로 싱글턴으로 둔다. ItemDragController와 같은 판단이다.
 /// 칸마다 툴팁을 들고 있으면 칸 수만큼 오브젝트가 늘어난다.
@@ -22,10 +30,25 @@ public class PopupItemInformation : Singleton<PopupItemInformation>
     [SerializeField] private TextMeshProUGUI _textItemDescription;
     [SerializeField] private SimpleGauge _durabilityGauge;
 
+    [Tooltip("수치 목록. 리치 텍스트로 줄마다 이름 / 값 / 비교를 적는다. 비우면 수치를 보이지 않는다.")]
+    [SerializeField] private TextMeshProUGUI _textStats;
+
+    [Tooltip("값이 시작하는 가로 위치(툴팁 폭 대비 %). 이름 길이와 상관없이 값 열을 맞춘다.")]
+    [SerializeField, Range(20f, 80f)] private float _valueColumn = 58f;
+
+    [SerializeField] private Color _betterColor = new(0.45f, 1f, 0.45f, 1f);
+    [SerializeField] private Color _worseColor = new(1f, 0.42f, 0.38f, 1f);
+    [SerializeField] private Color _noteColor = new(0.65f, 0.75f, 0.85f, 1f);
+
     [Tooltip("커서에서 얼마나 떨어뜨릴지. 커서에 딱 붙으면 아이콘을 가린다.")]
     [SerializeField] private Vector2 _offset = new(16f, -16f);
 
     private ItemStack _current;
+    private EquipmentController _equipment;
+
+    private readonly List<ItemStatLine> _lines = new();
+    private readonly List<ItemStatLine> _compareLines = new();
+    private readonly StringBuilder _sb = new();
 
     public bool IsShown => !_current.IsEmpty;
 
@@ -43,6 +66,13 @@ public class PopupItemInformation : Singleton<PopupItemInformation>
         Hide();
     }
 
+    // 비교 기준이 되는 장비. HUD·인벤토리와 같이 Start에서 씬의 플레이어를 찾는다.
+    private void Start()
+    {
+        Player player = FindAnyObjectByType<Player>();
+        _equipment = player != null ? player.GetCompo<EquipmentController>() : null;
+    }
+
     private void MakeClickThrough()
     {
         if (_root == null) return;
@@ -54,7 +84,8 @@ public class PopupItemInformation : Singleton<PopupItemInformation>
         group.interactable = false;
     }
 
-    public void ShowFor(ItemStack stack)
+    /// <param name="source">그 아이템이 들어 있는 컨테이너. 장비 칸이면 비교하지 않는다.</param>
+    public void ShowFor(ItemStack stack, IItemSlotContainer source = null)
     {
         if (stack.IsEmpty)
         {
@@ -78,6 +109,7 @@ public class PopupItemInformation : Singleton<PopupItemInformation>
             _textItemDescription.text = data.Description;
 
         RefreshDurability(stack);
+        RefreshStats(stack, source);
 
         SetVisible(true);
         FollowPointer();
@@ -114,6 +146,112 @@ public class PopupItemInformation : Singleton<PopupItemInformation>
         if (show)
             _durabilityGauge.UpdateProgress(instance.Durability, instance.MaxDurability);
     }
+
+    #region 수치
+
+    private void RefreshStats(ItemStack stack, IItemSlotContainer source)
+    {
+        if (_textStats == null) return;
+
+        ItemStatSheet.Collect(stack, _lines);
+
+        bool equipped = _equipment != null && ReferenceEquals(source, _equipment);
+        EquipSlotType compareSlot = EquipSlotType.None;
+        ItemStack compareWith = equipped ? ItemStack.Empty : FindCompareTarget(stack, out compareSlot);
+        bool comparing = !compareWith.IsEmpty;
+
+        if (comparing) ItemStatSheet.Collect(compareWith, _compareLines);
+        else _compareLines.Clear();
+
+        _sb.Clear();
+
+        string note = equipped
+            ? ItemText.Label("equipped", "장착 중")
+            : comparing
+                ? Localization.Format("ui.item.compare", "{0} 장착품과 비교", ItemText.SlotName(compareSlot))
+                : null;
+
+        if (note != null)
+            _sb.Append("<size=80%><color=#").Append(ColorUtility.ToHtmlStringRGB(_noteColor)).Append('>')
+               .Append(note).Append("</color></size>\n");
+
+        for (int i = 0; i < _lines.Count; i++)
+            AppendLine(_lines[i], comparing);
+
+        // 장착품에만 있는 스탯(산탄의 발사체 수 등). 빼면 "바꾸면 잃는 것"이 안 보인다. 이쪽 값은 0으로 적는다.
+        if (comparing)
+        {
+            for (int i = 0; i < _compareLines.Count; i++)
+            {
+                ItemStatLine missing = _compareLines[i];
+                if (missing.IsText || ItemStatSheet.TryFindValue(_lines, missing.key, out _)) continue;
+
+                missing.value = 0f;
+                AppendLine(missing, true);
+            }
+        }
+
+        bool any = _sb.Length > 0;
+        _textStats.gameObject.SetActive(any);
+
+        if (any)
+            _textStats.text = _sb.ToString().TrimEnd('\n');
+    }
+
+    private void AppendLine(ItemStatLine line, bool comparing)
+    {
+        _sb.Append(line.label).Append("<pos=").Append(_valueColumn.ToString("0.#")).Append("%>");
+
+        if (line.IsText)
+        {
+            _sb.Append(line.text).Append('\n');
+            return;
+        }
+
+        _sb.Append(ItemStatSheet.Format(line.value, line.format));
+
+        if (comparing)
+        {
+            ItemStatSheet.TryFindValue(_compareLines, line.key, out float other);
+            float difference = line.value - other;
+
+            if (ItemStatSheet.IsMeaningful(difference))
+            {
+                bool better = difference > 0f == line.higherIsBetter;
+
+                _sb.Append("  <color=#").Append(ColorUtility.ToHtmlStringRGB(better ? _betterColor : _worseColor)).Append('>')
+                   .Append(difference > 0f ? '▲' : '▼')
+                   .Append(ItemStatSheet.FormatDifference(Mathf.Abs(difference), line.format))
+                   .Append("</color>");
+            }
+        }
+
+        _sb.Append('\n');
+    }
+
+    /// <summary>들어갈 수 있는 칸 중 먼저 차 있는 칸의 아이템. 장비가 아니거나 다 비었으면 Empty.</summary>
+    private ItemStack FindCompareTarget(ItemStack stack, out EquipSlotType slot)
+    {
+        slot = EquipSlotType.None;
+        if (_equipment == null) return ItemStack.Empty;
+
+        EquipableItemDataSO data = stack.Resolve<EquipableItemDataSO>();
+        if (data == null) return ItemStack.Empty;
+
+        IReadOnlyList<EquipSlotType> allowed = data.AllowedSlots;
+        for (int i = 0; i < allowed.Count; i++)
+        {
+            ItemStack equipped = _equipment.GetStack(allowed[i]);
+            if (equipped.IsEmpty) continue;
+
+            slot = allowed[i];
+            return equipped;
+        }
+
+        return ItemStack.Empty;
+    }
+
+    #endregion
 
     private void SetVisible(bool visible)
     {

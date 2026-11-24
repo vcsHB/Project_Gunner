@@ -10,7 +10,7 @@ public class CellEquipmentSlot : CellInventorySlot
     [Header("Equipment")]
     [SerializeField] private EquipSlotType _slotType = EquipSlotType.None;
 
-    [Tooltip("비워두면 EquipSlotType 이름을 그대로 쓴다.")]
+    [Tooltip("비워두면 슬롯 표시명(ItemText.SlotName). 특별한 칸만 따로 적는다.")]
     [SerializeField] private string _displayName;
 
     [SerializeField] private TextMeshProUGUI _textSlotName;
@@ -25,7 +25,7 @@ public class CellEquipmentSlot : CellInventorySlot
         base.Awake();
 
         if (_textSlotName != null)
-            _textSlotName.text = string.IsNullOrEmpty(_displayName) ? _slotType.ToString() : _displayName;
+            _textSlotName.text = string.IsNullOrEmpty(_displayName) ? ItemText.SlotName(_slotType) : _displayName;
     }
 
     /// <summary>이 칸이 담당하는 장착 슬롯으로 컨테이너에 연결한다.</summary>

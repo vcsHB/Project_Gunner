@@ -15,6 +15,7 @@
 | Pool Manager 창 | ✅ | `Tools > Pool Manager`. 탭 분류, `PoolType` 코드 생성 |
 | LayerAttribute | ✅ | `int`를 레이어 드롭다운으로 |
 | 시드 난수 | ✅ | `IRandomSource` / `GameRandom.Combat`·`World` |
+| 게임 시간 | ✅ | `GameTime` — `timeScale`·`AudioListener.pause`를 바꾸는 유일한 곳. 멈춤은 요청자 집합(하나라도 남으면 멈춤). 멀티는 `SetPauseAllowed(false)` → 메뉴만 뜨고 시간은 흐름 |
 | 하이어라키 유틸 | ✅ | 휠클릭 활성 토글, 계층선, 호버 시 컴포넌트 아이콘 + RaycastTarget |
 | 에셋 하이라이트 | ✅ | 프로젝트 창에서 `Ctrl+/`로 색칠. 팔레트는 `Tools > Asset Highlight Settings` |
 
@@ -148,13 +149,12 @@
 | SlicedFilledImage | ✅ | 9슬라이스 + fillAmount 동시 지원, 전용 인스펙터 |
 | SimpleGauge | ✅ | |
 | UIPanelBase | ✅ | CanvasGroup 기반 Show/Hide/Toggle. `_closesOnCancel` 창은 열린 순서로 쌓여 ESC가 맨 위부터 닫는다(`TryCloseTop`) |
-| 일시정지 | 🟡 | ESC / 패드 Start(`PlayerInput.OnPauseEvent`, `Pause` 액션). 다른 창이 떠 있으면 그 창 먼저. `PanelGamePause` — `timeScale` 0, 게임플레이 입력 막음. 계속하기 / 게임 종료. **UI 임시** |
+| 일시정지 | 🟡 | ESC / 패드 Start(`PlayerInput.OnPauseEvent`, `Pause` 액션). 다른 창이 떠 있으면 그 창 먼저. `PanelGamePause` → `GameTime.RequestPause`, 게임플레이 입력 막음. 계속하기 / 게임 종료. **UI 임시** |
 | SectionInventoryGrid ↔ Inventory | ✅ | 슬롯 변경 이벤트 구독 |
 | 슬롯 컨테이너 추상화 | ✅ | `IItemSlotContainer` — 인벤토리/장비가 구현 |
 | 드래그 이동 | ✅ | 병합·스왑·반개 분할. `ItemTransfer` 한 곳에 규칙 |
 | 아이템 선택 | ✅ | `ItemSelectionController`, 어느 칸이든 클릭 |
 | 버리기 영역 | 🟡 | `ItemDropArea` — 이벤트만 쏨. 월드 픽업 필요 |
-| PartItemDetail / ItemPreview | ⬜ | 모듈 슬롯 배치 방식 미정 |
 | PartPlayerStatus | ✅ | 체력·실드(겹침, 실드 남으면 실드만 / 0이면 체력만) + 전력 / 연료 게이지 |
 | PartMechaSilhouette | 🟡 | 기체 실루엣. 조립된 코어·팔·추진체 스프라이트를 그대로 Image로 옮기고 단색 셰이더(`UI/SilhouetteSolid`, 안쪽 외곽선) + 부위 체력 색(부서지면 어둡게). `PartHud/MechaSilhouette`. **위치·크기(`_pixelsPerUnit`) 미조정** |
 | SimpleGauge 서브게이지 | ✅ | `_increaseMode`(Instant / SubFirst) · `_decreaseMode`(Instant / BlinkThenDrain). 체력·실드 = SubFirst + Blink, 연료 = SubFirst + Instant, 나머지(전력·과열) Instant. 처음 값·다시 켜질 때는 연출 없이 맞춘다 |

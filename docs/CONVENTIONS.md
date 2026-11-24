@@ -15,15 +15,16 @@ UI 클래스는 **화면에 어떻게 떠 있는가**를 접두사로 붙입니�
 
 | 접두사 | 뜻 | 예 |
 |---|---|---|
-| `Part` | **상시** 떠 있는 HUD 구성 요소 | `PartHud`, `PartPlayerStatus` |
-| `Panel` | 그 위에 **간헐적으로** 뜨는 화면. 열고 닫는다 | `PanelGamePause`, `PanelDeathScreen` |
-| `Popup` | **조건에 따라** 뜨는 확인창·안내 | `PopupItemInformation` |
+| `Part` | **상시** 떠 있는 HUD 구성 요소 | `PartHud`, `PartPlayerStatus`, `PartGlideStatus` |
+| `Panel` | 그 위에 **간헐적으로** 뜨는 화면. 열고 닫는다 | `PanelInventory`, `PanelGamePause`, `PanelDeathScreen` |
+| `Popup` | **조건에 따라** 뜨는 확인창·안내. 입력을 막는지는 `_blocksGameplayInput`으로 | `PopupItemInformation` |
+| `Section` | Panel·Popup **안의 큰 구역** | `SectionPlayerInventory`, `SectionInventoryGrid` |
 | `Cell` | 목록·격자에서 반복되는 한 칸 | `CellInventorySlot`, `CellConditionDisplay` |
 
-UI가 아닌 것(입력·드래그 처리)은 접두사 없이 `___Controller`. 공용 부품(`SimpleGauge`, `SlicedFilledImage`)도 접두사 없음.
+UI가 아닌 것(입력·드래그 처리)은 접두사 없이 `___Controller`. 공용 부품(`SimpleGauge`, `SlicedFilledImage`)과 바탕(`UIPanelBase`, `WeaponPartBase`)도 접두사 없음.
 `___UI` 접미사는 쓰지 않습니다 — 상시인지 간헐인지 이름에서 안 보입니다.
 
-> 아직 규칙에 안 맞는 것: `GlideStatusUI`, `RepairStatusUI`, `MechaSilhouetteUI`, `UIInventory`, `ConditionDisplayGroup`, `WeaponPanelBase`(상시 HUD인데 `Panel`), `PartInventory`(Tab으로 여닫는데 `Part`).
+클래스를 바꿀 때는 `.cs`와 `.cs.meta`를 **같이** 옮깁니다(`git mv` 두 번). GUID가 따라가서 씬·프리팹 참조가 안 끊깁니다.
 
 ## 용어
 

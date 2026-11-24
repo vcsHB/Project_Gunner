@@ -91,7 +91,7 @@
 > **해야 하는 시점** — 게임 중 언어 전환을 실제로 지원할 때. 지금은 에디터에서 확인하는 용도라 문제가 안 됩니다.
 
 ### 아이템 설명을 보여주는 UI가 없다
-`ItemDataSO.Description`은 키까지 갖춰졌는데 **읽는 곳이 없습니다.** `PartItemDetailInfo`와 `CellItemDetailInfo`가 빈 스텁입니다. 상세 패널을 만들 때 `DisplayName`/`Description`을 그대로 물리면 됩니다.
+`ItemDataSO.Description`은 키까지 갖춰졌는데 **읽는 곳이 거의 없습니다**(호버 툴팁 `PopupItemInformation`뿐). 총 시절 상세 패널(`PartItemDetail` 등 스텁)은 2026-11-24에 걷어냈습니다 — 새 상세 표시는 인벤토리 UX 계획에서 정합니다.
 
 ### 아이템 외 문자열
 상태이상 이름(`ConditionVisualTableSO.GetDisplayName`), 장비 슬롯 이름(`CellEquipmentSlot._displayName`)은 아직 하드코딩입니다. 아이템과 `LocalizedText`가 붙은 UI 문구만 키를 갖습니다.
@@ -140,7 +140,7 @@
 ### 차지 무기 밸런싱
 차지율은 데미지와 탄속에 곱해집니다. 최소 배율은 `PlayerRangedWeapon.MinChargeRatio`(0.25) 상수입니다. 무기별로 달라야 하면 스탯으로 올리세요.
 
-### ItemPreview 프리팹 구조
+### 기체 미리보기 구조 (옛 ItemPreview)
 **전환의 소켓 구조와 같은 문제입니다.** `PartView`의 소켓 + 프리팹 안 Pivot 보정이 서면 미리보기도 그걸 그대로 씁니다 — 미리보기용 배치 규칙을 따로 만들면 실제 조립과 어긋납니다. ([PIVOT.md](PIVOT.md#조립))
 
 ---

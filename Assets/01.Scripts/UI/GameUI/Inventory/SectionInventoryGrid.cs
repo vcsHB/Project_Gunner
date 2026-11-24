@@ -1,11 +1,13 @@
+using TMPro;
 using UnityEngine;
 
 /// <summary>
 /// Inventory의 한 구간을 격자로 보여준다.
 ///
 /// 칸은 인벤토리 용량에 맞춰 자동으로 만들어진다.
-/// 앞 7칸은 핫바가 따로 표시하므로, 보관 칸 뷰는 _startSlotIndex를 7로 둔다.
 /// 상자·제작대도 이 클래스를 그대로 재사용한다.
+///
+/// 몇 칸을 쓰고 있는지("18 / 30")를 <see cref="_textUsage"/>에 적는다. 루팅할 때 "더 들어가나"를 칸을 세지 않고 보게 한다.
 /// </summary>
 public class SectionInventoryGrid : MonoBehaviour
 {
@@ -26,6 +28,17 @@ public class SectionInventoryGrid : MonoBehaviour
     [Tooltip("0이면 인벤토리 용량에 맞춰 자동. 값을 넣으면 그 개수까지만 보여준다.")]
     [SerializeField, Min(0)] private int _maxVisibleCount;
 
+    [Header("Usage")]
+    [Tooltip("사용 칸 / 전체 칸. 비우면 표시하지 않는다.")]
+    [SerializeField] private TextMeshProUGUI _textUsage;
+
+    [Tooltip("남은 칸이 이 수 이하이면 경고 색.")]
+    [SerializeField, Min(0)] private int _warnFreeSlots = 3;
+
+    [SerializeField] private Color _usageColor = new(0.85f, 0.9f, 0.95f, 1f);
+    [SerializeField] private Color _usageWarnColor = new(1f, 0.6f, 0.3f, 1f);
+
+    [Header("Binding")]
     [Tooltip("켜면 씬에서 플레이어를 찾아 스스로 붙는다. 상자 뷰라면 끄고 Bind를 직접 부를 것.")]
     [SerializeField] private bool _bindPlayerInventory = true;
 
@@ -100,6 +113,24 @@ public class SectionInventoryGrid : MonoBehaviour
             cell.SetDisplayIndex(slotIndex);
             cell.Bind(i < needed ? _inventory : null, slotIndex);
         }
+
+        RefreshUsage();
+    }
+
+    private void RefreshUsage()
+    {
+        if (_textUsage == null) return;
+
+        int total = GetVisibleCount();
+        int used = 0;
+
+        for (int i = 0; i < total; i++)
+        {
+            if (!_inventory[_startSlotIndex + i].IsEmpty) used++;
+        }
+
+        _textUsage.text = Localization.Format("ui.inventory.usage", "{0} / {1}", used, total);
+        _textUsage.color = total - used <= _warnFreeSlots ? _usageWarnColor : _usageColor;
     }
 
     /// <summary>실제로 보여줄 칸 수.</summary>
@@ -115,6 +146,8 @@ public class SectionInventoryGrid : MonoBehaviour
     private void HandleSlotChanged(int slotIndex)
     {
         int cellIndex = slotIndex - _startSlotIndex;
+
+        RefreshUsage();
 
         CellInventorySlot cell = _builder[cellIndex];
         if (cell == null) return;

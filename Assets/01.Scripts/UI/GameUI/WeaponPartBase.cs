@@ -1,11 +1,11 @@
 using UnityEngine;
 
 /// <summary>
-/// 팔 하나에 달린 무기를 따라가는 UI 패널의 공통 베이스.
+/// 팔 하나에 달린 무기를 따라가는 HUD 구성 요소(Part)의 공통 베이스.
 ///
-/// 좌우 무장이 동시에 활성이라 패널도 둘입니다. <b>어느 팔을 볼지는 `_slot`이 정하고,</b>
+/// 좌우 무장이 동시에 활성이라 표시도 둘입니다. <b>어느 팔을 볼지는 `_slot`이 정하고,</b>
 /// 다른 팔의 변화는 여기서 걸러집니다. 그 판단이 파생 클래스로 흩어지면
-/// 양쪽 패널이 같은 무기를 그리는 상태가 생깁니다.
+/// 양쪽 표시이 같은 무기를 그리는 상태가 생깁니다.
 ///
 /// 무기는 장비를 바꿀 때 <b>파괴되고 다시 만들어집니다.</b>
 /// 그래서 무기에 직접 건 구독은 매번 갈아끼워야 하고, 한 번이라도 빠뜨리면
@@ -16,16 +16,16 @@ using UnityEngine;
 /// </summary>
 public abstract class WeaponPartBase : UIPanelBase
 {
-    [Tooltip("이 패널이 따라갈 팔. 좌우 무장이 동시에 활성이라 하나를 지정해야 한다.")]
+    [Tooltip("이 표시이 따라갈 팔. 좌우 무장이 동시에 활성이라 하나를 지정해야 한다.")]
     [SerializeField] private EquipSlotType _slot = EquipSlotType.ArmLeft;
 
     private PlayerHandController _weaponController;
 
-    /// <summary>이 패널이 보고 있는 팔.</summary>
+    /// <summary>이 표시이 보고 있는 팔.</summary>
     protected EquipSlotType Slot => _slot;
 
 #if UNITY_EDITOR
-    /// <summary>검증용. 두 패널이 같은 팔을 보고 있지 않은지 HUD가 확인한다.</summary>
+    /// <summary>검증용. 두 표시이 같은 팔을 보고 있지 않은지 HUD가 확인한다.</summary>
     public EquipSlotType EditorSlot => _slot;
 #endif
 
@@ -98,6 +98,6 @@ public abstract class WeaponPartBase : UIPanelBase
     /// <summary>무기를 놓았다. OnWeaponAttached에서 건 것을 여기서 정확히 되돌린다.</summary>
     protected abstract void OnWeaponDetached(PlayerRangedWeapon weapon);
 
-    /// <summary>들고 있는 원거리 무기가 없어졌다. 보통 패널을 숨긴다.</summary>
+    /// <summary>들고 있는 원거리 무기가 없어졌다. 보통 표시을 숨긴다.</summary>
     protected virtual void OnWeaponCleared() { }
 }
