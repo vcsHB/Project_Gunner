@@ -61,6 +61,9 @@ public class CellInventorySlot : MonoBehaviour,
 
     private int _displayIndex = -1;
 
+    // 커서가 올라와 있는가. 올라온 채로 내용이 바뀌면(Shift+클릭으로 보냄, 남이 꺼냄) 툴팁을 따라 고친다.
+    private bool _hovered;
+
     // 내구도 알림을 받기 위해 붙잡아 둔다. 스택이 바뀌면 반드시 떼야 한다.
     private ItemInstance _instance;
 
@@ -120,6 +123,21 @@ public class CellInventorySlot : MonoBehaviour,
         RefreshUsable();
         RefreshDurability();
         OnStackChanged();
+
+        if (_hovered) RefreshHoverInfo();
+    }
+
+    /// <summary>커서 아래에서 내용이 바뀌었다. 비었으면 툴팁을 내리고, 다른 게 들어왔으면 그걸로 다시 띄운다.</summary>
+    private void RefreshHoverInfo()
+    {
+        PopupItemInformation popup = PopupItemInformation.Instance;
+        if (popup == null) return;
+
+        // 이미 떠 있던 툴팁만 고친다. 패널이 닫혀 Exit을 못 받은 채로 남은 경우 새로 띄우지 않는다.
+        if (!popup.IsShown) return;
+
+        if (IsEmpty || IsConcealed || (Drag != null && Drag.IsDragging)) popup.Hide();
+        else popup.ShowFor(Stack, Container);
     }
 
     /// <summary>쿨타임 표시. 핫바가 매 프레임 밀어 넣는다. 0이면 꺼진다.</summary>
@@ -312,6 +330,8 @@ public class CellInventorySlot : MonoBehaviour,
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        _hovered = true;
+
         // 드래그 중에는 띄우지 않는다. 커서 밑에 고스트가 있는데 설명까지 겹치면 아무것도 안 보인다.
         // 메뉴가 떠 있을 때도 — 메뉴 위로 툴팁이 덮인다.
         if (IsEmpty || IsConcealed || (Drag != null && Drag.IsDragging) || PopupItemContext.IsOpen) return;
@@ -323,6 +343,8 @@ public class CellInventorySlot : MonoBehaviour,
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        _hovered = false;
+
         PopupItemInformation popup = PopupItemInformation.Instance;
         if (popup != null)
             popup.HideFor(Stack);

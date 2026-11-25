@@ -40,6 +40,16 @@ public abstract class CasterBase : MonoBehaviour
     /// <summary>지금 때릴 수 있는 대상 분류. 덮어쓰지 않았으면 프리팹에 찍힌 값이다.</summary>
     public TargetType TargetTypes { get; private set; }
 
+    private FactionType? _factionOverride;
+
+    /// <summary>지금 때릴 수 있는 편. 덮어쓰지 않았으면 프리팹 값.</summary>
+    public FactionType HitFactions => _factionOverride ?? _hitFactions;
+
+    /// <summary>때릴 편을 덮어쓴다. 같은 탄 프리팹을 플레이어와 적이 나눠 쓸 때(적은 적을 맞히지 않는다).</summary>
+    public void OverrideHitFactions(FactionType factions) => _factionOverride = factions;
+
+    public void ResetHitFactions() => _factionOverride = null;
+
     protected virtual void Awake()
     {
         Owner = GetComponentInParent<Agent>();
@@ -147,7 +157,7 @@ public abstract class CasterBase : MonoBehaviour
             if (Owner != null && hit.Target.Owner == Owner) continue;
 
             // 편 거르기. 레이어로는 못 나눈다 — 플레이어와 적이 둘 다 지상 유닛이라 같은 레이어다.
-            if ((_hitFactions & hit.Target.Faction) == 0) continue;
+            if ((HitFactions & hit.Target.Faction) == 0) continue;
 
             if (!CanAffect(hit.Target)) continue;
 

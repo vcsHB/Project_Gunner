@@ -2,7 +2,8 @@ using TMPro;
 using UnityEngine;
 
 /// <summary>
-/// 인벤토리 화면 오른쪽, <b>열어 본 적재함</b>(잔해) 구역. 상호작용(E)으로 열리고, 비거나 멀어지면 닫힌다.
+/// 인벤토리 화면 오른쪽, <b>열어 본 적재함</b>(잔해) 구역. 상호작용(E)으로 열리고, 멀어지거나 패널을 닫으면 닫힌다.
+/// <b>다 비워도 닫지 않는다</b> — 마지막 것을 꺼내는 순간 창이 사라지면 헷갈린다. 빈 적재함은 닫은 뒤 잠시 있다가 사라진다(<see cref="LootContainer"/>).
 ///
 /// 격자는 <see cref="SectionInventoryGrid"/>를 그대로 쓴다(플레이어에 스스로 붙지 않게 꺼 둔 것). 드래그·Shift+클릭은 플레이어 쪽과 같은 길이다.
 ///
@@ -33,7 +34,7 @@ public class SectionLootingInventory : MonoBehaviour
         _interactor = viewer.GetCompo<PlayerInteractor>();
 
         _container.BeginSearch(viewer);
-        _container.OnEmptiedEvent += Close;
+        _container.SetViewing(viewer, true);
 
         gameObject.SetActive(true);
 
@@ -53,7 +54,7 @@ public class SectionLootingInventory : MonoBehaviour
         if (!ReferenceEquals(_container, null))
         {
             if (_container != null)
-                _container.OnEmptiedEvent -= Close;
+                _container.SetViewing(_viewer, false);
 
             if (_grid != null)
             {

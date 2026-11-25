@@ -36,4 +36,9 @@ public struct ProjectileLaunchData
     /// 대공포탑처럼 무기가 대상을 정할 때 채운다 — 직격과 폭발 둘 다에 걸린다.
     /// </summary>
     public TargetType? targetTypes;
+
+    /// <summary>
+    /// 맞힐 편. null이면 프리팹 설정(보통 전부). 적의 무기는 플레이어·중립만 — 떼로 다니는 드론이 서로 맞히지 않게(2026-11-25).
+    /// </summary>
+    public FactionType? hitFactions;
 }

@@ -43,6 +43,11 @@
 | `HandController` 분리 | ✅ | 만들고 붙이는 일은 공용, 방아쇠만 플레이어/적이 다르다 |
 | 단일 기체 | ✅ | 조립 없는 적. **1기체 1무기** `UnitWeapon` + `UnitWeaponSO`(아이템 아님, 플레이어 무기와 분리). 공격 방식은 파생 SO — 연발(`UnitBurstWeaponSO`: 단발·기관포·산탄) / 정밀(`UnitPrecisionWeaponSO`: 조준선 → 고정 → 한 발). 맞히는 대상(지상/공중/둘 다)은 무기가 정하고 탄 판정에 걸린다(`ProjectileLaunchData.targetTypes`). 몸을 따라 쏘기(`_aimFollowsFacing` + 허용각), 잔해(`PartBreakFeedback._bodyRoot`) ([arch/enemy](arch/enemy.md#단일-기체)) |
 | 터렛 공격 범위 | ✅ | `UnitRangeIndicator` — 지상 = 실선 원 + 옅은 채움, 공중 = 활공 높이만큼 띄운 점선 원(색도 다름). 반경 = 무기 사거리. 공격 중이면 진해짐. 조준선 `UnitWeaponFeedback` |
+| 떠 있는 적 | ✅ | `EnemyMoveController._altitude`(로직) + `UnitHoverFeedback`(몸 띄움·흔들림·그림자). 떠 있다 죽으면 추락(`IDeathCrash` — 그때 속도로 미끄러지며 고도를 잃고 땅에서 부서짐). `_crashOnDeath` 끄면 그 자리에서(부표) |
+| 드론 | 🟡 | `Enemy_Drone_Gun`(사격 — 대상 주위를 돌며 연발 `_strafe`, 무리 3~5, 간격 유지 `_separationRadius`) / `Enemy_Drone_Bomb`(자폭 — 돌진, 0.9 안이면 0.6초 멈춰 깜빡임 후 폭발 60, 격추되면 추락 지점에서). 둘 다 `EnemyManager` 스폰 목록에. **아트는 터렛 스프라이트 축소·색칠** |
+| 부표(기뢰) | 🟡 | `Enemy_Buoy` — AI 없음, 제자리 떠 있음. 플레이어·적이 닿거나 맞으면 폭발(반경 2, 80, **모든 편**). 0.12초 뒤 이어 터져 연쇄. 중립 편. **배치는 맵 작업**(스폰 목록에 없음) |
+| 폭발 (`UnitDetonator`) | ✅ | 자식 폭발 캐스터를 떼어(`DelayedCast`) 고정 위력으로 터뜨림. 불붙는 조건(반경·편·퓨즈·멈춤)과 죽을 때 터짐. 스스로 터질 땐 `Health.Kill(allowCrash: false)` |
+| 무리 스폰 | ✅ | `UnitDataSO._groupSize` — 한 자리 근처(`_groupSpread`)에 여럿. 소대 편성은 별도(MILESTONE) |
 | 테스트 터렛 | 🟡 | `Enemy_Turret_Test`(기관포, 지상) / `_Sniper_Test`(정밀, 둘 다) / `_Flak_Test`(산탄, 공중만). 무기 `08.SO/UnitWeapon/`. 아트·이펙트·소리 임시, 셋 다 `Item_Unit_TurretTest`(9001) 데이터 공유 |
 | `IAimDirectionProvider` | ✅ | 무기가 겨누는 쪽을 인터페이스로 묻는다 |
 | `UnitDataSO` | ✅ | 유닛 데이터 + 전리품 테이블. Id 대역 9000~9999 |
@@ -190,7 +195,7 @@ TextMeshPro와 UI 스프라이트 시트가 들어와 있습니다.
 | 시스템 | 상태 |
 |---|---|
 | 활공 중 사망 = 추락 | ✅ (2026-11-25) 조종을 잃고 연기를 끌며 그때 속도로 날아가다 고도 0에서 폭발 → 잔해. `IDeathCrash`(`PlayerMoveController`), 죽음 2단계 `OnDeadEvent` / `OnWreckedEvent`. 연기·폭발은 **임시 코드 파티클**(`DeathCrashFeedback`, 적도 붙음). 나는 적은 드론 때 |
-| 잔해 루팅 | ✅ (2026-11-25) `WreckLoot`(적 프리팹 4종) → 잔해에 `LootContainer`. 코어 재료 일부 + 고철 + 전리품 표. 비지 않으면 남음. E 탐색(`PlayerInteractor`, `PartInteractPrompt`) → 루팅 구역. 하나씩 드러남(보는 사람마다), Shift+클릭 빠른 이동, 꽉 차면 깜빡임 ([arch/run](arch/run.md)) |
+| 잔해 루팅 | ✅ (2026-11-25) `WreckLoot`(적 프리팹 4종 + 드론 2종) → 잔해에 `LootContainer`. 코어 재료 일부 + 고철 + 전리품 표. 비지 않으면 남음. **비면 더 열 수 없고, 창을 닫은 뒤 2초 있다 흐려지며 사라짐**(다 꺼내도 창이 안 닫힌다). E 탐색(`PlayerInteractor`, `PartInteractPrompt`) → 루팅 구역. 하나씩 드러남(보는 사람마다), Shift+클릭 빠른 이동, 꽉 차면 깜빡임 ([arch/run](arch/run.md)) |
 | 죽음 / 새 판 | ✅ `RunController`(Managers). 코어 0 = 비상탈출 → (추락) → 부서진 뒤 3초 뒤 새 판. 남은 잔해 적재함도 치움. 기체·적재물 잃음, 안전 슬롯만 남음. 사망 연출(잔해·흔들림·줌아웃·조준점 끔·`PanelDeathScreen` — 제목·잃은 것·"N초 뒤 주둔지로" 세 줄) ([arch/run](arch/run.md)) |
 | 안전 슬롯 | 🟡 `InventoryController.SafeSlot`(1칸). UI `CellSafeSlot` — 기체 구역 오른쪽. **드래그는 눈으로 확인 전** |
 | 착지 불가 지역 | 🟡 `NoLandingZone`(콜라이더 모양 판정). 위에서 Space 착륙 막힘, 강제 착륙 = 추락 즉사. 지상: 걸어서는 가장자리에서 멈춤(적도), 미끄러져 들어가면 연료 있으면 자동 활공·없으면 추락. 테스트 영역 하나. 배치는 맵 작업 |

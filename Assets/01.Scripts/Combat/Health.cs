@@ -160,12 +160,13 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
     /// <summary>
     /// 즉사. 실드·방어력·무적을 전부 무시한다. 착지 불가 지역으로의 추락처럼 "맞아서"가 아닌 죽음에 쓴다.
     /// </summary>
-    public void Kill()
+    /// <param name="allowCrash">false면 떠 있어도 추락하지 않고 그 자리에서 부서진다 — 자폭처럼 "스스로 터지는" 죽음.</param>
+    public void Kill(bool allowCrash = true)
     {
         if (IsDead) return;
 
         SetHealth(0f);
-        Die();
+        Die(allowCrash);
     }
 
     private void SetHealth(float value)
@@ -174,7 +175,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         OnHealthChangedEvent?.Invoke(_currentHealth, _maxHealth);
     }
 
-    private void Die()
+    private void Die(bool allowCrash = true)
     {
         if (IsDead) return;
 
@@ -184,7 +185,7 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         // 떠 있으면 추락이 끝날 때 부서진다. 리스너가 되살렸으면(그럴 일은 없지만) 거기서 멈춘다.
         if (!IsDead) return;
 
-        IDeathCrash crash = _owner != null ? _owner.GetCompo<IDeathCrash>() : null;
+        IDeathCrash crash = allowCrash && _owner != null ? _owner.GetCompo<IDeathCrash>() : null;
         if (crash != null && crash.TryBeginCrash(Wreck)) return;
 
         Wreck();

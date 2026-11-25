@@ -50,11 +50,20 @@ public class EnemyAttackState : EnemyState
             return;
         }
 
-        Ai.Move.Stop();
+        // 도는 적(드론)은 서지 않고 대상 주위를 돌며 대상을 본다. 나머지는 서서 본다.
+        if (Ai.Strafes && Ai.IsArmed)
+        {
+            Ai.Move.Move(Ai.StrafeDirection);
+            Ai.Move.LookAt(Ai.DirectionToTarget, true);
+        }
+        else
+        {
+            Ai.Move.Stop();
 
-        // 정밀 사격이 조준을 고정했으면 돌지 않는다 — 이 틈에 선 밖으로 빠지는 것이 회피다.
-        if (!Ai.IsAimLocked)
-            Ai.Move.LookAt(Ai.DirectionToTarget);
+            // 정밀 사격이 조준을 고정했으면 돌지 않는다 — 이 틈에 선 밖으로 빠지는 것이 회피다.
+            if (!Ai.IsAimLocked)
+                Ai.Move.LookAt(Ai.DirectionToTarget);
+        }
 
         if (Ai.IsArmed)
         {

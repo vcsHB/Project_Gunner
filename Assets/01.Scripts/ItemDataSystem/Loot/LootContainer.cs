@@ -5,7 +5,9 @@ using UnityEngine;
 /// <summary>
 /// 월드에 놓인 적재함. 지금은 <b>부서진 적의 잔해</b>가 이걸 들고 있다(<see cref="WreckLoot"/>). 상자도 같은 것을 쓰면 된다.
 ///
-/// <b>비지 않은 동안은 남는다.</b> 다 꺼내면 자기가 붙은 오브젝트(잔해)째 사라진다. 새 판이 오면 전부 사라진다(<see cref="ClearAll"/>).
+/// <b>비지 않은 동안은 남는다.</b> 다 비면 더는 열 수 없고(<see cref="CanInteract"/>), <b>보던 사람이 창을 닫은 뒤</b>
+/// 잠깐(<see cref="_emptyLinger"/>) 있다가 잔해째 흐려져 사라진다. 마지막 것을 꺼내는 순간 창이 닫히면 무슨 일이 났는지 헷갈린다(2026-11-25).
+/// 새 판이 오면 전부 사라진다(<see cref="ClearAll"/>).
 ///
 /// <b>탐색</b> — 처음 연 사람에게는 안의 아이템이 가려져 있다가 하나씩 드러난다(등급이 높을수록 오래).
 /// 진행은 <b>보는 사람마다</b> 따로다(멀티에서 남이 뒤진 걸 내가 공짜로 보지 않는다). 상태는 여기(월드 오브젝트)에 둔다 — 싱글턴에 두지 않는다(RULES).
@@ -18,8 +20,8 @@ public class LootContainer : MonoBehaviour, IInteractable
     /// <summary>누가 이 적재함을 열려고 한다. 그 사람의 화면이 듣고 연다.</summary>
     public static event Action<LootContainer, Agent> OnOpenRequestedEvent;
 
-    /// <summary>다 비었다. 곧 사라진다.</summary>
-    public event Action OnEmptiedEvent;
+    /// <summary>비었다(true) / 다시 뭔가 들어갔다(false).</summary>
+    public event Action<bool> OnEmptyChangedEvent;
 
     private static readonly List<LootContainer> s_all = new();
 
@@ -32,11 +34,21 @@ public class LootContainer : MonoBehaviour, IInteractable
     [Tooltip("등급 하나마다 더 걸리는 시간(초).")]
     [SerializeField, Min(0f)] private float _searchPerGrade = 0.35f;
 
+    [Header("비었을 때")]
+    [Tooltip("비고 나서 아무도 보고 있지 않으면 이만큼 뒤에 사라지기 시작한다(초).")]
+    [SerializeField, Min(0f)] private float _emptyLinger = 2f;
+
+    [Tooltip("사라질 때 흐려지는 시간(초).")]
+    [SerializeField, Min(0f)] private float _fadeDuration = 0.8f;
+
     [SerializeField] private string _labelKey = "ui.interact.search";
     [SerializeField] private string _labelFallback = "탐색";
 
     private readonly Dictionary<Agent, SearchState> _search = new();
-    private bool _emptied;
+    private readonly HashSet<Agent> _viewers = new();
+    private bool _empty;
+    private bool _vanishing;
+    private float _emptyTimer;
 
     private class SearchState
     {
@@ -45,6 +57,8 @@ public class LootContainer : MonoBehaviour, IInteractable
     }
 
     public Inventory Inventory { get; private set; }
+
+    public bool IsEmpty => _empty;
 
     public static IReadOnlyList<LootContainer> All => s_all;
 
@@ -84,14 +98,24 @@ public class LootContainer : MonoBehaviour, IInteractable
                 Debug.LogWarning($"[Loot] {name}에 자리가 없어 {items[i].itemId}를 넣지 못했습니다. 칸 수({_capacity})를 늘릴 것.", this);
         }
 
-        CheckEmpty();
+        RefreshEmpty();
     }
 
     #region 상호작용
 
-    public bool CanInteract(Agent who) => who != null && !_emptied;
+    /// <summary>빈 적재함은 열지 않는다 — 열어 봐야 아무것도 없다.</summary>
+    public bool CanInteract(Agent who) => who != null && !_empty && !_vanishing;
 
     public void Interact(Agent who) => OnOpenRequestedEvent?.Invoke(this, who);
+
+    /// <summary>창이 열렸다/닫혔다. 보는 사람이 있는 동안은 비어도 사라지지 않는다.</summary>
+    public void SetViewing(Agent viewer, bool viewing)
+    {
+        if (viewer == null) return;
+
+        if (viewing) _viewers.Add(viewer);
+        else _viewers.Remove(viewer);
+    }
 
     #endregion
 
@@ -161,21 +185,52 @@ public class LootContainer : MonoBehaviour, IInteractable
                 state.hidden.Remove(slot);
         }
 
-        CheckEmpty();
+        RefreshEmpty();
     }
 
-    private void CheckEmpty()
+    private void RefreshEmpty()
     {
-        if (_emptied) return;
-
+        bool empty = true;
         for (int i = 0; i < Inventory.Capacity; i++)
         {
-            if (!Inventory[i].IsEmpty) return;
+            if (Inventory[i].IsEmpty) continue;
+
+            empty = false;
+            break;
         }
 
-        _emptied = true;
-        OnEmptiedEvent?.Invoke();
-        Destroy(gameObject);
+        if (empty == _empty) return;
+
+        _empty = empty;
+        _emptyTimer = 0f;
+        OnEmptyChangedEvent?.Invoke(empty);
+    }
+
+    // 비었고 아무도 보고 있지 않을 때만 시간이 간다. 보는 중에 다시 넣으면(RefreshEmpty) 처음부터.
+    private void Update()
+    {
+        if (!_empty || _vanishing) return;
+
+        _viewers.RemoveWhere(v => v == null);
+        if (_viewers.Count > 0)
+        {
+            _emptyTimer = 0f;
+            return;
+        }
+
+        _emptyTimer += Time.deltaTime;
+        if (_emptyTimer >= _emptyLinger) Vanish();
+    }
+
+    /// <summary>흐려지며 사라진다. 잔해 조각(<see cref="PartDebris"/>)이면 그쪽에 맡긴다.</summary>
+    private void Vanish()
+    {
+        _vanishing = true;
+        InteractableRegistry.Unregister(this);
+
+        PartDebris debris = GetComponent<PartDebris>();
+        if (debris != null) debris.FadeOut(_fadeDuration);
+        else Destroy(gameObject);
     }
 
     /// <summary>새 판. 남은 적재함(잔해)을 전부 치운다.</summary>

@@ -111,6 +111,25 @@ MechaPartController.ApplyEntries
 | `Enemy_Turret_Sniper_Test` | 정밀(노림 1.2 → 고정 0.45 → 35 피해) | 둘 다 |
 | `Enemy_Turret_Flak_Test` | 산탄 5발 × 2(대공) | 공중 |
 
+### 떠 있는 적 — 드론·부표 (2026-11-25)
+
+| | 사격 드론 | 자폭 드론 | 부표 |
+|---|---|---|---|
+| 프리팹 | `Enemy_Drone_Gun` | `Enemy_Drone_Bomb` | `Enemy_Buoy` |
+| 다리 · 고도 | 비행 · 0.8 | 비행 · 0.7 | 제자리 · 0.35 |
+| 판정 · 편 | 공중 · 적 | 공중 · 적 | 공중 · **중립** |
+| 공격 | 연발(`UnitWeapon_Burst_DroneGun`, 지상+공중, 사거리 6) — **대상 주위를 돈다**(`_strafe`, 사거리×0.75 유지, 방향은 2.5~5초마다 바뀜) | 몸이 무기 — 0.9 안이면 0.6초 멈춰 깜빡이고 폭발(반경 1.6, 60, 플레이어·중립) | 누구든 0.75 안 → 즉시 폭발(반경 2, 80, **전부**) |
+| 죽으면 | 추락 → 잔해(회로 기판 1 + 고철 1) | 추락 → 땅에서 폭발 → 잔해 | 그 자리에서 폭발(0.12초 뒤 — 연쇄가 한 프레임에 안 몰리게) |
+| 무리 | 3~5 | 2~3 | 배치(맵) |
+
+**고도는 이동이 갖고(`EnemyMoveController._altitude`), 띄워 그리는 건 `UnitHoverFeedback`** — 플레이어 활공(`PlayerMoveController.Altitude` / `GlideFeedback`)과 같은 나눔. 띄우는 대상에 히트박스·총구가 같이 있다(보이는 곳에서 맞고 쏜다). 그림자는 제자리.
+
+**폭발은 `UnitDetonator` 하나.** 자식에 폭발 캐스터(`CircleCaster` + `DamageCastEffector`)를 두고, 터질 때 떼어 내 고정 위력으로 쏜다(`DelayedCast`) — 몸은 부서지는 프레임 끝에 사라지므로 붙어 있으면 늦게 터질 수 없다. AI는 이 캐스터를 근접 공격으로 집지 않는다.
+
+**적의 탄은 적을 맞히지 않는다** — `UnitWeaponSO._hitFactions`(기본 플레이어·중립)가 탄에 실린다(`ProjectileLaunchData.hitFactions` → `CasterBase.OverrideHitFactions`). 떼로 도는 드론이 서로 쏘지 않게. 중립은 맞히므로 **드론의 탄이 부표를 터뜨린다** — 유인 플레이가 된다.
+
+**간격 유지** — `_separationRadius` 안의 같은 다리 동료를 서로 민다. 길찾기가 아니다.
+
 ### 방아쇠는 AI가 민다
 
 `HandController`가 만들고 붙이는 일을 하고, 파생이 **누가 당기는가**만 다르게 한다.

@@ -111,6 +111,7 @@ public class UnitWeapon : MonoBehaviour, IAgentComponent
             penetration = _data.Penetration,
             explosionRadius = _data.ExplosionRadius,
             targetTypes = _data.HitTargets,
+            hitFactions = _data.HitFactions,
         };
 
         int count = Mathf.Max(1, pellets);

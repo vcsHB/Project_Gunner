@@ -39,6 +39,9 @@ public abstract class UnitWeaponSO : ScriptableObject
     [Tooltip("맞히는 대상. 지상 전용 / 대공 / 둘 다. 탄의 판정과 화면의 범위 표시가 같이 따른다.")]
     [SerializeField] private TargetType _hitTargets = TargetType.Ground;
 
+    [Tooltip("맞히는 편. 기본은 플레이어·중립 — 적끼리(떼로 다니는 드론) 서로 맞히지 않는다.")]
+    [SerializeField] private FactionType _hitFactions = FactionType.Player | FactionType.Neutral;
+
     [Header("반응")]
     [Tooltip("사정권에 들어오고 첫 공격을 시작하기까지(초). 들어오는 순간 맞으면 접근할 방법이 없다.")]
     [SerializeField, Min(0f)] private float _engageDelay = 0.4f;
@@ -51,6 +54,7 @@ public abstract class UnitWeaponSO : ScriptableObject
     public int Penetration => _penetration;
     public float ExplosionRadius => _explosionRadius;
     public TargetType HitTargets => _hitTargets;
+    public FactionType HitFactions => _hitFactions;
     public float EngageDelay => _engageDelay;
 
     /// <summary>이 무기의 공격 방식. 기체마다 하나씩 만든다 — 진행 상태를 SO에 두면 같은 무기를 든 터렛끼리 섞인다.</summary>

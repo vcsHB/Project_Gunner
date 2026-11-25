@@ -58,6 +58,10 @@ public class UnitDataSO : ItemDataSO
     [Tooltip("죽을 때 떨구는 것. 줄마다 따로 굴린다 — 여러 줄이 동시에 나올 수 있다.")]
     [SerializeField] private List<LootEntry> _loot = new();
 
+    [Header("Spawn")]
+    [Tooltip("한 번에 몇 기가 무리로 나오는가(최소~최대). 드론처럼 떼로 다니는 적. 소대(엘리트+호위+하급) 편성은 나중에 따로 만든다.")]
+    [SerializeField] private Vector2Int _groupSize = new(1, 1);
+
     public Agent Prefab => _prefab;
     public float MaxHealth => _maxHealth;
     public float MoveSpeed => _moveSpeed;
@@ -67,6 +71,9 @@ public class UnitDataSO : ItemDataSO
     public MechaLoadoutTableSO LoadoutTable => _loadoutTable;
 
     public IReadOnlyList<LootEntry> Loot => _loot;
+
+    public int GroupMin => Mathf.Max(1, Mathf.Min(_groupSize.x, _groupSize.y));
+    public int GroupMax => Mathf.Max(1, Mathf.Max(_groupSize.x, _groupSize.y));
 
     /// <summary>
     /// 기본 스탯을 유닛에 적어 넣는다. 프리팹 인스펙터에 적힌 값을 덮어쓴다.

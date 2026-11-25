@@ -53,10 +53,14 @@ public class Projectile : PoolableMono
             _caster.Power = data.power;
             _caster.ResetTrail();
             ApplyTargetTypes(_caster, data.targetTypes);
+            ApplyFactions(_caster, data.hitFactions);
         }
 
         if (_explosionCaster != null)
+        {
             ApplyTargetTypes(_explosionCaster, data.targetTypes);
+            ApplyFactions(_explosionCaster, data.hitFactions);
+        }
 
         _launched = true;
     }
@@ -121,6 +125,13 @@ public class Projectile : PoolableMono
     {
         if (types.HasValue) caster.OverrideTargetTypes(types.Value);
         else caster.ResetTargetTypes();
+    }
+
+    // 풀에서 다시 나온 탄이 이전 발사자의 편 설정을 들고 있으면 안 된다 — 없으면 프리팹 값으로.
+    private static void ApplyFactions(CasterBase caster, FactionType? factions)
+    {
+        if (factions.HasValue) caster.OverrideHitFactions(factions.Value);
+        else caster.ResetHitFactions();
     }
 
     /// <summary>

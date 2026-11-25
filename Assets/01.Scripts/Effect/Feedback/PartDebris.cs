@@ -30,6 +30,16 @@ public class PartDebris : MonoBehaviour
             _baseAlpha[i] = _renderers[i].color.a;
     }
 
+    /// <summary>지금부터 <paramref name="duration"/>초 동안 흐려지며 사라진다. 다 비운 잔해 적재함이 부른다.</summary>
+    public void FadeOut(float duration)
+    {
+        // 흐려지는 구간이 수명의 마지막 FadeRatio이므로, 지금이 그 시작이 되도록 수명을 다시 잡는다.
+        duration = Mathf.Max(0.01f, duration);
+        float lifetime = duration / FadeRatio;
+        _age = lifetime - duration;
+        _lifetime = lifetime;
+    }
+
     /// <summary>흐려져 사라지지 않게 한다. 적재함이 붙은 잔해 — 비울 때까지 남고, 비우면 적재함이 지운다.</summary>
     public void MakePersistent() => _lifetime = float.PositiveInfinity;
 

@@ -79,10 +79,42 @@ public class EnemyManager : MonoBehaviour
         Spawn();
     }
 
-    /// <summary>한 마리 찍어낸다. 밖에서도 부를 수 있다(디버그 버튼, 웨이브 스크립트).</summary>
+    [Tooltip("무리가 퍼지는 반경(유닛).")]
+    [SerializeField, Min(0f)] private float _groupSpread = 1.5f;
+
+    /// <summary>
+    /// 한 종류를 골라 찍어낸다. 데이터의 무리 크기(<see cref="UnitDataSO.GroupMin"/>~Max)만큼 한 자리 근처에 모아 낸다.
+    /// 무리는 최대 수를 넘을 수 있다 — 반쯤 잘린 무리는 무리가 아니다. 밖에서도 부를 수 있다(디버그 버튼, 웨이브 스크립트).
+    /// </summary>
     public Enemy Spawn()
     {
         UnitDataSO data = PickUnit();
+        if (data == null) return null;
+
+        int count = GameRandom.World.Range(data.GroupMin, data.GroupMax + 1);
+        Vector2 center = PickPosition();
+        Enemy first = null;
+
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 offset = Vector2.zero;
+            if (count > 1)
+            {
+                float angle = GameRandom.World.Range(0f, Mathf.PI * 2f);
+                float radius = Mathf.Sqrt(GameRandom.World.Value) * _groupSpread;
+                offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+            }
+
+            Enemy enemy = SpawnAt(data, center + offset);
+            if (first == null) first = enemy;
+        }
+
+        return first;
+    }
+
+    /// <summary>이 종류 하나를 이 자리에. 테스트·배치용.</summary>
+    public Enemy SpawnAt(UnitDataSO data, Vector2 position)
+    {
         if (data == null) return null;
 
         if (data.Prefab == null)
@@ -91,7 +123,7 @@ public class EnemyManager : MonoBehaviour
             return null;
         }
 
-        Agent spawned = Instantiate(data.Prefab, PickPosition(), Quaternion.identity);
+        Agent spawned = Instantiate(data.Prefab, position, Quaternion.identity);
 
         // Agent.Awake가 Instantiate 안에서 이미 끝났다. 그 뒤라야 AgentStatus가 서 있다.
         if (spawned is not Enemy enemy)

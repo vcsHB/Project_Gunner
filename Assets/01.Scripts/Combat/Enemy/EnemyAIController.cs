@@ -45,6 +45,15 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     [Tooltip("보는 쪽과 대상 사이가 이 각도 안일 때만 방아쇠를 당긴다(도). 조준이 몸을 따를 때만 쓴다.")]
     [SerializeField, Range(0f, 180f)] private float _fireAngleTolerance = 8f;
 
+    [Header("공격 중 이동")]
+    [Tooltip("켜면 사정권 안에서 서지 않고 대상 주위를 돌며 쏜다(드론). 거리는 사정권 × 아래 비율로 유지한다.")]
+    [SerializeField] private bool _strafe;
+
+    [SerializeField, Range(0.3f, 1f)] private float _strafeDistance = 0.75f;
+
+    [Tooltip("도는 방향을 바꾸는 간격(초, 최소~최대). 한 방향으로만 돌면 읽히기 쉽다.")]
+    [SerializeField] private Vector2 _strafeFlipInterval = new(2.5f, 5f);
+
     [Header("공격")]
     [Tooltip("판정이 나가는 자리. 보통 몸 앞쪽에 둔 CircleCaster다.")]
     [SerializeField] private CasterBase _attackCaster;
@@ -75,6 +84,36 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     private UnitWeapon _weapon;
 
     public EnemyMoveController Move { get; private set; }
+
+    private float _strafeSign = 1f;
+    private float _strafeFlipAt;
+
+    /// <summary>사정권 안에서 서지 않고 돈다.</summary>
+    public bool Strafes => _strafe;
+
+    /// <summary>
+    /// 대상 주위를 도는 방향. 접선 + 거리 보정. 방향은 가끔 뒤집는다(시드 난수 — 판정에 영향을 주므로 Combat 소스).
+    /// </summary>
+    public Vector2 StrafeDirection
+    {
+        get
+        {
+            if (Time.time >= _strafeFlipAt)
+            {
+                _strafeSign = GameRandom.Combat.Value < 0.5f ? -1f : 1f;
+                _strafeFlipAt = Time.time + GameRandom.Combat.Range(_strafeFlipInterval.x, Mathf.Max(_strafeFlipInterval.x, _strafeFlipInterval.y));
+            }
+
+            Vector2 to = DirectionToTarget;
+            Vector2 tangent = new Vector2(-to.y, to.x) * _strafeSign;
+
+            float desired = AttackRange * _strafeDistance;
+            float error = DistanceToTarget - desired;
+            Vector2 radial = to * Mathf.Clamp(error / Mathf.Max(0.5f, desired * 0.3f), -1f, 1f);
+
+            return (tangent + radial).normalized;
+        }
+    }
 
     public EnemyStateType CurrentState { get; private set; } = EnemyStateType.Idle;
 
@@ -170,8 +209,13 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
         if (_attackCaster == null)
             _attackCaster = GetComponentInChildren<CasterBase>(true);
 
-        // 무장도 캐스터도 없으면 영영 못 때린다. 둘 중 하나는 있어야 한다.
-        if (_attackCaster == null && _hands == null && _weapon == null)
+        // 자폭 드론의 폭발 캐스터를 근접 공격으로 집으면 붙을 때마다 터진다. 폭발은 UnitDetonator만 부른다.
+        UnitDetonator detonator = _owner.GetCompo<UnitDetonator>();
+        if (detonator != null && _attackCaster == detonator.Explosion)
+            _attackCaster = null;
+
+        // 무장도 캐스터도 없으면 영영 못 때린다. 둘 중 하나는 있어야 한다. 자폭 드론은 몸이 무기다.
+        if (_attackCaster == null && _hands == null && _weapon == null && detonator == null)
             Debug.LogWarning($"[EnemyAI] {name}에 무장도 공격 캐스터도 없습니다. 쫓아오기만 합니다.", this);
 
         _states[EnemyStateType.Idle] = new EnemyIdleState(this);

@@ -38,7 +38,7 @@ Health.OnWreckedEvent — 몸이 부서짐(땅에 닿음)
 | | |
 |---|---|
 | 내용 | 달고 있던 **코어의 재료 구성 일부**(재료마다 25~60%) + **고철** 1~3 + 유닛 데이터 전리품 표. 코어가 없는 단일 기체는 유닛 데이터의 재료 구성 |
-| 수명 | **비지 않은 동안 남는다**(`PartDebris.MakePersistent`). 다 꺼내면 잔해째 사라진다. 새 판이 `LootContainer.ClearAll()` |
+| 수명 | **비지 않은 동안 남는다**(`PartDebris.MakePersistent`). 비면 더 열 수 없고(`CanInteract`), **보던 사람이 창을 닫은 뒤** `_emptyLinger`(2초) 있다가 잔해째 흐려져 사라진다(`PartDebris.FadeOut`). 다 꺼내는 순간 창을 닫지 않는다 — 무슨 일이 났는지 헷갈린다. 새 판이 `LootContainer.ClearAll()` |
 | 열기 | 가까이 가면 `PlayerInteractor`가 가장 가까운 하나를 고르고 `PartInteractPrompt`가 "[E] 탐색". E → `LootContainer.OnOpenRequestedEvent` → `PanelInventory`가 오른쪽에 `SectionLootingInventory`를 붙여 연다. 활공 중에는 고르지 않는다. 멀어지면 닫힌다 |
 | 탐색 | 처음 연 사람에게 안의 것이 전부 가려지고(`?`) 앞에서부터 하나씩 드러난다(0.5초 + 등급×0.35초). 진행은 쿨타임 막대를 빌려 보인다. **보는 사람마다** 따로, 상태는 잔해에. 닫았다 열면 이어서 |
 | 옮기기 | 드래그, 또는 Shift+클릭(`ItemQuickMove` → `ItemTransfer.QuickMove`) — 반대편 적재함으로. 꽉 차면 사용 칸 표시가 깜빡인다. 가려진 칸은 드래그·툴팁·메뉴·놓기 전부 막힌다 |
