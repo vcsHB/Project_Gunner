@@ -266,6 +266,12 @@ MonoBehaviour:
   _visualRoot: {fileID: 690746450218609567}
   _spriteFacing: 2
   _turnSpeed: 360
+  _altitude: 0
+  _crashOnDeath: 1
+  _crashFallDuration: 0.9
+  _crashDeceleration: 4
+  _separationRadius: 0
+  _separationStrength: 1.2
 --- !u!114 &6737236976351345000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -278,13 +284,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3061daffe55223641bb5f482be945e1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAIController
-  _detectRange: 12
-  _loseMargin: 4
+  _detectRange: 18
+  _loseMargin: 5
   _attackRange: 1.6
   _fireRange: 8
   _attackLeaveMargin: 0.6
   _aimFollowsFacing: 0
   _fireAngleTolerance: 8
+  _attackMove: 0
+  _strafeDistance: 0.75
+  _strafeFlipInterval: {x: 2.5, y: 5}
+  _repositionTurn: {x: 35, y: 80}
+  _spotSpacing: 2.2
+  _formationSpacing: 0
+  _scatterStep: 40
+  _patrolRadius: 6
+  _patrolSpeed: 0.5
+  _patrolPause: {x: 1, y: 2.5}
   _attackCaster: {fileID: 8853542339104049377}
   _attackWindup: 0.35
   _attackCooltime: 1.2

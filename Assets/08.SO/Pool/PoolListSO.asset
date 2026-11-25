@@ -25,6 +25,11 @@ MonoBehaviour:
       _objectName: 
       _prefab: {fileID: 7406001809311160977, guid: 6b7d8a82661283a4fb2f19eb2515a22f, type: 3}
       _prewarmCount: 64
+    - _id: 9
+      _enumName: Missile_0
+      _objectName: 
+      _prefab: {fileID: 8624728626379941717, guid: 28d0f752ee65cfb4b910dd5e4c9cbb55, type: 3}
+      _prewarmCount: 12
   - _name: Sound
     _items:
     - _id: 3
@@ -54,3 +59,8 @@ MonoBehaviour:
       _objectName: 
       _prefab: {fileID: 3766824325509519986, guid: db6d93b65a46f9d48b2f6bb54387d469, type: 3}
       _prewarmCount: 2
+    - _id: 10
+      _enumName: FX_Explosion_Small
+      _objectName: 
+      _prefab: {fileID: 6262271479318424383, guid: f31b1750002162141a09af4b470b3225, type: 3}
+      _prewarmCount: 8

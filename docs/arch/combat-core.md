@@ -60,6 +60,15 @@ public class Health : MonoBehaviour, IAgentComponent
 
 지상↔공중 전환 시 물리 캐스터는 매번 새로 질의하므로 자동으로 맞습니다. 참조를 캐시한 쪽(유도탄, AI 어그로, 락온 UI)만 `OnTargetTypeChangedEvent` / `OnTargetLostEvent`를 구독해 다시 판단하면 됩니다.
 
+### Agent 없이 맞는 것
+
+`TargetBase`와 `Health`는 Agent가 없으면 `Awake`에서 스스로 초기화한다. 미사일(`Missile_0`, 풀)이 첫 사용자다(2026-11-26).
+
+- 몸(`TargetBase` + `Health` + 자식 `HitBox`)을 탄 루트에 둔다. 레이어는 `TargetBase`가 분류(공중)대로 입힌다
+- 풀에서 다시 나올 때 `Health.ResetHealth()` + `ResetTargetType()`(`Projectile.Launch`). 사라질 때 `NotifyLost`
+- 탄 자신의 직격 캐스터가 첫 프레임 제자리 질의로 **제 몸을 집는다** — `ProjectileCaster.IgnoredTarget`으로 뺀다(편 설정이 "전부"여도)
+- 떨어진 미사일의 폭발은 주인을 비우고(`Owner = null`) 편을 "전부"로 덮는다 — 쏜 쪽도 맞는다
+
 **누구 편인지는 여기서 못 가립니다.** 플레이어와 적이 둘 다 지상 유닛이라 같은 레이어입니다. 그건 [편 가르기](#편-가르기-faction)가 따로 봅니다.
 
 ## 스탯

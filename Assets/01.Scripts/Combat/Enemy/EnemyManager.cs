@@ -39,6 +39,9 @@ public class EnemyManager : MonoBehaviour
 
     private readonly List<Enemy> _alive = new();
 
+    // 무리를 편대로 묶을 때만 잠깐 쓴다.
+    private readonly List<EnemyAIController> _squadBuffer = new();
+
     private Transform _player;
     private float _timer;
 
@@ -85,6 +88,7 @@ public class EnemyManager : MonoBehaviour
     /// <summary>
     /// 한 종류를 골라 찍어낸다. 데이터의 무리 크기(<see cref="UnitDataSO.GroupMin"/>~Max)만큼 한 자리 근처에 모아 낸다.
     /// 무리는 최대 수를 넘을 수 있다 — 반쯤 잘린 무리는 무리가 아니다. 밖에서도 부를 수 있다(디버그 버튼, 웨이브 스크립트).
+    /// 프리팹이 편대를 쓰면(<see cref="EnemyAIController.UsesFormation"/>) 무리를 <see cref="EnemySquad"/>로 묶는다.
     /// </summary>
     public Enemy Spawn()
     {
@@ -94,6 +98,7 @@ public class EnemyManager : MonoBehaviour
         int count = GameRandom.World.Range(data.GroupMin, data.GroupMax + 1);
         Vector2 center = PickPosition();
         Enemy first = null;
+        _squadBuffer.Clear();
 
         for (int i = 0; i < count; i++)
         {
@@ -106,8 +111,15 @@ public class EnemyManager : MonoBehaviour
             }
 
             Enemy enemy = SpawnAt(data, center + offset);
+            if (enemy == null) continue;
             if (first == null) first = enemy;
+
+            EnemyAIController ai = enemy.GetCompo<EnemyAIController>();
+            if (ai != null && ai.UsesFormation) _squadBuffer.Add(ai);
         }
+
+        if (_squadBuffer.Count > 0) new EnemySquad(_squadBuffer, center);
+        _squadBuffer.Clear();
 
         return first;
     }

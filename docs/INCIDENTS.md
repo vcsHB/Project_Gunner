@@ -268,6 +268,18 @@ assets.Sort((a, b) => {
 
 **대응** — 버린 사람은 **줍기 반경을 한 번 벗어나야** 다시 줍는다(`WorldItem.IgnorePickupBy`). 다른 사람은 바로 줍는다. 아이템을 떨구는 새 경로를 만들 때는 `ItemDiscard`를 거치거나 같은 처리를 할 것(분해 넘침 `ItemDisassembly`도 그렇게 함).
 
+## 투사체 직격 위력이 늘 사라지고 있었다 (2026-11-26 발견)
+
+**증상** — 없었다. 적 탄이 무기 데이터의 피해(예: 드론 4)가 아니라 발사자 스탯(`UnitDataSO._damage`)으로 맞았는데 값이 비슷해서 안 보였다.
+
+**원인** — `Projectile.Launch`가 `_caster.Power = data.power` 다음에 `_caster.ResetTrail()`을 불렀고, `ResetTrail`이 `Power = null`로 지운다. 직격은 늘 `DamageCastEffector`의 대체 경로(발사자 스탯 → 고정값)로 계산됐다. 폭발 캐스터는 따로 넣어서 멀쩡했다.
+
+**대응** — 순서를 바꿨다(지우고 → 싣는다). **플레이어 무기의 직격 피해도 이제 무기 스탯(개량·탄종)을 탄다** — 밸런스가 달라졌을 수 있다. 상태를 지우는 함수 뒤에 값을 넣을 것.
+
+## 플레이 모드 검증 — `Application.runInBackground = true` (2026-11-26)
+
+에디터가 비활성이어도 `execute_code`에서 `Application.runInBackground = true`를 켜면 **플레이 모드가 실시간으로 흐른다.** 아래 `Step`보다 훨씬 싸다 — 상태를 바꾸고 `sleep` 후 다시 읽으면 된다. 플레이 모드마다 다시 켤 것(도메인 리로드로 꺼진다).
+
 ## 플레이 모드 검증은 `EditorApplication.Step`으로 프레임을 민다 (2026-11-25)
 
 에디터가 비활성이면 시간이 안 흐른다(위). 그때는 `execute_code`에서 `EditorApplication.isPaused = true; EditorApplication.Step();`으로 **한 번 부를 때 한 프레임**씩 민다. 긴 타이머는 검증용으로 짧게 바꿔(리플렉션) 몇 번만 밀면 된다. 끝나면 `isPaused = false`로 되돌릴 것.

@@ -29,7 +29,7 @@ MonoBehaviour:
   _disassemblable: 0
   _prefab: {fileID: 2494443894999911409, guid: 28b82979047d2054b968913080086451, type: 3}
   _maxHealth: 60
-  _moveSpeed: 4.5
+  _moveSpeed: 6
   _damage: 4
   _defense: 0
   _loadoutTable: {fileID: 0}

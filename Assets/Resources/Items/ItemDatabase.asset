@@ -62,7 +62,7 @@ MonoBehaviour:
     label: "\uC720\uB2DB"
     start: 9000
     end: 9999
-    nextId: 9005
+    nextId: 9007
   - typeName: RepairKitDataSO
     label: "\uC218\uB9AC \uD0A4\uD2B8"
     start: 10000
@@ -94,4 +94,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d48b0359aa2fdff4ea6f81263b9557db, type: 2}
   - {fileID: 11400000, guid: 17142b6eca16fcf469a7db8c2743aff1, type: 2}
   - {fileID: 11400000, guid: 6c280c30f4eda484a82ccc099534a2ac, type: 2}
+  - {fileID: 11400000, guid: b7e6b766a20dd41458230634babffae7, type: 2}
+  - {fileID: 11400000, guid: 274ce275866f50f4da0ed87809bb8415, type: 2}
   - {fileID: 11400000, guid: 5f3fd1cba306bab4894b76dd51292614, type: 2}

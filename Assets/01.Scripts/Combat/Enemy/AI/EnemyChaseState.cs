@@ -19,6 +19,9 @@ public class EnemyChaseState : EnemyState
             return;
         }
 
+        // 쫓는 동안 무리에 경보를 이어 준다 — 대열에 남은 동료가 따라온다.
+        Ai.Squad?.Alert();
+
         float distance = Ai.DistanceToTarget;
 
         // 놓치는 거리가 탐지 거리보다 넓다. 같은 값이면 경계에서 쫓았다 멈췄다 한다.

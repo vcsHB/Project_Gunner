@@ -9,6 +9,7 @@ using UnityEngine;
 /// |---|---|
 /// | 노림 | 가늘게, 점점 진해진다. 포탑을 따라 돈다 |
 /// | 고정 | 굵게 깜빡인다. 더는 돌지 않는다 — 지금 빠져야 한다 |
+/// | 연발 (정밀 연발 — 드론) | 고정 색 그대로 남는다. 탄이 선 위로 나간다 |
 /// | 그 밖 | 끈다 |
 ///
 /// 선은 총구에서 사거리 끝까지 그린다. 벽에서 끊기지 않는다(벽이 아직 없다, M2).
@@ -75,7 +76,9 @@ public class UnitWeaponFeedback : MonoBehaviour
         _phaseTime = 0f;
         _phaseDuration = duration;
 
-        bool aiming = phase == UnitWeaponPhase.Charging || phase == UnitWeaponPhase.Locked;
+        // 고정된 채 쏘는 연발(정밀 연발)이면 다 쏠 때까지 선을 남긴다. 연발 무기(포탑 기관포)의 연발은 선이 없다.
+        bool aiming = phase == UnitWeaponPhase.Charging || phase == UnitWeaponPhase.Locked
+                      || (phase == UnitWeaponPhase.Firing && _weapon.IsAimLocked);
         _line.enabled = aiming;
 
         Vector2 at = _weapon.Muzzle.position;
@@ -110,7 +113,12 @@ public class UnitWeaponFeedback : MonoBehaviour
         Color color;
         float width;
 
-        if (_phase == UnitWeaponPhase.Locked)
+        if (_phase == UnitWeaponPhase.Firing)
+        {
+            color = _lockColor;
+            width = _chargeWidth;
+        }
+        else if (_phase == UnitWeaponPhase.Locked)
         {
             bool on = _lockBlinkRate <= 0f || Mathf.Repeat(_phaseTime * _lockBlinkRate, 1f) < 0.6f;
             color = _lockColor;

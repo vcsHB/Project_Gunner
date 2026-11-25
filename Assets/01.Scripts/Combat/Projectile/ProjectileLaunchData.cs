@@ -41,4 +41,7 @@ public struct ProjectileLaunchData
     /// 맞힐 편. null이면 프리팹 설정(보통 전부). 적의 무기는 플레이어·중립만 — 떼로 다니는 드론이 서로 맞히지 않게(2026-11-25).
     /// </summary>
     public FactionType? hitFactions;
+
+    /// <summary>유도탄이 쫓을 대상. 유도하지 않는 탄(<see cref="Projectile"/>의 꺾는 각도 0)은 무시한다.</summary>
+    public TargetBase homingTarget;
 }

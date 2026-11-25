@@ -19,7 +19,8 @@ public enum GaugeType
 /// <item><b>늘어날 때</b> — <see cref="IncreaseMode.Instant"/>: 주 게이지가 바로 목표로.
 /// <see cref="IncreaseMode.SubFirst"/>: 서브게이지(초록)가 먼저 목표에 가 있고 주 게이지가 따라 찬다.</item>
 /// <item><b>줄어들 때</b> — 주 게이지는 항상 바로 내려간다. <see cref="DecreaseMode.Instant"/>: 그걸로 끝.
-/// <see cref="DecreaseMode.BlinkThenDrain"/>: 깎인 구간이 서브게이지(흰색)로 남아 한 번 점멸하고 금방 빠진다.</item>
+/// <see cref="DecreaseMode.BlinkThenDrain"/>: 깎인 구간이 서브게이지(흰색)로 남아 한 번 점멸하고 금방 빠진다.
+/// 연달아 맞으면 <b>처음 한 번만</b> 점멸하고, 그 뒤 피해는 남은 구간에 쌓이며 빠지기를 잠깐 미룬다 — 맞을 때마다 점멸하면 게이지가 계속 깜빡인다.</item>
 /// </list>
 ///
 /// 처음 값과 꺼져 있다 켜질 때는 연출 없이 바로 맞춘다 — 붙는 순간이나 실드↔체력 게이지가 바뀌는 순간 0에서 차오르면 안 된다.
@@ -62,6 +63,7 @@ public class SimpleGauge : MonoBehaviour, IProgressUpdateable
     private float _main;
     private float _decrease;
     private float _blinkTimer;
+    private float _holdTimer;
     private bool _initialized;
 
     public void UpdateProgress(int current, int max)
@@ -108,12 +110,17 @@ public class SimpleGauge : MonoBehaviour, IProgressUpdateable
     {
         float before = Mathf.Max(_main, _decrease);
 
+        // 남은 흰 구간이 이미 보이면(연타) 점멸은 다시 걸지 않는다. 빠지기만 잠깐 미뤄 쌓인 만큼 보여 준다.
+        bool residual = _decrease > _main + 0.0001f || _blinkTimer > 0f;
+
         _main = next;
 
         if (_decreaseMode == DecreaseMode.BlinkThenDrain)
         {
             _decrease = before;
-            _blinkTimer = _blinkDuration;
+            _holdTimer = _blinkDuration;
+
+            if (!residual) _blinkTimer = _blinkDuration;
         }
         else
         {
@@ -128,6 +135,7 @@ public class SimpleGauge : MonoBehaviour, IProgressUpdateable
         _main = value;
         _decrease = value;
         _blinkTimer = 0f;
+        _holdTimer = 0f;
         Apply();
     }
 
@@ -154,6 +162,11 @@ public class SimpleGauge : MonoBehaviour, IProgressUpdateable
         {
             _blinkTimer -= dt;
             changed = true;
+        }
+
+        if (_holdTimer > 0f)
+        {
+            _holdTimer -= dt;
         }
         else if (_decrease > _main)
         {

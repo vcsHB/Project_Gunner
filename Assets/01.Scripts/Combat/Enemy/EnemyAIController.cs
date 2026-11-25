@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 /// <summary>
 /// 적의 머리. <b>상태 전환만 하고, 움직임과 판정은 남에게 맡긴다.</b>
@@ -17,7 +18,7 @@ using UnityEngine;
 /// 체력·공격력처럼 밸런스로 조정되는 값은 데이터에 있다.
 /// </summary>
 [RequireAgentComponent(typeof(EnemyMoveController))]
-public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionProvider
+public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionProvider, IAimTargetProvider
 {
     [Header("거리")]
     [Tooltip("이 안에 들어오면 쫓기 시작한다.")]
@@ -46,13 +47,38 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     [SerializeField, Range(0f, 180f)] private float _fireAngleTolerance = 8f;
 
     [Header("공격 중 이동")]
-    [Tooltip("켜면 사정권 안에서 서지 않고 대상 주위를 돌며 쏜다(드론). 거리는 사정권 × 아래 비율로 유지한다.")]
-    [SerializeField] private bool _strafe;
+    [Tooltip("서서 쏜다 / 대상 주위를 돌며 쏜다 / 자리 잡고 노리다 쏘고 나면 옮긴다(사격 드론).")]
+    [FormerlySerializedAs("_strafe")]
+    [SerializeField] private EnemyAttackMove _attackMove = EnemyAttackMove.Stand;
 
+    [Tooltip("대상과 유지하는 거리 = 사정권 × 이 비율. 돌기·옮기기에 쓴다.")]
     [SerializeField, Range(0.3f, 1f)] private float _strafeDistance = 0.75f;
 
     [Tooltip("도는 방향을 바꾸는 간격(초, 최소~최대). 한 방향으로만 돌면 읽히기 쉽다.")]
     [SerializeField] private Vector2 _strafeFlipInterval = new(2.5f, 5f);
+
+    [Tooltip("옮길 때 대상 둘레로 도는 각도(도, 최소~최대). 방향은 매번 굴린다.")]
+    [SerializeField] private Vector2 _repositionTurn = new(35f, 80f);
+
+    [Tooltip("편대 동료와 공격 자리 사이에 두는 최소 거리(유닛). 같은 자리로 몰려 겹치지 않게 한다.")]
+    [SerializeField, Min(0f)] private float _spotSpacing = 2.2f;
+
+    [Header("편대 (무리로 나올 때)")]
+    [Tooltip("0보다 크면 무리로 스폰될 때 편대를 짠다 — 대장이 순찰하고 나머지가 V자 대열을 따른다. 대열 간격(유닛). " +
+             "간격 유지(EnemyMoveController) 반경보다 넓어야 자리에서 밀려나지 않는다.")]
+    [SerializeField, Min(0f)] private float _formationSpacing;
+
+    [Tooltip("산개할 때 동료끼리 대상 둘레에서 벌리는 각도(도).")]
+    [SerializeField, Min(0f)] private float _scatterStep = 40f;
+
+    [Tooltip("대장이 순찰하는 반경(집 기준, 유닛).")]
+    [SerializeField, Min(0f)] private float _patrolRadius = 6f;
+
+    [Tooltip("순찰 속도 배율. 따라오는 쪽이 따라잡을 여유가 있어야 대열이 선다.")]
+    [SerializeField, Range(0.1f, 1f)] private float _patrolSpeed = 0.5f;
+
+    [Tooltip("순찰 지점에서 쉬는 시간(초, 최소~최대).")]
+    [SerializeField] private Vector2 _patrolPause = new(1f, 2.5f);
 
     [Header("공격")]
     [Tooltip("판정이 나가는 자리. 보통 몸 앞쪽에 둔 CircleCaster다.")]
@@ -88,8 +114,49 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     private float _strafeSign = 1f;
     private float _strafeFlipAt;
 
-    /// <summary>사정권 안에서 서지 않고 돈다.</summary>
-    public bool Strafes => _strafe;
+    /// <summary>사정권 안에서 어떻게 움직이나.</summary>
+    public EnemyAttackMove AttackMove => _attackMove;
+
+    /// <summary>쏘고 나서 옮겨 갈 때 대상 둘레로 도는 각도(도). 방향까지 굴린다 — 판정에 영향을 주므로 Combat 소스.</summary>
+    public float RollRepositionTurn()
+    {
+        float sign = GameRandom.Combat.Value < 0.5f ? -1f : 1f;
+        return sign * GameRandom.Combat.Range(_repositionTurn.x, Mathf.Max(_repositionTurn.x, _repositionTurn.y));
+    }
+
+    public float SpotSpacing => _spotSpacing;
+
+    /// <summary>대상과 유지하는 거리.</summary>
+    public float HoldDistance => AttackRange * _strafeDistance;
+
+    #region 편대
+
+    /// <summary>속한 무리. 혼자면 null.</summary>
+    public EnemySquad Squad { get; private set; }
+
+    /// <summary>무리로 스폰될 때 편대를 짜는가.</summary>
+    public bool UsesFormation => _formationSpacing > 0f;
+
+    public float FormationSpacing => _formationSpacing;
+    public float ScatterStep => _scatterStep;
+    public float PatrolRadius => _patrolRadius;
+    public float PatrolSpeed => _patrolSpeed;
+
+    public float RollPatrolPause() => GameRandom.Combat.Range(_patrolPause.x, Mathf.Max(_patrolPause.x, _patrolPause.y));
+
+    /// <summary>무리가 묶을 때 부른다(<see cref="EnemySquad"/> 생성자).</summary>
+    public void JoinSquad(EnemySquad squad) => Squad = squad;
+
+    #endregion
+
+    /// <summary>죽었거나 사라졌다. 무리가 대장·자리를 셀 때 본다.</summary>
+    public bool IsDead => _owner == null || _owner.IsDead;
+
+    /// <summary>노리는 대상. 유도탄이 쫓는다.</summary>
+    public TargetBase AimTarget => HasTarget ? _target : null;
+
+    /// <summary>무기가 지금 무엇을 하는가. 없으면 Idle.</summary>
+    public UnitWeaponPhase WeaponPhase => _weapon != null ? _weapon.Phase : UnitWeaponPhase.Idle;
 
     /// <summary>
     /// 대상 주위를 도는 방향. 접선 + 거리 보정. 방향은 가끔 뒤집는다(시드 난수 — 판정에 영향을 주므로 Combat 소스).

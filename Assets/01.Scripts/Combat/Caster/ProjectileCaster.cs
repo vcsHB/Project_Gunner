@@ -76,7 +76,10 @@ public class ProjectileCaster : CasterBase
         return count;
     }
 
-    protected override bool CanAffect(TargetBase target) => !_hitTargets.Contains(target);
+    /// <summary>절대 맞히지 않는 대상. 맞는 몸이 있는 탄(미사일)이 자기 몸을 맞히지 않게 한다 — 편 설정과 상관없이.</summary>
+    public TargetBase IgnoredTarget { get; set; }
+
+    protected override bool CanAffect(TargetBase target) => target != IgnoredTarget && !_hitTargets.Contains(target);
 
     protected override void AfterCast(IReadOnlyList<CastHit> hits)
     {

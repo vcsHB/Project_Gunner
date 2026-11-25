@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3dfa52a4c2aff1c45978ba6d18bd7d2a, type: 3}
-  m_Name: UnitWeapon_Burst_DroneGun
+  m_Name: UnitWeapon_Burst_Missile
   m_EditorClassIdentifier: Assembly-CSharp::UnitBurstWeaponSO
-  _projectile: 1
-  _damage: 4
+  _projectile: 9
+  _damage: 16
   _criticalRate: 0
-  _projectileSpeed: 12
-  _range: 6
+  _projectileSpeed: 6.5
+  _range: 15
   _penetration: 0
-  _explosionRadius: 0
+  _explosionRadius: 1.1
   _hitTargets: 3
   _hitFactions: 5
   _engageDelay: 0.6
-  _shotsPerBurst: 3
-  _shotInterval: 0.12
-  _burstRest: 1.8
+  _shotsPerBurst: 4
+  _shotInterval: 0.28
+  _burstRest: 3.5
   _pelletsPerShot: 1
   _pelletFan: 30
-  _spread: 8
+  _spread: 12

@@ -12,6 +12,7 @@ public enum PoolType
     // Unnamed
     Bullet_0 = 1,
     WorldItem = 2,
+    Missile_0 = 9,
 
     // Sound
     SoundPlayer = 3,
@@ -21,4 +22,5 @@ public enum PoolType
     FX_ShieldHit = 6,
     FX_GunFire_1 = 7,
     FX_GroundScratch = 8,
+    FX_Explosion_Small = 10,
 }

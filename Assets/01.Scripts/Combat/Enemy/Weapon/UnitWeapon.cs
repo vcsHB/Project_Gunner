@@ -18,6 +18,9 @@ public class UnitWeapon : MonoBehaviour, IAgentComponent
     [Tooltip("탄이 나가는 자리. 비우면 이 오브젝트.")]
     [SerializeField] private Transform _muzzle;
 
+    [Tooltip("총구가 여럿이면(좌우 발사관) 한 발마다 번갈아 쓴다. 비우면 위 하나만.")]
+    [SerializeField] private Transform[] _muzzles;
+
     /// <summary>공격 단계가 바뀌었다. (단계, 그 단계가 이어질 시간). 예고·조준선 연출이 듣는다.</summary>
     public event Action<UnitWeaponPhase, float> OnPhaseChangedEvent;
 
@@ -26,11 +29,26 @@ public class UnitWeapon : MonoBehaviour, IAgentComponent
 
     private Agent _owner;
     private IAimDirectionProvider _aim;
+    private IAimTargetProvider _aimTarget;
     private UnitFirePattern _pattern;
+    private int _muzzleIndex;
 
     public UnitWeaponSO Data => _data;
     public Agent Owner => _owner;
-    public Transform Muzzle => _muzzle != null ? _muzzle : transform;
+    /// <summary>다음 발이 나갈 총구. 여럿이면 쏠 때마다 다음으로 넘어간다.</summary>
+    public Transform Muzzle
+    {
+        get
+        {
+            if (_muzzles != null && _muzzles.Length > 0)
+            {
+                Transform next = _muzzles[_muzzleIndex % _muzzles.Length];
+                if (next != null) return next;
+            }
+
+            return _muzzle != null ? _muzzle : transform;
+        }
+    }
 
     public float Range => _data != null ? _data.Range : 0f;
     public TargetType HitTargets => _data != null ? _data.HitTargets : TargetType.None;
@@ -47,6 +65,7 @@ public class UnitWeapon : MonoBehaviour, IAgentComponent
     public void AfterInitialize()
     {
         _aim = _owner.GetCompo<IAimDirectionProvider>();
+        _aimTarget = _owner.GetCompo<IAimTargetProvider>();
 
         if (_data == null)
         {
@@ -106,12 +125,15 @@ public class UnitWeapon : MonoBehaviour, IAgentComponent
         {
             owner = _owner,
             speed = _data.ProjectileSpeed,
-            range = _data.Range,
+            range = _data.TravelRange,
             power = new CastPower(_data.Damage, _data.CriticalRate),
             penetration = _data.Penetration,
             explosionRadius = _data.ExplosionRadius,
             targetTypes = _data.HitTargets,
             hitFactions = _data.HitFactions,
+
+            // 유도탄만 쓴다. 직진탄은 무시한다.
+            homingTarget = _aimTarget != null ? _aimTarget.AimTarget : null,
         };
 
         int count = Mathf.Max(1, pellets);
@@ -134,5 +156,8 @@ public class UnitWeapon : MonoBehaviour, IAgentComponent
         }
 
         OnFiredEvent?.Invoke(origin, aim);
+
+        if (_muzzles != null && _muzzles.Length > 1)
+            _muzzleIndex = (_muzzleIndex + 1) % _muzzles.Length;
     }
 }

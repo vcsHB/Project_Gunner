@@ -30,6 +30,9 @@ public abstract class UnitWeaponSO : ScriptableObject
     [Tooltip("탄이 날아가는 거리이자 AI가 쏘기 시작하는 거리, 화면에 그리는 공격 범위.")]
     [SerializeField, Min(0.5f)] private float _range = 10f;
 
+    [Tooltip("탄이 실제로 날아가는 거리. 0이면 사거리와 같다. 사거리보다 길면 빗나간 탄이 범위 밖까지 이어진다 — 사거리 끝에서 뚝 끊기면 어색하다.")]
+    [SerializeField, Min(0f)] private float _travelRange;
+
     [Tooltip("추가로 뚫는 대상 수. 0이면 하나 맞히고 사라진다.")]
     [SerializeField, Min(0)] private int _penetration;
 
@@ -51,6 +54,9 @@ public abstract class UnitWeaponSO : ScriptableObject
     public float CriticalRate => _criticalRate;
     public float ProjectileSpeed => _projectileSpeed;
     public float Range => _range;
+
+    /// <summary>탄이 날아가는 거리. 사거리(쏘기 시작하는 거리)보다 짧지 않다.</summary>
+    public float TravelRange => Mathf.Max(_range, _travelRange);
     public int Penetration => _penetration;
     public float ExplosionRadius => _explosionRadius;
     public TargetType HitTargets => _hitTargets;

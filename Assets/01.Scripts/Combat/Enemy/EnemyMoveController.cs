@@ -72,6 +72,7 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent, IDeathCrash
     private AgentConditionEffector _conditions;
 
     private Vector2 _moveDirection;
+    private float _speedScale = 1f;
 
     // 멈춰 있을 때 바라볼 쪽. 공격 자세에서 등을 돌리지 않게 한다.
     private Vector2 _lookDirection;
@@ -138,15 +139,23 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent, IDeathCrash
     private void OnEnable() => s_all.Add(this);
     private void OnDisable() => s_all.Remove(this);
 
-    /// <summary>이 방향으로 간다. 길이는 무시하고 방향만 본다. 가는 쪽을 바라본다.</summary>
-    public void Move(Vector2 direction)
+    /// <summary>
+    /// 이 방향으로 간다. 길이는 무시하고 방향만 본다. 가는 쪽을 바라본다.
+    /// <paramref name="speedScale"/> — 이동 속도 배율(0~1). 순찰은 느리게, 대열 자리를 따라잡을 때는 빠르게.
+    /// </summary>
+    public void Move(Vector2 direction, float speedScale = 1f)
     {
         _moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.zero;
+        _speedScale = Mathf.Clamp01(speedScale);
         _lookWhileMoving = false;
     }
 
     /// <summary>선다. 공격 중에도 몸은 계속 대상을 바라본다.</summary>
-    public void Stop() => _moveDirection = Vector2.zero;
+    public void Stop()
+    {
+        _moveDirection = Vector2.zero;
+        _speedScale = 1f;
+    }
 
     /// <summary>
     /// 이쪽을 보게 한다. 공격 자세에서 쓴다 — 멈췄다고 등을 돌린 채 때리면 어디서 맞는지 읽을 수 없다.
@@ -185,7 +194,7 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent, IDeathCrash
         Vector2 desired = moves ? _moveDirection + Separation() * _separationStrength : Vector2.zero;
         if (desired.sqrMagnitude > 1f) desired.Normalize();
 
-        Vector2 target = desired * CurrentSpeed;
+        Vector2 target = desired * CurrentSpeed * (_moveDirection.sqrMagnitude > 0f ? _speedScale : 1f);
 
         Vector2 velocity = _locomotion == EnemyLocomotion.Fixed
             ? Vector2.zero
@@ -201,6 +210,9 @@ public class EnemyMoveController : MonoBehaviour, IAgentComponent, IDeathCrash
     }
 
     private float CurrentSpeed => _status != null ? _status.MoveSpeed.TotalValue : 0f;
+
+    /// <summary>전속(배율 1) 이동 속도. 대열을 따라가는 쪽이 대장의 속도와 견줄 때 쓴다.</summary>
+    public float MaxSpeed => CurrentSpeed;
 
     /// <summary>가까운 동료에게서 멀어지는 방향(가까울수록 세다). 같은 다리끼리만 — 걷는 것과 나는 것은 서로 안 막는다.</summary>
     private Vector2 Separation()

@@ -14,3 +14,13 @@ public interface IAimDirectionProvider
     /// <summary>겨누는 방향(정규화). 논리 공간이다 — 리소스 방향 보정이 들어가지 않은 값.</summary>
     Vector2 AimDirection { get; }
 }
+
+/// <summary>
+/// 지금 노리는 <b>대상</b>. 방향(<see cref="IAimDirectionProvider"/>)만으로 모자란 무기 — 유도탄이 쫓을 대상을 실어 보낸다.
+/// 적은 AI가 고른 대상, 플레이어는 아직 없다(락온이 생기면 그쪽).
+/// </summary>
+public interface IAimTargetProvider
+{
+    /// <summary>노리는 대상. 없으면 null.</summary>
+    TargetBase AimTarget { get; }
+}

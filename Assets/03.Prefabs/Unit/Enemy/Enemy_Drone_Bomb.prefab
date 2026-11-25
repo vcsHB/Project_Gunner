@@ -544,16 +544,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3061daffe55223641bb5f482be945e1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAIController
-  _detectRange: 14
-  _loseMargin: 1
+  _detectRange: 20
+  _loseMargin: 4
   _attackRange: 0.4
   _fireRange: 0.5
   _attackLeaveMargin: 0.6
   _aimFollowsFacing: 0
   _fireAngleTolerance: 8
-  _strafe: 0
+  _attackMove: 0
   _strafeDistance: 0.75
   _strafeFlipInterval: {x: 2.5, y: 5}
+  _repositionTurn: {x: 35, y: 80}
+  _spotSpacing: 2.2
+  _formationSpacing: 0
+  _scatterStep: 40
+  _patrolRadius: 6
+  _patrolSpeed: 0.5
+  _patrolPause: {x: 1, y: 2.5}
   _attackCaster: {fileID: 0}
   _attackWindup: 0.35
   _attackCooltime: 1.2

@@ -32,23 +32,26 @@
 | 상태이상 | ✅ | Burn / Poison / Weakness / Stun |
 | 타게팅 (`TargetBase`, `HitBox`) | ✅ | 레이어 동기화, 소실 알림, 조준점 |
 | Caster / CastEffector | ✅ | 중복 제거, 부위 배율, `CastPower`로 위력 주입 |
-| Projectile | ✅ | 경로 스윕, 관통, 사거리 소멸, 폭발 |
+| Projectile | ✅ | 경로 스윕, 관통, 사거리 소멸, 폭발. **유도**(`_turnRate`, 발사자가 `homingTarget`을 실어 보냄), **맞는 몸**(`_body` — 루트 `TargetBase`+`Health`, 총에 맞으면 그 자리에서 편 가리지 않고 폭발). 2026-11-26 — 직격 위력이 `ResetTrail`에 지워지던 버그 수정(그동안 직격은 발사자 스탯으로 맞았다) |
 | ProjectileCaster | ✅ | 직전 위치→현재 위치 CircleCast. 터널링·중복타 방지 |
 | `Enemy` | ✅ | 데이터 주입·사망·드랍 |
 | `EnemyMoveController` | ✅ | Rigidbody2D 이동 + 진행 방향 바라보기. 다리(`EnemyLocomotion`) 걷기 / 비행 / 제자리. 제자리도 바라보기는 돈다(포탑) |
-| `EnemyAIController` | ✅ | 상태 머신 Idle / Chase / Attack. 무장이 있으면 사격, 없으면 선딜 근접 |
+| `EnemyAIController` | ✅ | 상태 머신 Idle / Chase / Attack. 무장이 있으면 사격, 없으면 선딜 근접. 공격 중 이동 `_attackMove` 서서 / 돌기 / **옮기기**(자리 잡고 노리고 쏘고, 쉬는 동안 다른 자리로) |
 | `EnemyManager` | ✅ | 플레이어 주위 고리에 스폰. 최대 수·주기 |
 | 편 가르기 (`FactionType`) | ✅ | 캐스터가 때릴 편을 고른다. 적끼리 오사 방지 |
 | 적 메카 조립 | ✅ | 플레이어와 같은 경로. `MechaLoadoutTableSO`가 매번 굴린다 |
 | `HandController` 분리 | ✅ | 만들고 붙이는 일은 공용, 방아쇠만 플레이어/적이 다르다 |
-| 단일 기체 | ✅ | 조립 없는 적. **1기체 1무기** `UnitWeapon` + `UnitWeaponSO`(아이템 아님, 플레이어 무기와 분리). 공격 방식은 파생 SO — 연발(`UnitBurstWeaponSO`: 단발·기관포·산탄) / 정밀(`UnitPrecisionWeaponSO`: 조준선 → 고정 → 한 발). 맞히는 대상(지상/공중/둘 다)은 무기가 정하고 탄 판정에 걸린다(`ProjectileLaunchData.targetTypes`). 몸을 따라 쏘기(`_aimFollowsFacing` + 허용각), 잔해(`PartBreakFeedback._bodyRoot`) ([arch/enemy](arch/enemy.md#단일-기체)) |
+| 단일 기체 | ✅ | 조립 없는 적. **1기체 1무기** `UnitWeapon` + `UnitWeaponSO`(아이템 아님, 플레이어 무기와 분리). 공격 방식은 파생 SO — 연발(`UnitBurstWeaponSO`: 단발·기관포·산탄) / 정밀(`UnitPrecisionWeaponSO`: 조준선 → 고정 → 한 발 또는 **조준선을 따라 긋는 연발** `_shots`). 총구 여럿이면 번갈아(`UnitWeapon._muzzles`). 맞히는 대상(지상/공중/둘 다)은 무기가 정하고 탄 판정에 걸린다(`ProjectileLaunchData.targetTypes`). 몸을 따라 쏘기(`_aimFollowsFacing` + 허용각), 잔해(`PartBreakFeedback._bodyRoot`) ([arch/enemy](arch/enemy.md#단일-기체)) |
 | 터렛 공격 범위 | ✅ | `UnitRangeIndicator` — 지상 = 실선 원 + 옅은 채움, 공중 = 활공 높이만큼 띄운 점선 원(색도 다름). 반경 = 무기 사거리. 공격 중이면 진해짐. 조준선 `UnitWeaponFeedback` |
 | 떠 있는 적 | ✅ | `EnemyMoveController._altitude`(로직) + `UnitHoverFeedback`(몸 띄움·흔들림·그림자). 떠 있다 죽으면 추락(`IDeathCrash` — 그때 속도로 미끄러지며 고도를 잃고 땅에서 부서짐). `_crashOnDeath` 끄면 그 자리에서(부표) |
-| 드론 | 🟡 | `Enemy_Drone_Gun`(사격 — 대상 주위를 돌며 연발 `_strafe`, 무리 3~5, 간격 유지 `_separationRadius`) / `Enemy_Drone_Bomb`(자폭 — 돌진, 0.9 안이면 0.6초 멈춰 깜빡임 후 폭발 60, 격추되면 추락 지점에서). 둘 다 `EnemyManager` 스폰 목록에. **아트는 터렛 스프라이트 축소·색칠** |
+| 드론 | 🟡 | `Enemy_Drone_Gun`(사격 — 2026-11-26 교체: 아트 `Unit_Drone_1`, **편대**로 순찰 → 목표를 보면 산개 → 붉은 조준선 0.6초 + 고정 0.2초 → 조준선 따라 6연발 → 조준선 끄고 1초 쉬는 동안 자리 옮김, 사거리 9·탄 14, 속도 6, 탐지 18, 무리 3~5. 공격 자리는 같은 대상을 노리는 적끼리 2.2 이상 벌려 예약 `AttackSpotRegistry`) / `Enemy_Drone_Bomb`(자폭 — 돌진, 0.9 안이면 0.6초 멈춰 깜빡임 후 폭발 60, 격추되면 추락 지점에서. **아트는 터렛 스프라이트 축소·색칠**). 둘 다 `EnemyManager` 스폰 목록에 |
+| 편대 (`EnemySquad`) | ✅ | 무리 스폰 때 프리팹이 편대를 쓰면(`_formationSpacing` > 0) 묶는다. 대장(살아 있는 첫 멤버) 순찰, 나머지 V자 대열. 하나가 보면 경보 공유. 산개 각도는 자리 번호로. 소대의 바탕 |
+| 미사일 | ✅ | `Missile_0`(풀) — 유도(초당 110°), 체력 6, 맞히면 폭발 1.1. 총으로 떨어뜨리면 그 자리에서 **모든 편**을 맞히며 터진다. 폭발 연출 `ProjectileExplodeFeedback` + `FX_Explosion_Small`(FX_DefaultHit 복제 확대, 임시) |
 | 부표(기뢰) | 🟡 | `Enemy_Buoy` — AI 없음, 제자리 떠 있음. 플레이어·적이 닿거나 맞으면 폭발(반경 2, 80, **모든 편**). 0.12초 뒤 이어 터져 연쇄. 중립 편. **배치는 맵 작업**(스폰 목록에 없음) |
 | 폭발 (`UnitDetonator`) | ✅ | 자식 폭발 캐스터를 떼어(`DelayedCast`) 고정 위력으로 터뜨림. 불붙는 조건(반경·편·퓨즈·멈춤)과 죽을 때 터짐. 스스로 터질 땐 `Health.Kill(allowCrash: false)` |
 | 무리 스폰 | ✅ | `UnitDataSO._groupSize` — 한 자리 근처(`_groupSpread`)에 여럿. 소대 편성은 별도(MILESTONE) |
 | 테스트 터렛 | 🟡 | `Enemy_Turret_Test`(기관포, 지상) / `_Sniper_Test`(정밀, 둘 다) / `_Flak_Test`(산탄, 공중만). 무기 `08.SO/UnitWeapon/`. 아트·이펙트·소리 임시, 셋 다 `Item_Unit_TurretTest`(9001) 데이터 공유 |
+| 대포·미사일 포탑 | 🟡 | (2026-11-26, 아트 있음) `Enemy_Turret_Cannon`(정밀 한 발 40, 사거리 11, 둘 다, 9005) / `Enemy_Turret_Missile`(좌우 발사관 번갈아 4연발 → 쉼 3.5초, 유도 미사일, 사거리 15, 둘 다, 9006). 씬에 놓임(더미 `TestTurret_1/2` 자리). 소리 없음 |
 | `IAimDirectionProvider` | ✅ | 무기가 겨누는 쪽을 인터페이스로 묻는다 |
 | `UnitDataSO` | ✅ | 유닛 데이터 + 전리품 테이블. Id 대역 9000~9999 |
 | Shadow | 🟡 | 크기 설정만 |
