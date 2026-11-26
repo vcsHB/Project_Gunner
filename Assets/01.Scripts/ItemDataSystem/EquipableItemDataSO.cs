@@ -20,6 +20,12 @@ public abstract class EquipableItemDataSO : ItemDataSO
     /// <summary>부위 체력. 판마다 가득 찬 채로 시작한다 — 아이템 내구도(<see cref="ItemInstance"/>)와는 별개다.</summary>
     public float PartHealth => _partHealth;
 
+    /// <summary>
+    /// 장비는 전부 개체다 — 손상(<see cref="ItemInstance.HealthRatio"/>)이 파츠마다 다르고, 판 밖으로 그대로 들고 나간다.
+    /// 그래서 장비는 겹치지 않는다. 만들 때는 <see cref="ItemInstanceRegistry.CreateStack"/>으로(RULES — 개체 상태 있는 아이템은 AddStack).
+    /// </summary>
+    public override bool RequiresInstance => true;
+
     public bool CanEquipTo(EquipSlotType slot)
         => slot != EquipSlotType.None && _allowedSlots.Contains(slot);
 

@@ -106,7 +106,8 @@
 | 구글 시트 자동 동기화 | ⬜ | 지금은 TSV 복사/붙여넣기로 수동 왕복 |
 | Item Creator 창 | ✅ | `Tools > Item Creator`. 타입 스캔, 이름 규칙, 일괄 리네임 |
 | Item Database 메뉴 | ✅ | `Tools > Item Database > Rebuild`. 자동화에서 스캔을 부를 수 있다 |
-| 개체 상태 (`ItemInstance`) | ✅ | 무기 모듈·개량이 인벤토리에서도 유지됨 |
+| 개체 상태 (`ItemInstance`) | ✅ | 무기 모듈·개량이 인벤토리에서도 유지됨. **장비는 전부 개체**이고 손상(`HealthRatio`)이 파츠를 따라다님 (2026-11-27) |
+| 판 밖 상태 (`PlayerProfile`) | 🟡 | 창고 60칸·격납고 기록·건너는 기체(`MechaRecord`). 새 판에도 인스턴스가 남음. **UI 없음, 씬 전환 시 사라짐**(다음 단계) ([run](arch/run.md#판-밖-상태--playerprofile-2026-11-27)) |
 | Inventory | ✅ | 칸 기반, 스택 병합, 인스턴스 아이템 단독 칸 |
 | EquipmentController | ✅ | 슬롯 관리만. 효과는 `MechaPartController`가 붙임 |
 | 장비 슬롯 구성 | ✅ | 코어 / 좌팔 / 우팔 / 추진체 |

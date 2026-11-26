@@ -137,6 +137,16 @@ public class Health : MonoBehaviour, IDamageable, IAgentComponent
         SetHealth(_currentHealth + amount);
     }
 
+    /// <summary>
+    /// 남은 체력을 비율로 맞춘다. 깎인 코어를 끼웠을 때(<see cref="MechaPartHealth"/>) 쓴다 — 피해가 아니라 상태 복원이라 죽이지 않는다(최소 1).
+    /// </summary>
+    public void RestoreRatio(float ratio)
+    {
+        if (IsDead || _maxHealth <= 0f) return;
+
+        SetHealth(Mathf.Max(1f, _maxHealth * Mathf.Clamp01(ratio)));
+    }
+
     /// <summary>풀에서 재사용하거나 리스폰할 때 호출. 실드도 같이 채운다.</summary>
     public void ResetHealth()
     {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -18,6 +19,11 @@ public class PlayerPilot : MonoBehaviour
 {
     /// <summary>이 화면의 조종권.</summary>
     public static PlayerPilot Local { get; private set; }
+
+    private static readonly List<PlayerPilot> s_all = new();
+
+    /// <summary>살아 있는 조종권 전부. 멀티에서는 여럿.</summary>
+    public static IReadOnlyList<PlayerPilot> All => s_all;
 
     /// <summary>이 화면의 조종권이 탄 기체. 없으면 null.</summary>
     public static Player LocalMecha => Local != null ? Local.Mecha : null;
@@ -40,6 +46,9 @@ public class PlayerPilot : MonoBehaviour
 
     public Player Mecha { get; private set; }
 
+    /// <summary>판 밖 상태 — 창고·격납고. 판이 끝나도 남는다.</summary>
+    public PlayerProfile Profile { get; } = new();
+
     public bool IsLocal => _isLocal;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -47,6 +56,16 @@ public class PlayerPilot : MonoBehaviour
     {
         Local = null;
         OnLocalMechaChangedEvent = null;
+        s_all.Clear();
+    }
+
+    /// <summary>
+    /// 모든 플레이어의 판 밖 상태가 붙잡은 인스턴스. 새 판에 레지스트리를 비울 때 남긴다 — 창고의 무기·세워 둔 기체의 파츠가 날아가지 않게.
+    /// </summary>
+    public static void CollectPersistentInstances(ICollection<uint> into)
+    {
+        for (int i = 0; i < s_all.Count; i++)
+            s_all[i].Profile.CollectInstanceIds(into);
     }
 
     // 기체의 컴포넌트 초기화(Agent.Awake)보다 먼저일 수도, 나중일 수도 있다. 기체 쪽은 둘 다 받는다 —
@@ -55,6 +74,8 @@ public class PlayerPilot : MonoBehaviour
     {
         if (_input == null)
             Debug.LogError("[PlayerPilot] PlayerInput이 지정되지 않았습니다.", this);
+
+        if (!s_all.Contains(this)) s_all.Add(this);
 
         if (_isLocal)
         {
@@ -72,6 +93,7 @@ public class PlayerPilot : MonoBehaviour
         if (Mecha != null && Mecha.Pilot == this)
             Mecha.SetPilot(null);
 
+        s_all.Remove(this);
         if (Local == this) Local = null;
     }
 

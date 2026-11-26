@@ -126,7 +126,9 @@ Health.ApplyDamage
 
 `EquipableItemDataSO._partHealth`. 무기는 지금 전부 150입니다. **0이면 부서지지 않는 부위**라 맞은 피해가 코어로 갑니다. 코어는 이 값을 쓰지 않습니다(`AgentStatus.Health`).
 
-**부위 체력은 아이템 내구도(`ItemInstance`)와 별개입니다.** 판마다, 그리고 장착이 바뀔 때마다 가득 찬 채로 시작합니다 — 같은 값이면 판이 끝나도 손상이 남아 매 판이 수리부터 시작합니다.
+**부위 체력은 아이템 내구도와 별개지만, 파츠 아이템에 남습니다** (2026-11-27 — 이전에는 판마다 가득이었다). `ItemInstance.HealthRatio`(0~1)에 바뀔 때마다 써 넣고, 끼울 때 읽습니다. 깎인 팔을 떼었다 다시 끼워도 깎인 채이고, **탈출하면 손상을 그대로 들고 다음 판에 갑니다** → 주둔지 수리(M5). **코어도 같습니다** — 기체 체력(`Health`)을 코어 아이템에 써 넣고, 코어를 끼우면 `Health.RestoreRatio`로 맞춥니다(최소 1, 죽이지 않음). 죽으면 파츠를 잃으므로 새 판은 새 인스턴스 = 가득입니다. `ResetAll`(되살림)은 붙어 있는 파츠의 기록까지 가득으로 덮습니다.
+
+그래서 **장비는 전부 개체입니다**(`EquipableItemDataSO.RequiresInstance => true`). 겹치지 않고, `CreateStack`으로 만듭니다. 인스턴스 없는 옛 스택은 기록 없이 가득으로 다룹니다.
 
 추진체는 `Item_Booster_Booster1`(`PartView_Booster_1`, 스프라이트 `Unit_Booster_1_0`, 체력 120)이고 테스트 로드아웃에 장착했습니다. 남은 `Unit_Booster_1_1~3`은 아직 SO가 없습니다.
 

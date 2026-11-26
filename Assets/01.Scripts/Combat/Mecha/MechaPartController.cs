@@ -355,7 +355,11 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
     /// </summary>
     private void ResetWorldState(IReadOnlyCollection<uint> keepInstances = null)
     {
-        ItemInstanceRegistry.ClearExcept(keepInstances);
+        // 판 밖 상태(창고·격납고)가 붙잡은 인스턴스는 판이 바뀌어도 산다.
+        HashSet<uint> keep = keepInstances != null ? new HashSet<uint>(keepInstances) : new HashSet<uint>();
+        PlayerPilot.CollectPersistentInstances(keep);
+
+        ItemInstanceRegistry.ClearExcept(keep);
         GameRandom.Reseed(_loadout.useFixedSeed ? _loadout.seed : Environment.TickCount);
     }
 

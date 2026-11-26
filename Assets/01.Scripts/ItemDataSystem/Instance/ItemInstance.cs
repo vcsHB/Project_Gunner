@@ -50,6 +50,14 @@ public abstract class ItemInstance
 
     public bool HasDurability => MaxDurability > 0;
 
+    /// <summary>
+    /// 기체에 붙었을 때의 체력 비율(0~1). 팔·추진체는 부위 체력, 코어는 기체 체력이다. 내구도와는 별개다.
+    /// <b>손상은 파츠를 따라다닌다</b> — 깎인 팔을 떼었다 다른 기체에 끼워도 깎인 채다. 탈출하면 그대로 다음 판에 간다.
+    /// 장착 중에는 <see cref="MechaPartHealth"/>가 계속 써 넣는다. 비율로 두는 이유는 밸런스로 최대치가 바뀌어도 어긋나지 않게.
+    /// 세이브 복원에도 이걸 쓴다.
+    /// </summary>
+    public float HealthRatio { get; set; } = 1f;
+
     /// <summary>내구도가 있는 아이템인데 다 닳았는지.</summary>
     public bool IsBroken => HasDurability && Durability <= 0;
 

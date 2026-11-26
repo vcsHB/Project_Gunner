@@ -16,7 +16,9 @@ using UnityEngine;
 /// <item>추진체: <see cref="OnPartDestroyedEvent"/>를 이동이 듣는다(활공·부스터 불가 + 감속).</item>
 /// </list>
 ///
-/// 부위 체력은 판마다 가득 찬 채로 시작한다. 아이템 내구도와는 별개다.
+/// <b>손상은 파츠 아이템에 남는다</b>(<see cref="ItemInstance.HealthRatio"/>, 2026-11-27). 바뀔 때마다 써 넣고, 끼울 때 읽는다 —
+/// 깎인 팔을 떼었다 다시 끼워도 깎인 채고, 탈출하면 그대로 다음 판에 간다. <b>코어</b>도 같다 — 기체 체력(<see cref="Health"/>)을 코어 아이템에 써 넣는다.
+/// 새 파츠(새 인스턴스)는 가득 찬 채다. 아이템 내구도와는 별개다.
 /// 수리(<see cref="Repair"/>)로 차오르고, <see cref="_restoreRatio"/>까지 차면 부서진 부위가 되살아난다.
 /// </summary>
 [RequireAgentComponent(typeof(EquipmentController))]
@@ -48,7 +50,12 @@ public class MechaPartHealth : MonoBehaviour, IAgentComponent
 
     private readonly PartState[] _states = new PartState[Parts.Length];
 
+    // 지금 붙어 있는 파츠의 개체. 손상을 여기에 써 넣는다. 인스턴스 없는 옛 스택이면 null — 기록 없이 가득 찬 채로 다룬다.
+    private readonly ItemInstance[] _instances = new ItemInstance[Parts.Length];
+    private ItemInstance _coreInstance;
+
     private Agent _owner;
+    private Health _health;
     private EquipmentController _equipment;
     private MechaAssembler _assembler;
     private HandController _hands;
@@ -65,6 +72,10 @@ public class MechaPartHealth : MonoBehaviour, IAgentComponent
         _equipment = _owner.GetCompo<EquipmentController>();
         _assembler = _owner.GetCompo<MechaAssembler>();
         _hands = _owner.GetCompo<HandController>(true);
+        _health = _owner.GetCompo<Health>();
+
+        if (_health != null)
+            _health.OnHealthChangedEvent += HandleCoreHealthChanged;
 
         if (_equipment != null)
             _equipment.OnEquipChangedEvent += HandleEquipChanged;
@@ -77,11 +88,16 @@ public class MechaPartHealth : MonoBehaviour, IAgentComponent
             _hands.OnHandChangedEvent += HandleHandChanged;
 
         for (int i = 0; i < Parts.Length; i++)
-            ResetPart(i, _equipment != null ? _equipment.GetStack(Parts[i]) : default);
+            ResetPart(i, _equipment != null ? _equipment.GetStack(Parts[i]) : default, keepWear: true);
+
+        _coreInstance = _equipment != null ? ResolveInstance(_equipment.GetStack(EquipSlotType.Core)) : null;
     }
 
     public void Dispose()
     {
+        if (_health != null)
+            _health.OnHealthChangedEvent -= HandleCoreHealthChanged;
+
         if (_equipment != null)
             _equipment.OnEquipChangedEvent -= HandleEquipChanged;
 
@@ -152,6 +168,7 @@ public class MechaPartHealth : MonoBehaviour, IAgentComponent
         if (state.max <= 0f || state.destroyed) return false;
 
         state.current = Mathf.Max(0f, state.current - damage);
+        RecordWear(i);
         OnPartHealthChangedEvent?.Invoke(slot, state.current, state.max);
 
         if (state.current <= 0f)
@@ -175,6 +192,7 @@ public class MechaPartHealth : MonoBehaviour, IAgentComponent
             if (state.max <= 0f || state.current >= state.max) continue;
 
             state.current = Mathf.Min(state.max, state.current + amount);
+            RecordWear(i);
             OnPartHealthChangedEvent?.Invoke(Parts[i], state.current, state.max);
 
             if (state.destroyed && state.current >= state.max * _restoreRatio)
@@ -186,40 +204,90 @@ public class MechaPartHealth : MonoBehaviour, IAgentComponent
         }
     }
 
-    /// <summary>새 판·리스폰. 전부 가득 채우고 되살린다.</summary>
+    /// <summary>새 판·리스폰. 전부 가득 채우고 되살린다 — 붙어 있는 파츠의 기록도 가득으로.</summary>
     public void ResetAll()
     {
         for (int i = 0; i < Parts.Length; i++)
-            ResetPart(i, _equipment != null ? _equipment.GetStack(Parts[i]) : default);
+            ResetPart(i, _equipment != null ? _equipment.GetStack(Parts[i]) : default, keepWear: false);
     }
 
     #endregion
 
     #region 장착 / 상태 입히기
 
-    /// <summary>부위가 갈렸다. 새 부품은 새것이다 — 가득 찬 채로, 부서지지 않은 채로.</summary>
+    /// <summary>부위가 갈렸다. 끼운 파츠가 기억하는 손상으로 시작한다 — 새 파츠면 가득.</summary>
     private void HandleEquipChanged(EquipSlotType slot, ItemStack stack)
     {
+        if (slot == EquipSlotType.Core)
+        {
+            HandleCoreChanged(stack);
+            return;
+        }
+
         int i = IndexOf(slot);
         if (i < 0) return;
 
-        ResetPart(i, stack);
+        ResetPart(i, stack, keepWear: true);
     }
 
-    private void ResetPart(int index, ItemStack stack)
+    /// <param name="keepWear">true면 파츠가 기억하는 손상으로, false면 가득 채우고 그 기록도 가득으로 덮는다.</param>
+    private void ResetPart(int index, ItemStack stack, bool keepWear)
     {
         EquipableItemDataSO data = stack.IsEmpty ? null : stack.Resolve<EquipableItemDataSO>();
         float max = data != null ? data.PartHealth : 0f;
 
+        ItemInstance instance = ResolveInstance(stack);
+        _instances[index] = instance;
+
+        float ratio = keepWear && instance != null ? Mathf.Clamp01(instance.HealthRatio) : 1f;
+        float current = max * ratio;
+        bool destroyed = max > 0f && current <= 0f;
+
         bool wasDestroyed = _states[index].destroyed;
 
-        _states[index] = new PartState { current = max, max = max, destroyed = false };
+        _states[index] = new PartState { current = current, max = max, destroyed = destroyed };
+        RecordWear(index);
         ApplyState(index);
 
-        OnPartHealthChangedEvent?.Invoke(Parts[index], max, max);
+        OnPartHealthChangedEvent?.Invoke(Parts[index], current, max);
 
-        if (wasDestroyed)
+        if (destroyed && !wasDestroyed)
+            OnPartDestroyedEvent?.Invoke(Parts[index]);
+        else if (!destroyed && wasDestroyed)
             OnPartRestoredEvent?.Invoke(Parts[index]);
+    }
+
+    private static ItemInstance ResolveInstance(ItemStack stack)
+        => !stack.IsEmpty && ItemInstanceRegistry.TryGet(stack.instanceId, out ItemInstance instance) ? instance : null;
+
+    private void RecordWear(int index)
+    {
+        ItemInstance instance = _instances[index];
+        if (instance == null) return;
+
+        PartState state = _states[index];
+        instance.HealthRatio = state.max > 0f ? state.current / state.max : 1f;
+    }
+
+    // ── 코어 — 기체 체력을 코어 아이템에 남긴다 ──
+
+    /// <summary>
+    /// 코어가 갈렸다. 먼저 기록처를 새 코어로 바꾸고, 그 코어가 기억하는 비율로 체력을 맞춘다.
+    /// 장착이 최대 체력을 바꾸는 것(<see cref="MechaPartController"/>)이 이보다 먼저든 나중이든 — <see cref="Health"/>는 최대치가 바뀌어도 비율을 지킨다.
+    /// </summary>
+    private void HandleCoreChanged(ItemStack stack)
+    {
+        _coreInstance = ResolveInstance(stack);
+
+        if (_coreInstance != null && _health != null)
+            _health.RestoreRatio(_coreInstance.HealthRatio);
+    }
+
+    private void HandleCoreHealthChanged(float current, float max)
+    {
+        if (_coreInstance == null || max <= 0f) return;
+
+        _coreInstance.HealthRatio = Mathf.Clamp01(current / max);
     }
 
     private void HandleHandChanged(EquipSlotType slot, HandActionBase hand)
