@@ -221,6 +221,22 @@ public class MechaPartController : MonoBehaviour, IAgentComponent
         return _loadout.defaultLoadout;
     }
 
+    /// <summary>
+    /// 기록된 기체로 시작한다 — 씬을 건너온 기체(<see cref="PlayerPilot"/>). Start보다 <b>먼저</b> 불러야 한다(씬이 열린 직후).
+    /// 기본 구성 대신 이걸 입히고, 첫 출격과 같이 월드 상태를 되돌린다. 기록이 붙잡은 인스턴스는 판 밖 상태라 남는다 —
+    /// 그래서 기록을 비우는 건 입힌 <b>뒤</b>다(부르는 쪽).
+    /// </summary>
+    public void BeginFromRecord(MechaRecord record, List<ItemStack> leftover = null)
+    {
+        if (_loadout.resetWorldState)
+            ResetWorldState();
+
+        _resolved = true;
+        AppliedLoadout = null;
+
+        record?.ApplyTo(_owner, leftover);
+    }
+
     /// <summary>밖에서 구성을 넣는다. 스포너·격납고가 쓴다.</summary>
     public void SetLoadout(MechaLoadoutSO loadout) => ApplyLoadout(loadout);
 

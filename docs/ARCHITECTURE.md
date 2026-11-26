@@ -16,7 +16,7 @@
 | [arch/enemy.md](arch/enemy.md) | 적(머리/다리, 상태 클래스, 선딜, 적도 메카다, 단일 기체, 떠 있는 적, 편대, 미사일, AI 방아쇠, 구경 표) | 적 AI, 적 로드아웃, 드론 편대 |
 | [arch/input.md](arch/input.md) | 조준 · 카메라 · 팔에 달린 것이 입력을 해석한다 · 입력 차단 · 입력 · 조종권/기체 분리(`PlayerPilot`) · 이동(착륙/활공) | 입력, 조준점, 카메라 흔들림 |
 | [arch/feedback.md](arch/feedback.md) | 진입점(`EffectPlayer`·`SoundManager`) · 핸들 · `ParticleEffect` · `SoundPlayer` 풀과 거르기 · 귀(`AudioListenerFollow`) · 피드백 컴포넌트 위치 | 이펙트·소리 재생, 새 이펙트 등록 |
-| [arch/run.md](arch/run.md) | 죽음 = 비상탈출(조종 상실 → 추락 → 부서짐) · 잔해 적재함(탐색·상호작용) · 새 판(`RunController`) · 판 밖 상태(`PlayerProfile`·`MechaRecord`) · 안전 슬롯 · 착지 불가 지역 | 사망·리스폰, 사망 연출, 잔해 루팅, 판 사이에 남는 것, 활공 착륙 규칙 |
+| [arch/run.md](arch/run.md) | 죽음 = 비상탈출(조종 상실 → 추락 → 부서짐) · 잔해 적재함(탐색·상호작용) · 새 판(`RunController`) · 판 밖 상태(`PlayerProfile`·`MechaRecord`) · 씬 건너기(`SceneFlow`) · 안전 슬롯 · 착지 불가 지역 | 사망·리스폰, 사망 연출, 잔해 루팅, 판 사이에 남는 것, 활공 착륙 규칙 |
 
 ## 파일 사이의 연결
 

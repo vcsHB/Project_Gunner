@@ -99,9 +99,9 @@ public class PlayerAimPoint : MonoBehaviour
     {
         Unbind();
 
+        // 내렸다(씬을 떠나는 중·기체 없음). 경고할 일이 아니다.
         if (player == null)
         {
-            Debug.LogWarning("[AimPoint] 씬에서 Player를 찾지 못했습니다.", this);
             return;
         }
 

@@ -83,7 +83,28 @@ UI는 적재함을 직접 부르지 않고 적재함도 UI를 부르지 않습�
 
 **같은 스택을 두 곳에 두지 마세요.** 기록에 적은 기체를 그대로 굴리면 같은 인스턴스가 둘로 보입니다 — 적은 뒤에는 기체를 비우거나 없앱니다.
 
-지금은 게임을 끄면 사라집니다(저장은 M7). 조종권이 씬에 있어서 **씬이 바뀌어도 사라집니다** — 씬 분리 단계에서 씬 밖으로 옮깁니다.
+지금은 게임을 끄면 사라집니다(저장은 M7). 씬이 바뀌어도 남습니다 — 아래.
+
+## 씬 건너기 — 주둔지 ↔ 필드 (2026-11-27)
+
+| 씬 | 있는 것 |
+|---|---|
+| `GarrisonScene` (Build 0) | 필드 씬의 사본에서 적·터렛·`EnemyManager`·`RunController`·착지 불가 지역을 뺀 것. 배경색만 다르다. **출격구** `SortieGate` |
+| `IngameScene` (Build 1) | 필드. **임시 귀환문** `ReturnGate_Temp` — 탈출 지점이 생기면 지운다 |
+
+**바꾸는 곳은 `SceneFlow` 하나.** `Sortie()`(기체 들고 필드로) / `ReturnToGarrison(withMecha)`(탈출 = true, 부서짐 = false). 문은 `SceneGate`(IInteractable, E).
+
+**순서** —
+1. 떠나는 씬: `PlayerPilot.LeaveScene(carry)` — 탄 기체를 `MechaRecord`로 적어 `Profile.Sortie`에 두고 내린다. **기체를 비우지 않는다** — 비우면 적재 칸이 줄며 짐이 바닥에 떨어진다. 기체는 씬과 함께 사라진다
+2. `SceneManager.LoadScene`
+3. 도착한 씬: 모든 `Awake`가 끝난 뒤, `Start` 전(`sceneLoaded`)에 조종권이 그 씬의 기체에 `MechaPartController.BeginFromRecord`로 기록을 입힌다 — 기본 구성(Start) 대신. 월드 리셋(레지스트리·시드)도 여기서 하고, `Sortie`가 아직 판 밖 상태라 그 인스턴스는 남는다. **입힌 뒤에** `Sortie`를 비운다. 못 실은 것은 창고로
+4. 탄다 → HUD·카메라가 `Start`에서 붙는다
+
+**조종권은 씬 밖에 산다.** 처음 뜬 `PlayerPilot`이 루트로 나가 `DontDestroyOnLoad`. 씬마다 조종권을 놓아 둬서 어느 씬에서든 플레이를 시작할 수 있다 — 이미 건너온 것이 있으면 씬의 사본은 자기 `_startMecha`만 넘기고 `Awake`에서 사라진다. 매니저(풀·UI·카메라·사운드)는 씬마다 따로다(`Singleton._dontDestroyOnLoad` 꺼짐).
+
+**헷갈리기 쉬운 것** — 필드에서 죽어 새 판이 되면 레지스트리가 비워지며 인스턴스 번호가 1부터 다시 시작한다(남길 것이 없을 때). 들고 온 코어와 새 코어의 번호가 같아 보여도 다른 개체다.
+
+**아직** — 필드에서 죽으면 지금처럼 필드에서 새 판(`RunController`)이다. 죽음 → 결과 → 주둔지(기체 없이)는 탈출·결과 단계에서 바꾼다. 주둔지에서 장비 잠금은 아직 걸려 있다(보조 드론 단계).
 
 ## 안전 슬롯
 
