@@ -149,5 +149,5 @@ final = max(damage - defense, floor) * (1 - clamp01(resistance))
 자기 자신만 자동으로 제외되고(`CasterBase.Owner`), 나머지는 캐스터가 명시한다.
 적의 근접 공격은 `Player + Neutral`만 켠다 — 전부 켜두면 적끼리 서로 때려 죽는다.
 
-**탄은 쏜 쪽이 편을 정한다** (2026-11-25). 탄 프리팹(`Bullet_0`)은 플레이어와 적이 같이 써서 프리팹 값은 "전부"다. 단일 기체 무기는 `UnitWeaponSO._hitFactions`를 `ProjectileLaunchData.hitFactions`로 실어 보내고 `CasterBase.OverrideHitFactions`가 덮는다(풀에서 다시 나오면 `ResetHitFactions`). **팔에 플레이어 무기를 단 메카 적은 아직 안 실어 보낸다** — 적끼리 맞을 수 있다(BACKLOG).
+**탄은 쏜 쪽이 편을 정한다** (2026-11-25). 탄 프리팹(`Bullet_0`)은 플레이어와 적이 같이 써서 프리팹 값은 "전부"다. 단일 기체 무기는 `UnitWeaponSO._hitFactions`를 `ProjectileLaunchData.hitFactions`로 실어 보내고 `CasterBase.OverrideHitFactions`가 덮는다(풀에서 다시 나오면 `ResetHitFactions`). 팔에 플레이어 무기를 단 메카 적도 실어 보낸다(2026-11-26) — `PlayerRangedWeapon`이 주인 편이 적이면 "적 제외". 플레이어 손에서는 지정하지 않는다(PVP).
 

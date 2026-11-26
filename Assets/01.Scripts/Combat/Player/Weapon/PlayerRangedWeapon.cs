@@ -317,6 +317,7 @@ public class PlayerRangedWeapon : PlayerWeaponBase
                 Status.Value(WeaponStatType.CriticalRate)),
             penetration = Mathf.Max(0, Mathf.RoundToInt(Status.Value(WeaponStatType.Penetration))),
             explosionRadius = Mathf.Max(0f, Status.Value(WeaponStatType.ExplosionRadius)),
+            hitFactions = ResolveHitFactions(),
         };
 
         for (int i = 0; i < count; i++)
@@ -328,6 +329,18 @@ public class PlayerRangedWeapon : PlayerWeaponBase
 
             projectile.Launch(origin, data);
         }
+    }
+
+    /// <summary>
+    /// 맞힐 편. <b>적의 팔에 들리면 적을 빼고</b> — 메카 적끼리(나중의 소대) 서로 쏘지 않게. 단일 기체 무기의 기본값(플레이어·중립)과 같은 규칙이다.
+    /// 플레이어 손에서는 지정하지 않는다(프리팹 값 = 전부) — PVPVE라 플레이어끼리도 맞는다.
+    /// </summary>
+    private FactionType? ResolveHitFactions()
+    {
+        TargetBase self = Owner != null ? Owner.GetCompo<TargetBase>() : null;
+        if (self == null || self.Faction != FactionType.Enemy) return null;
+
+        return FactionType.All & ~FactionType.Enemy;
     }
 
     /// <summary>탄약이 자기 투사체를 지정했으면 그것, 아니면 무기의 기본 투사체.</summary>
