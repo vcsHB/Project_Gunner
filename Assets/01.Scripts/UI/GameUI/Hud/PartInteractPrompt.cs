@@ -18,7 +18,15 @@ public class PartInteractPrompt : MonoBehaviour
 
     [SerializeField] private string _keyLabel = "E";
 
-    private PlayerInteractor _interactor;
+    // 갈아탈 수 있으므로 매번 본다.
+    private static PlayerInteractor Interactor
+    {
+        get
+        {
+            Player mecha = PlayerPilot.LocalMecha;
+            return mecha != null ? mecha.GetCompo<PlayerInteractor>() : null;
+        }
+    }
     private PanelInventory _panel;
     private Canvas _canvas;
     private Camera _worldCamera;
@@ -26,8 +34,6 @@ public class PartInteractPrompt : MonoBehaviour
 
     private void Start()
     {
-        Player player = FindAnyObjectByType<Player>();
-        _interactor = player != null ? player.GetCompo<PlayerInteractor>() : null;
         _panel = FindAnyObjectByType<PanelInventory>();
         _canvas = GetComponentInParent<Canvas>();
         _worldCamera = Camera.main;
@@ -38,7 +44,8 @@ public class PartInteractPrompt : MonoBehaviour
 
     private void LateUpdate()
     {
-        IInteractable target = _interactor != null ? _interactor.Current : null;
+        PlayerInteractor interactor = Interactor;
+        IInteractable target = interactor != null ? interactor.Current : null;
         bool show = target != null && (_panel == null || !_panel.IsShown);
 
         SetVisible(show);

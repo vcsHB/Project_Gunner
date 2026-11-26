@@ -24,9 +24,8 @@ public class DebugItemSpawner : MonoBehaviour
     [SerializeField] private List<Entry> _entries = new();
     [SerializeField] private bool _enableHotkeys = true;
 
-    private Player _player;
-
-    private void Start() => _player = FindAnyObjectByType<Player>();
+    // 갈아탈 수 있으므로 매번 본다.
+    private static Player Mecha => PlayerPilot.LocalMecha;
 
     private void Update()
     {
@@ -59,7 +58,7 @@ public class DebugItemSpawner : MonoBehaviour
             return;
         }
 
-        if (_player == null)
+        if (Mecha == null)
         {
             Debug.LogWarning("[DebugItem] 씬에서 Player를 찾지 못했습니다.", this);
             return;
@@ -75,7 +74,7 @@ public class DebugItemSpawner : MonoBehaviour
             if (stack.IsEmpty) continue;
 
             if (entry.dropToWorld)
-                WorldItemSpawner.Spawn(stack, _player.transform.position);
+                WorldItemSpawner.Spawn(stack, Mecha.transform.position);
             else
                 GiveToInventory(stack);
         }
@@ -83,7 +82,7 @@ public class DebugItemSpawner : MonoBehaviour
 
     private void GiveToInventory(ItemStack stack)
     {
-        InventoryController controller = _player.GetCompo<InventoryController>();
+        InventoryController controller = Mecha.GetCompo<InventoryController>();
         if (controller == null)
         {
             Debug.LogWarning("[DebugItem] 플레이어에 InventoryController가 없습니다.", this);

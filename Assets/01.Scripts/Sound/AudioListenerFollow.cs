@@ -27,11 +27,18 @@ public class AudioListenerFollow : MonoBehaviour
 
     private void Start()
     {
+        // 갈아타면 새 기체를 따라간다. 내렸으면(null) 그 자리에 남는다.
+        PlayerPilot.OnLocalMechaChangedEvent += HandleMechaChanged;
+
         if (_target != null) return;
 
-        Player player = FindAnyObjectByType<Player>();
-        if (player != null)
-            SetTarget(player.transform);
+        HandleMechaChanged(PlayerPilot.LocalMecha);
+    }
+
+    private void HandleMechaChanged(Player mecha)
+    {
+        if (mecha != null)
+            SetTarget(mecha.transform);
     }
 
     public void SetTarget(Transform target)
@@ -50,6 +57,8 @@ public class AudioListenerFollow : MonoBehaviour
 
     private void OnDestroy()
     {
+        PlayerPilot.OnLocalMechaChangedEvent -= HandleMechaChanged;
+
         if (Current == this) Current = null;
     }
 }

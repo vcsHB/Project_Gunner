@@ -20,18 +20,22 @@ public class PartHud : MonoBehaviour
     private void Start()
     {
         if (Player == null)
-            Bind(FindAnyObjectByType<Player>());
+        {
+            Bind(PlayerPilot.LocalMecha);
+
+            if (Player == null)
+                Debug.LogWarning("[HUD] 탄 기체가 없습니다(PlayerPilot).", this);
+        }
+
+        // 갈아타면 다시 붙는다. 내렸으면(null) 조각들도 떨어진다.
+        PlayerPilot.OnLocalMechaChangedEvent += Bind;
     }
+
+    private void OnDestroy() => PlayerPilot.OnLocalMechaChangedEvent -= Bind;
 
     public void Bind(Player player)
     {
         Player = player;
-
-        if (player == null)
-        {
-            Debug.LogWarning("[HUD] 씬에서 Player를 찾지 못했습니다.", this);
-            return;
-        }
 
         if (_partPlayerStatus != null)
             _partPlayerStatus.Bind(player);

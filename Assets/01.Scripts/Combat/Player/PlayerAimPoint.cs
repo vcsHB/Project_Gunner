@@ -89,7 +89,10 @@ public class PlayerAimPoint : MonoBehaviour
     private void Start()
     {
         if (_aimController == null)
-            Bind(FindAnyObjectByType<Player>());
+            Bind(PlayerPilot.LocalMecha);
+
+        // 갈아타면 다시 붙는다.
+        PlayerPilot.OnLocalMechaChangedEvent += Bind;
     }
 
     public void Bind(Player player)
@@ -148,7 +151,11 @@ public class PlayerAimPoint : MonoBehaviour
     private void RefreshEnable()
         => SetAimPointEnable(!UIInputBlocker.IsBlocked && (_health == null || !_health.IsDead));
 
-    private void OnDestroy() => Unbind();
+    private void OnDestroy()
+    {
+        PlayerPilot.OnLocalMechaChangedEvent -= Bind;
+        Unbind();
+    }
 
     // 조준 계산이 Update에서 끝난 뒤에 따라가야 한 프레임 밀리지 않는다.
     private void LateUpdate()

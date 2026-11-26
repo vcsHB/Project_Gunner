@@ -48,8 +48,13 @@ public class PartGlideStatus : MonoBehaviour
     private void Start()
     {
         if (_move == null)
-            Bind(FindAnyObjectByType<Player>());
+            Bind(PlayerPilot.LocalMecha);
+
+        // 갈아타면 다시 붙는다.
+        PlayerPilot.OnLocalMechaChangedEvent += Bind;
     }
+
+    private void OnDestroy() => PlayerPilot.OnLocalMechaChangedEvent -= Bind;
 
     public void Bind(Player player)
     {

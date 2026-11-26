@@ -29,7 +29,8 @@ public class PopupItemContext : UIPanelBase, IPointerClickHandler
 
     private readonly List<ItemContextAction> _actions = new();
     private readonly List<UnityEngine.UI.Button> _rows = new();
-    private Agent _owner;
+    // 갈아탈 수 있으므로 매번 본다.
+    private static Agent Owner => PlayerPilot.LocalMecha;
     private Color _textColor = Color.white;
 
     protected override void Awake()
@@ -45,8 +46,6 @@ public class PopupItemContext : UIPanelBase, IPointerClickHandler
         }
     }
 
-    private void Start() => _owner = FindAnyObjectByType<Player>();
-
     private void OnDestroy()
     {
         if (Instance == this) Instance = null;
@@ -54,7 +53,7 @@ public class PopupItemContext : UIPanelBase, IPointerClickHandler
 
     public void Open(CellInventorySlot cell)
     {
-        ItemContextActions.Collect(cell, _owner, _actions);
+        ItemContextActions.Collect(cell, Owner, _actions);
         if (_actions.Count == 0 || _template == null)
         {
             Hide();

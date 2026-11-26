@@ -189,20 +189,16 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent, IDeathCrash
             _parts.OnPartRestoredEvent += HandlePartRestored;
         }
 
-        if (_player.Input == null) return;
-
-        _player.Input.OnMoveEvent += HandleMove;
-        _player.Input.OnSprintEvent += HandleSprint;
-        _player.Input.OnGlideToggleEvent += HandleGlideToggle;
+        _player.OnInputChangedEvent += HandleInputChanged;
+        HandleInputChanged(null, _player.Input);
     }
 
     public void Dispose()
     {
-        if (_player != null && _player.Input != null)
+        if (_player != null)
         {
-            _player.Input.OnMoveEvent -= HandleMove;
-            _player.Input.OnSprintEvent -= HandleSprint;
-            _player.Input.OnGlideToggleEvent -= HandleGlideToggle;
+            _player.OnInputChangedEvent -= HandleInputChanged;
+            HandleInputChanged(_player.Input, null);
         }
 
         if (_parts != null)
@@ -311,6 +307,26 @@ public class PlayerMoveController : MonoBehaviour, IAgentComponent, IDeathCrash
     }
 
     private float CurrentSpeed => _status != null ? _status.MoveSpeed.TotalValue : 0f;
+
+    /// <summary>탔다·내렸다. 내린 기체는 쥐고 있던 입력을 놓는다 — 안 그러면 마지막 방향으로 계속 간다.</summary>
+    private void HandleInputChanged(PlayerInput previous, PlayerInput current)
+    {
+        if (previous != null)
+        {
+            previous.OnMoveEvent -= HandleMove;
+            previous.OnSprintEvent -= HandleSprint;
+            previous.OnGlideToggleEvent -= HandleGlideToggle;
+        }
+
+        _moveInput = Vector2.zero;
+        _sprintHeld = false;
+
+        if (current == null) return;
+
+        current.OnMoveEvent += HandleMove;
+        current.OnSprintEvent += HandleSprint;
+        current.OnGlideToggleEvent += HandleGlideToggle;
+    }
 
     private void HandleMove(Vector2 input) => _moveInput = input;
 

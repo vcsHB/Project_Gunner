@@ -38,7 +38,7 @@ public abstract class WeaponPartBase : UIPanelBase
     private void Start()
     {
         if (_weaponController == null)
-            Bind(FindAnyObjectByType<Player>());
+            Bind(PlayerPilot.LocalMecha);
     }
 
     public void Bind(Player player)

@@ -60,7 +60,7 @@ public class SectionInventoryGrid : MonoBehaviour
     {
         if (!_bindPlayerInventory || _inventory != null) return;
 
-        Player player = FindAnyObjectByType<Player>();
+        Player player = PlayerPilot.LocalMecha;
         InventoryController controller = player != null ? player.GetCompo<InventoryController>() : null;
 
         if (controller != null)

@@ -341,7 +341,7 @@ public class EnemyAIController : MonoBehaviour, IAgentComponent, IAimDirectionPr
     {
         if (_target != null && _target.IsTargetable) return;
 
-        Player player = FindAnyObjectByType<Player>();
+        Player player = PlayerPilot.LocalMecha;
 
         _target = player != null ? player.GetCompo<TargetBase>() : null;
     }

@@ -134,6 +134,24 @@ PlayerInput ──▶ PlayerHandController ──┬─▶ ArmLeft  (좌클릭)
 
 **짧게/길게 누름 판정은 `PlayerInput`이 하지 않습니다.** 재장전 키는 눌림/뗌만 이벤트로 내보내고, "몇 초 이상이면 탄종 전환"은 `PlayerWeaponController`가 판단합니다. 시간 임계값은 게임 규칙이라 입력 리더에 들어가면 안 됩니다.
 
+## 조종권 — `PlayerPilot` / 기체 — `Player` (2026-11-27)
+
+**플레이어 = 조종권(`PlayerPilot`), 기체(`Player`) = 타는 것.** 기체 밖의 플레이어는 없습니다 — 늘 기체 안이거나, 기체가 없으면 아무것도 조종하지 않습니다(조립기 화면, M5). 씬의 `Managers/PlayerPilot`에 있고 `PlayerInput.asset`을 듭니다.
+
+| | 하는 일 |
+|---|---|
+| `PlayerPilot.Board(mecha)` / `Disembark()` | 갈아탄다 / 내린다. 내린 기체는 **월드에 그대로 서 있는다**(격납고에 세워 둔 기체) |
+| `Player.Input` | 탄 조종권의 입력을 빌린다. 아무도 안 타면 null |
+| `Player.OnInputChangedEvent(이전, 지금)` | 입력을 구독하는 기체 컴포넌트(이동·팔·수리·상호작용)가 **여기서 갈아 끼운다.** 초기화 때 한 번 붙이고 끝내면 갈아탄 뒤에 안 움직인다. 내릴 때 쥐고 있던 이동 입력·방아쇠를 놓는다 |
+| `PlayerPilot.LocalMecha` | 이 화면의 주인이 탄 기체. HUD·카메라·흔들림·소리·적 스포너가 `FindAnyObjectByType<Player>()` 대신 본다 — 세워 둔 기체가 여럿이면 엉뚱한 걸 집는다 |
+| `PlayerPilot.OnLocalMechaChangedEvent` | `Bind(Player)`를 가진 표시 쪽이 듣고 다시 붙는다. 내렸으면 null로 떨어진다 |
+
+**타이밍** — 조종권의 `Awake`가 기체의 `Agent.Awake`보다 먼저일 수도 나중일 수도 있습니다. 기체 쪽은 초기화 때 **지금 입력을 한 번 붙이고**, 그 뒤 교체는 이벤트로 받습니다. 둘 다 있어야 순서에 상관없이 붙습니다.
+
+**`Local`은 표시용 포인터입니다.** 상태는 조종권 인스턴스에 있습니다(RULES — 싱글턴에 플레이어별 상태 금지). 멀티에서는 조종권이 여럿이고 `Local`만 하나입니다. 인벤토리·일시정지 창의 입력은 조종권의 것이라 갈아타도 그대로입니다.
+
+**아직 갈아타기를 따라가지 않는 것** — 인벤토리 화면(`PanelInventory`의 적재함·체력, `SectionInventoryGrid`, `SectionPlayerInventory`, `PopupItemInformation`)은 `Start`에서 한 번 잡습니다. 실제로 갈아타는 흐름(조립기)이 생길 때 다시 붙게 바꿉니다. 적 AI(`AcquireTarget`)도 대상이 노릴 수 없게 될 때만 다시 고릅니다.
+
 ## 이동 — 착륙 / 활공
 
 `PlayerMoveController`가 두 모드(`MechaMoveMode`)를 갖습니다. Space(`Glide` 액션, 옛 `Crawl`)가 토글입니다.

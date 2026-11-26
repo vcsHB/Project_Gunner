@@ -21,9 +21,9 @@ public class PanelInventory : UIPanelBase
     // Awake가 아니라 Start에서 붙는다. Agent의 컴포넌트 초기화가 Awake에서 끝나기 때문이다.
     private void Start()
     {
-        Player player = FindAnyObjectByType<Player>();
+        Player player = PlayerPilot.LocalMecha;
         _player = player;
-        _input = player != null ? player.Input : null;
+        _input = PlayerPilot.Local != null ? PlayerPilot.Local.Input : null; // 입력은 조종권의 것 — 갈아타도 그대로다
         _health = player != null ? player.GetCompo<Health>() : null;
 
         InventoryController cargo = player != null ? player.GetCompo<InventoryController>() : null;

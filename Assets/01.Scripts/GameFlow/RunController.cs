@@ -40,7 +40,8 @@ public class RunController : MonoBehaviour
 
     private void Start()
     {
-        Bind(FindAnyObjectByType<Player>());
+        Bind(PlayerPilot.LocalMecha);
+        PlayerPilot.OnLocalMechaChangedEvent += Bind;
     }
 
     public void Bind(Player player)
@@ -60,6 +61,8 @@ public class RunController : MonoBehaviour
 
     private void OnDestroy()
     {
+        PlayerPilot.OnLocalMechaChangedEvent -= Bind;
+
         if (_health != null)
             _health.OnWreckedEvent -= HandlePlayerDead;
     }

@@ -18,7 +18,7 @@ public class SectionPlayerInventory : MonoBehaviour
     // UIInventory는 스스로 붙으므로 여기서는 장착 칸만 챙긴다.
     private void Start()
     {
-        Player player = FindAnyObjectByType<Player>();
+        Player player = PlayerPilot.LocalMecha;
         if (player == null) return;
 
         Bind(player.GetCompo<EquipmentController>());

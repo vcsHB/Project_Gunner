@@ -17,8 +17,7 @@ public class PanelGamePause : UIPanelBase
 
     private void Start()
     {
-        Player player = FindAnyObjectByType<Player>();
-        _input = player != null ? player.Input : null;
+        _input = PlayerPilot.Local != null ? PlayerPilot.Local.Input : null; // 입력은 조종권의 것 — 갈아타도 그대로다
 
         if (_input != null)
             _input.OnPauseEvent += HandlePause;

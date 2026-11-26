@@ -42,7 +42,6 @@ public class EnemyManager : MonoBehaviour
     // 무리를 편대로 묶을 때만 잠깐 쓴다.
     private readonly List<EnemyAIController> _squadBuffer = new();
 
-    private Transform _player;
     private float _timer;
 
     /// <summary>지금 살아있는 적 수. 웨이브·클리어 판정이 읽는다.</summary>
@@ -60,11 +59,18 @@ public class EnemyManager : MonoBehaviour
     {
         _timer = _startDelay;
 
-        Player player = FindAnyObjectByType<Player>();
-        _player = player != null ? player.transform : null;
+        if (PlayerPilot.LocalMecha == null)
+            Debug.LogWarning("[EnemyManager] 탄 기체가 없습니다. 스폰 기준이 원점이 됩니다.", this);
+    }
 
-        if (_player == null)
-            Debug.LogWarning("[EnemyManager] 씬에서 Player를 찾지 못했습니다. 스폰 기준이 원점이 됩니다.", this);
+    // 갈아탈 수 있으므로 매번 본다.
+    private Transform PlayerTransform
+    {
+        get
+        {
+            Player mecha = PlayerPilot.LocalMecha;
+            return mecha != null ? mecha.transform : null;
+        }
     }
 
     private void Update()
@@ -171,7 +177,8 @@ public class EnemyManager : MonoBehaviour
 
     private Vector2 PickPosition()
     {
-        Vector2 center = _player != null ? (Vector2)_player.position : Vector2.zero;
+        Transform player = PlayerTransform;
+        Vector2 center = player != null ? (Vector2)player.position : Vector2.zero;
 
         float angle = GameRandom.World.Range(0f, Mathf.PI * 2f);
         float distance = GameRandom.World.Range(_minDistance, Mathf.Max(_minDistance, _maxDistance));
@@ -214,7 +221,8 @@ public class EnemyManager : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Vector3 center = _player != null ? _player.position : transform.position;
+        Transform player = PlayerTransform;
+        Vector3 center = player != null ? player.position : transform.position;
 
         Gizmos.color = new Color(0.4f, 1f, 0.6f, 0.5f);
         Gizmos.DrawWireSphere(center, _minDistance);

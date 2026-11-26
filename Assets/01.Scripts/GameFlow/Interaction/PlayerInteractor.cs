@@ -29,14 +29,22 @@ public class PlayerInteractor : MonoBehaviour, IAgentComponent
     {
         _move = _player.GetCompo<PlayerMoveController>();
 
-        if (_player.Input != null)
-            _player.Input.OnInteractEvent += HandleInteract;
+        _player.OnInputChangedEvent += HandleInputChanged;
+        HandleInputChanged(null, _player.Input);
     }
 
     public void Dispose()
     {
-        if (_player != null && _player.Input != null)
-            _player.Input.OnInteractEvent -= HandleInteract;
+        if (_player == null) return;
+
+        _player.OnInputChangedEvent -= HandleInputChanged;
+        HandleInputChanged(_player.Input, null);
+    }
+
+    private void HandleInputChanged(PlayerInput previous, PlayerInput current)
+    {
+        if (previous != null) previous.OnInteractEvent -= HandleInteract;
+        if (current != null) current.OnInteractEvent += HandleInteract;
     }
 
     private void Update()
@@ -53,7 +61,8 @@ public class PlayerInteractor : MonoBehaviour, IAgentComponent
 
     private bool CanSearch()
     {
-        if (_player == null || _player.IsDead) return false;
+        // 빈 기체는 고르지 않는다 — 세워 둔 기체 옆의 상자에 "[E] 열기"가 뜨면 안 된다.
+        if (_player == null || _player.IsDead || !_player.IsPiloted) return false;
         if (_move != null && (!_move.CanMove || _move.IsGliding)) return false;
 
         return true;

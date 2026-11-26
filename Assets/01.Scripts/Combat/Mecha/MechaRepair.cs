@@ -64,8 +64,11 @@ public class MechaRepair : MonoBehaviour, IAgentComponent
             _health.OnDeadEvent += HandleDead;
         }
 
-        if (_player != null && _player.Input != null)
-            _player.Input.OnRepairEvent += HandleRepairInput;
+        if (_player != null)
+        {
+            _player.OnInputChangedEvent += HandleInputChanged;
+            HandleInputChanged(null, _player.Input);
+        }
     }
 
     public void Dispose()
@@ -76,10 +79,19 @@ public class MechaRepair : MonoBehaviour, IAgentComponent
             _health.OnDeadEvent -= HandleDead;
         }
 
-        if (_player != null && _player.Input != null)
-            _player.Input.OnRepairEvent -= HandleRepairInput;
+        if (_player != null)
+        {
+            _player.OnInputChangedEvent -= HandleInputChanged;
+            HandleInputChanged(_player.Input, null);
+        }
 
         _remaining = 0f;
+    }
+
+    private void HandleInputChanged(PlayerInput previous, PlayerInput current)
+    {
+        if (previous != null) previous.OnRepairEvent -= HandleRepairInput;
+        if (current != null) current.OnRepairEvent += HandleRepairInput;
     }
 
     private void HandleRepairInput() => TryStartRepair();

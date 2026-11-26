@@ -33,7 +33,8 @@ public class ItemDragController : Singleton<ItemDragController>
     [Tooltip("커서가 패널 밖에 있을 때 고스트에 붙는 \"버리기\" 표시.")]
     [SerializeField] private GameObject _ghostDiscardLabel;
 
-    private Agent _dropper;
+    // 갈아탈 수 있으므로 매번 본다.
+    private static Agent Dropper => PlayerPilot.LocalMecha;
 
     private CellInventorySlot _sourceCell;
     private int _count;
@@ -55,11 +56,6 @@ public class ItemDragController : Singleton<ItemDragController>
         MakeGhostClickThrough();
         SetGhostVisible(false);
         SetDiscardVisual(false);
-    }
-
-    private void Start()
-    {
-        _dropper = FindAnyObjectByType<Player>();
     }
 
     /// <summary>
@@ -139,8 +135,8 @@ public class ItemDragController : Singleton<ItemDragController>
 
         RefreshDiscard();
 
-        if (IsOverDiscard && _dropper != null)
-            ItemDiscard.Discard(_sourceCell.Container, _sourceCell.SlotKey, _count, _dropper);
+        if (IsOverDiscard && Dropper != null)
+            ItemDiscard.Discard(_sourceCell.Container, _sourceCell.SlotKey, _count, Dropper);
 
         Cancel();
     }

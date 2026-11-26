@@ -80,7 +80,10 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
     private void Start()
     {
         if (_aim == null)
-            Bind(FindAnyObjectByType<Player>());
+            Bind(PlayerPilot.LocalMecha);
+
+        // 갈아타면 다시 붙는다.
+        PlayerPilot.OnLocalMechaChangedEvent += Bind;
     }
 
     public void Bind(Player player)
@@ -89,7 +92,8 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
 
         if (player == null) return;
 
-        if (_target == null)
+        // 기체(또는 그 자식)를 따라가던 중이면 새 기체로 옮긴다. 기체가 아닌 것을 일부러 지정했으면 그대로 둔다.
+        if (_target == null || _target.GetComponentInParent<Player>() != null)
             _target = player.transform;
 
         _aim = player.GetCompo<PlayerAimController>();
@@ -117,7 +121,11 @@ public class CameraFollowEffector : MonoBehaviour, ICameraEffector
         _aim = null;
     }
 
-    private void OnDestroy() => Unbind();
+    private void OnDestroy()
+    {
+        PlayerPilot.OnLocalMechaChangedEvent -= Bind;
+        Unbind();
+    }
 
     private void HandleAimingChanged(bool aiming) => _isAiming = aiming;
 

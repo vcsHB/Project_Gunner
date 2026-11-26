@@ -25,10 +25,10 @@ public class PlayerHandController : HandController
     {
         base.AfterInitialize();
 
-        if (_player != null && _player.Input != null)
+        if (_player != null)
         {
-            _player.Input.OnPrimaryEvent += HandlePrimary;
-            _player.Input.OnSecondaryEvent += HandleSecondary;
+            _player.OnInputChangedEvent += HandleInputChanged;
+            HandleInputChanged(null, _player.Input);
         }
 
         UIInputBlocker.OnBlockedChangedEvent += HandleInputBlocked;
@@ -36,10 +36,10 @@ public class PlayerHandController : HandController
 
     public override void Dispose()
     {
-        if (_player != null && _player.Input != null)
+        if (_player != null)
         {
-            _player.Input.OnPrimaryEvent -= HandlePrimary;
-            _player.Input.OnSecondaryEvent -= HandleSecondary;
+            _player.OnInputChangedEvent -= HandleInputChanged;
+            HandleInputChanged(_player.Input, null);
         }
 
         UIInputBlocker.OnBlockedChangedEvent -= HandleInputBlocked;
@@ -48,6 +48,22 @@ public class PlayerHandController : HandController
     }
 
     #region 입력 배분
+
+    /// <summary>탔다·내렸다. 내리는 순간 누르고 있던 방아쇠를 놓는다 — 빈 기체가 계속 쏘지 않게.</summary>
+    private void HandleInputChanged(PlayerInput previous, PlayerInput current)
+    {
+        if (previous != null)
+        {
+            previous.OnPrimaryEvent -= HandlePrimary;
+            previous.OnSecondaryEvent -= HandleSecondary;
+            ReleaseAll();
+        }
+
+        if (current == null) return;
+
+        current.OnPrimaryEvent += HandlePrimary;
+        current.OnSecondaryEvent += HandleSecondary;
+    }
 
     private void HandlePrimary(bool pressed) => Route(EquipSlotType.ArmLeft, pressed);
 

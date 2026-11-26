@@ -69,7 +69,7 @@ public class PopupItemInformation : Singleton<PopupItemInformation>
     // 비교 기준이 되는 장비. HUD·인벤토리와 같이 Start에서 씬의 플레이어를 찾는다.
     private void Start()
     {
-        Player player = FindAnyObjectByType<Player>();
+        Player player = PlayerPilot.LocalMecha;
         _equipment = player != null ? player.GetCompo<EquipmentController>() : null;
     }
 

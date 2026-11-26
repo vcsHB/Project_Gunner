@@ -16,7 +16,10 @@ public class DeathCameraShake : MonoBehaviour
     private void Start()
     {
         if (_health == null)
-            Bind(FindAnyObjectByType<Player>());
+            Bind(PlayerPilot.LocalMecha);
+
+        // 갈아타면 다시 붙는다.
+        PlayerPilot.OnLocalMechaChangedEvent += Bind;
     }
 
     public void Bind(Player player)
@@ -46,7 +49,11 @@ public class DeathCameraShake : MonoBehaviour
         _shake = null;
     }
 
-    private void OnDestroy() => Unbind();
+    private void OnDestroy()
+    {
+        PlayerPilot.OnLocalMechaChangedEvent -= Bind;
+        Unbind();
+    }
 
     private void HandleDead()
     {

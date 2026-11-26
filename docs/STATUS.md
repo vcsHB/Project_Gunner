@@ -65,6 +65,7 @@
 | 시스템 | 상태 | 비고 |
 |---|---|---|
 | PlayerInput | ✅ | 입력 리더 SO. `PlayerInput.asset` 존재 |
+| 조종권 / 기체 분리 | 🟡 | `PlayerPilot`(Managers 아래)이 입력을 들고 기체(`Player`)에 탄다. `Board`/`Disembark`, 표시 쪽은 `LocalMecha`·`OnLocalMechaChangedEvent`. 인벤토리 화면은 아직 갈아타기를 안 따라간다 ([input](arch/input.md#조종권--playerpilot--기체--player-2026-11-27)) |
 | 이동 | ✅ | Rigidbody2D, 질주는 Percent modifier, 기절 시 정지. **착륙 / 활공 두 모드** |
 | 활공 / 착륙 (Space) | 🟡 | `PlayerMoveController`. 활공 = `TargetType.Air` + 속도↑ + 연료 상시 소모 + **몸체가 0.6 뜬다**(`Altitude`, `GlideFeedback`, 카메라 줌아웃). 고속 착륙 미끄러짐 + `SkidCameraShake`, 착륙 후 1초 잠금. **수치 미조정** |
 | 조준 | ✅ | 마우스 절대 조준 + `AimRange` 제한 + 반동 오프셋 |

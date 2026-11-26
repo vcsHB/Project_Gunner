@@ -13,15 +13,10 @@ public class ItemDropArea : MonoBehaviour, IDropHandler
     public event Action<IItemSlotContainer, int, int> OnDropRequestedEvent;
 
     private ItemDragController _drag;
-    private Agent _dropper;
+    // 갈아탈 수 있으므로 매번 본다.
+    private static Agent Dropper => PlayerPilot.LocalMecha;
 
     private void Awake() => _drag = GetComponentInParent<ItemDragController>(true);
-
-    private void Start()
-    {
-        Player player = FindAnyObjectByType<Player>();
-        _dropper = player;
-    }
 
     public void OnDrop(PointerEventData eventData)
     {
@@ -45,12 +40,12 @@ public class ItemDropArea : MonoBehaviour, IDropHandler
 
     private void DropToWorld(IItemSlotContainer container, int slotKey, int count)
     {
-        if (_dropper == null)
+        if (Dropper == null)
         {
             Debug.LogWarning("[ItemDrop] 떨어뜨릴 주인이 없어 취소합니다.", this);
             return;
         }
 
-        ItemDiscard.Discard(container, slotKey, count, _dropper);
+        ItemDiscard.Discard(container, slotKey, count, Dropper);
     }
 }
